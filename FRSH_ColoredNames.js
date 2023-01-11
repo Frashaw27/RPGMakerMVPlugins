@@ -97,7 +97,7 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 			icon = parseInt($dataEnemies[id].meta.iconNum);
 		}
 		}
-		var name = "\\c[" + color + "]" + name2 + "\\c[0]";
+		var name = "\\c[" + color + "]" + fool.name() + "\\c[0]";
 		if (icon != 0){
 			name = "\\i[" + icon + "]" + name;
 		}
