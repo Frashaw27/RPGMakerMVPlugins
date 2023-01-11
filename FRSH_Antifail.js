@@ -117,7 +117,7 @@ Frashaw.Antifail = Frashaw.Antifail || {};
 		}
 		return name;
 		} else {
-		return fool;
+		return fool.name();
 		}
 	}
 
