@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.0.1
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -41,9 +41,16 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 * Due to the nature of this, it might not work properly with
 * certain plugins that also overwrite the original name drawing method. If
 * this is your case, I'd recommend setting it lower as that seems to have the
-* last one to overwrite it to be the one that overwrites it. The only current
-* intended capatability is with my other plugin Dynamic Battlelog Message.
+* last one to overwrite it to be the one that overwrites it.
 * ===Change Log===============================================================
+* Version 1.1.0 (01/11/23):
+* -Rewrote method to get the Actor's Name, which removes many manual 
+* applications and allows more compatibility for more plugins
+* -Removed overwrites of Battlelog messages as it simply wasn't needed
+* now
+* -Added a function to get an Item's proper name
+* -Added a method to overwrite the Item Drop text 
+*
 * Version 1.0.1 (01/11/23):
 * -Add Compatiblity with Custom Item Messages
 * -Added Battlelog messages being colored
@@ -74,12 +81,32 @@ Frashaw.DBLMessage = Frashaw.CName || {};
     }
 	};
 	
-	//Function to mass call the name colorization
-	function nameCaller(fool){
+	//A function that makes the item's called name fit within the colored
+	//name aethetic. Can't be set like the others because Item Names aren't
+	//set like that.
+	function makeItemName(item){
+		var color = 0;
+		if (item.meta.nameColor != null){
+			color = parseInt(item.meta.nameColor);
+		}
+		var icon = 0;
+		if (item.meta.iconNum != null){
+			icon = parseInt(item.meta.iconNum);
+		}
+		var name = "\\c[" + color + "]" + item.name + "\\c[0]";
+		if (icon != 0){
+			name = "\\i[" + icon + "]" + name;
+		}
+		return name;
+	}
+	
+	//A function made to rewrite the name produced from a script
+	//call to be colored.
+	Game_Actor.prototype.name = function() {
+		var fool = this;
 		var color = 0;
 		var icon = 0;
-		if (fool.isActor()){
-		name2 = fool.name();
+		var name2 = fool._name;
 		var id = fool.actorId()
 		if ($dataActors[id].meta.nameColor != null){
 			color = parseInt($dataActors[id].meta.nameColor);
@@ -87,80 +114,13 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 		if ($dataActors[id].meta.iconNum != null){
 			icon = parseInt($dataActors[id].meta.iconNum);
 		}
-		} else {
-		name2 = fool.name;
-		var id = fool.enemyId()
-		if ($dataEnemies[id].meta.nameColor != null){
-			color = parseInt($dataEnemies[id].meta.nameColor);
-		}
-		if ($dataEnemies[id].meta.iconNum != null){
-			icon = parseInt($dataEnemies[id].meta.iconNum);
-		}
-		}
-		var name = "\\c[" + color + "]" + fool.name() + "\\c[0]";
+		var name = "\\c[" + color + "]" + name2 + "\\c[0]";
 		if (icon != 0){
 			name = "\\i[" + icon + "]" + name;
 		}
 		return name;
-		}
-	
-	//Changes Battlelog messages for skills that call the names. 
-	if (!Imported.DBLMessage && !Imported.CIMessage){
-	//If my other scripts, Dynamic Battlelog Message and Custom Item Messages
-	//is enabled, this won't run and instead the other one will
-	Window_BattleLog.prototype.displayAction = function(subject, item) {
-    var numMethods = this._methods.length;
-	var color = 0;
-	if (item.meta.nameColor != null){
-		color = parseInt(item.meta.nameColor);
-	}
-	var icon = 0;
-	if (item.meta.iconNum != null){
-		icon = parseInt(item.iconNum);
-	}
-	var name = "\\c[" + color + "]" + item.name + "\\c[0]";
-	if (icon != 0){
-		name = "\\i[" + icon + "]" + name;
-	}
-	color = 0;
-	icon = 0;
-	if (subject.isActor()){
-	var id = subject.actorId()
-	if ($dataActors[id].meta.nameColor != null){
-		color = parseInt($dataActors[id].meta.nameColor);
-	}
-	if ($dataActors[id].meta.iconNum != null){
-		icon = parseInt($dataActors[id].meta.iconNum);
-	}
-	} else {
-	var id = subject.enemyId()
-	if ($dataEnemies[id].meta.nameColor != null){
-		color = parseInt($dataEnemies[id].meta.nameColor);
-	}
-	if ($dataEnemies[id].meta.iconNum != null){
-		icon = parseInt($dataEnemies[id].meta.iconNum);
-	}
-	}
-	var name2 = "\\c[" + color + "]" + subject.name() + "\\c[0]";
-	if (icon != 0){
-		name2 = "\\i[" + icon + "]" + name2;
-	}
-    if (DataManager.isSkill(item)) {
-        if (item.message1) {
-            this.push('addText', name2 + item.message1.format(name));
-        }
-        if (item.message2) {
-            this.push('addText', item.message2.format(name));
-        }
-    } else {
-        this.push('addText', TextManager.useItem.format(name2, name));
-    }
-    if (this._methods.length === numMethods) {
-        this.push('wait');
-    }
-	}
 	};
-	
+
 	//Changes the Enemy Name in drawing their name for the selection
 	Window_BattleEnemy.prototype.drawItem = function(index) {
 		this.resetTextColor();
@@ -218,7 +178,7 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 	Window_Base.prototype.drawActorName = function(actor, x, y, width) {
 	var id = actor.actorId();
 	var icon = 0;
-	var name = actor.name();
+	var name = actor._name;
 	if ($dataActors[id].meta.nameColor != null){
 		color = parseInt($dataActors[id].meta.nameColor);
 	}
@@ -294,211 +254,25 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 	
 	//For the level up text boxes
 	Game_Actor.prototype.displayLevelUp = function(newSkills) {
-		var id = this.actorId();
-		var color = 0;
-		var icon = 0;
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		var name = "\\c[" + color + "]" + this.name() + "\\c[0]";
-		if (icon != 0){
-			name = "\\i[" + icon + "]" + name;
-		}
-		var text = TextManager.levelUp.format(name, TextManager.level, this._level);
+		var text = TextManager.levelUp.format(this.name(), TextManager.level, this._level);
 		$gameMessage.newPage();
 		$gameMessage.add(text);
 		newSkills.forEach(function(skill) {
-			var id = skill.id;
-			var color = 0;
-			var icon = 0;
-			if ($dataSkills[id].meta.nameColor != null){
-				color = parseInt($dataSkills[id].meta.nameColor);
-			}
-			if ($dataSkills[id].meta.iconNum != null){
-				icon = parseInt($dataSkills[id].meta.iconNum);
-			}
-			var name2 = "\\c[" + color + "]" + skill.name + "\\c[0]";
-			if (icon != 0){
-				name2 = "\\i[" + icon + "]" + name2;
-			}
+			var name2 = makeItemName(skill); 
 			$gameMessage.add(TextManager.obtainSkill.format(name2));
 		});
 	};
 	
-	//Changes the Party leader's name to be colored. Feel free to edit it further if want to fuck with it yourself.
-	Game_Party.prototype.name = function() {
-		var numBattleMembers = this.battleMembers().length;
-		var id = this.leader().actorId();
-		var color = 0;
-		var icon = 0;
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		var name = "\\c[" + color + "]" + this.leader().name() + "\\c[0]";
-		if (icon != 0){
-			name = "\\i[" + icon + "]" + name;
-		}
-		if (numBattleMembers > 1){
-			var name2 = $dataSystem.terms.messages.partyName;
-			nameArray = name2.split("%1");
-			var text = name + nameArray[1];
-		} else {
-			return name;
-		}
-		return text;
-	};
-	
-	//All below here are just the battlelog messages that remain so that the names 
-	//can be colorized.
-	//Checks to see if Dynamic Battlelogg Messages if active
-	if(!Imported.DBLMessage){
-		Window_BattleLog.prototype.displayCounter = function(target) {
-			this.push('performCounter', target);
-			this.push('addText', TextManager.counterAttack.format(nameCaller(target)));
-		};
-
-		Window_BattleLog.prototype.displayReflection = function(target) {
-			this.push('performReflection', target);
-			this.push('addText', TextManager.magicReflection.format(nameCaller(target)));
-		};
-
-		Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
-			var substName = substitute.name();
-			this.push('performSubstitute', substitute, target);
-			this.push('addText', TextManager.substitute.format(substName, nameCaller(target)));
-		};
-		
-		if (!Imported.Antifail){//Adds a capatability to one of my other plugins, Antifail
-		Window_BattleLog.prototype.displayFailure = function(target) {
-		if (target.result().isHit() && !target.result().success) {
-				this.push('addText', TextManager.actionFailure.format(nameCaller(target)));
-			}
-		}
-		};
-		
-		Window_BattleLog.prototype.displayFailure = function(target) {
-		if (target.result().isHit() && !target.result().success) {
-				this.push('addText', TextManager.actionFailure.format(nameCaller(target)));
-			}
-		};
-		
-		Window_BattleLog.prototype.displayMiss = function(target) {
-		var fmt;
-			if (target.result().physical) {
-				fmt = target.isActor() ? TextManager.actorNoHit : TextManager.enemyNoHit;
-				this.push('performMiss', target);
-			} else {
-				fmt = TextManager.actionFailure;
-			}
-			this.push('addText', fmt.format(nameCaller(target)));
-		};
-		
-		Window_BattleLog.prototype.displayEvasion = function(target) {
-		var fmt;
-			if (target.result().physical) {
-				fmt = TextManager.evasion;
-				this.push('performEvasion', target);
-			} else {
-				fmt = TextManager.magicEvasion;
-				this.push('performMagicEvasion', target);
-			}
-			this.push('addText', fmt.format(nameCaller(target)));
-		};
-		
-		Window_BattleLog.prototype.displayAddedStates = function(target) {
-			target.result().addedStateObjects().forEach(function(state) {
-				var stateMsg = target.isActor() ? state.message1 : state.message2;
-				if (state.id === target.deathStateId()) {
-					this.push('performCollapse', target);
-				}
-				if (stateMsg) {
-					this.push('popBaseLine');
-					this.push('pushBaseLine');
-					this.push('addText', nameCaller(target) + stateMsg);
-					this.push('waitForEffect');
-				}
-			}, this);
-		};
-
-		Window_BattleLog.prototype.displayRemovedStates = function(target) {
-			target.result().removedStateObjects().forEach(function(state) {
-				if (state.message4) {
-					this.push('popBaseLine');
-					this.push('pushBaseLine');
-					this.push('addText', nameCaller(target) + state.message4);
-				}
-			}, this);
-		};
-		
-		Window_BattleLog.prototype.displayBuffs = function(target, buffs, fmt) {
-			buffs.forEach(function(paramId) {
-				this.push('popBaseLine');
-				this.push('pushBaseLine');
-				this.push('addText', fmt.format(nameCaller(target), TextManager.param(paramId)));
-			}, this);
-		};
-
-		Window_BattleLog.prototype.makeHpDamageText = function(target) {
-			var result = target.result();
-			var damage = result.hpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0 && result.drain) {
-				fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-				return fmt.format(nameCaller(target), TextManager.hp, damage);
-			} else if (damage > 0) {
-				fmt = isActor ? TextManager.actorDamage : TextManager.enemyDamage;
-				return fmt.format(nameCaller(target), damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-				return fmt.format(nameCaller(target), TextManager.hp, -damage);
-			} else {
-				fmt = isActor ? TextManager.actorNoDamage : TextManager.enemyNoDamage;
-				return fmt.format(nameCaller(target));
-			}
-		};
-
-		Window_BattleLog.prototype.makeMpDamageText = function(target) {
-			var result = target.result();
-			var damage = result.mpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0 && result.drain) {
-				fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-				return fmt.format(nameCaller(target), TextManager.mp, damage);
-			} else if (damage > 0) {
-				fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-				return fmt.format(nameCaller(target), TextManager.mp, damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-				return fmt.format(nameCaller(target), TextManager.mp, -damage);
-			} else {
-				return '';
-			}
-		};
-
-		Window_BattleLog.prototype.makeTpDamageText = function(target) {
-			var result = target.result();
-			var damage = result.tpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0) {
-				fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-				return fmt.format(nameCaller(target), TextManager.tp, damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorGain : TextManager.enemyGain;
-				return fmt.format(nameCaller(target), TextManager.tp, -damage);
-			} else {
-				return '';
-			}
-		};
-	}
+	//Overwrites the name displayed for a dropped item to be colored
+	BattleManager.displayDropItems = function() {
+    var items = this._rewards.items;
+    if (items.length > 0) {
+        $gameMessage.newPage();
+        items.forEach(function(item) {
+            $gameMessage.add(TextManager.obtainItem.format(makeItemName(item)));
+        });
+    }
+};
 })();
 
 //=============================================================================
