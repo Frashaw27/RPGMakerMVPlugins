@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DynamicBattlelogMessages
 // FRSH_DynamicBattlelogMessages.js
-// Version: 1.2.1
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -284,6 +284,12 @@ Frashaw.DBLMessage = Frashaw.DBLMessage || {};
 *
 * Hope you get some use out of it.
 * ===Change Log===============================================================
+* Version 1.2.2 (01/12/23):
+* -Removed some Compatibility between Colored Names due to a script rewrite
+* that removed some manual code
+* -Fixed a bug that prevented Item Icons from showing up when showing
+* action messages
+*
 * Version 1.2.1 (01/11/23):
 * -Added Compatibility for Antifail and Custom Item Messages
 * -Fixed using item names not being colored when Colored Names is active
@@ -334,47 +340,13 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 
 (function() {
 
-//A function to determine the name when Colored Names is active
-function nameCaller(fool){
-		if (Imported.CName){
-		var color = 0;
-		var icon = 0;
-		if (fool.isActor()){
-		name2 = fool.name();
-		var id = fool.actorId()
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		} else {
-		name2 = fool.name;
-		var id = fool.enemyId()
-		if ($dataEnemies[id].meta.nameColor != null){
-			color = parseInt($dataEnemies[id].meta.nameColor);
-		}
-		if ($dataEnemies[id].meta.iconNum != null){
-			icon = parseInt($dataEnemies[id].meta.iconNum);
-		}
-		}
-		var name = "\\c[" + color + "]" + fool.name() + "\\c[0]";
-		if (icon != 0){
-			name = "\\i[" + icon + "]" + name;
-		}
-		return name;
-		} else {
-		return fool.name();
-		}
-	}
-
 //Inital Free Ones
 if (Imported.Antifail == null){
 Window_BattleLog.prototype.displayFailure = function(target){
 	var numb = Frashaw.Param.DSwitch1;
 	if ($gameSwitches.value(numb) == true){
 		if (target.result().isHit() && !target.result().success) {
-        this.push('addText', TextManager.actionFailure.format(nameCaller(target)));
+        this.push('addText', TextManager.actionFailure.format(target.name()));
     }
 	}
 }
@@ -411,48 +383,24 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 		}
 		var icon = 0;
 		if (item.meta.iconNum != null){
-			icon = parseInt(item.iconNum);
+			icon = parseInt(item.meta.iconNum);
 		}
 		var name = "\\c[" + color + "]" + item.name + "\\c[0]";
 		if (icon != 0){
 			name = "\\i[" + icon + "]" + name;
 		}
-		color = 0;
-		icon = 0;
-		if (subject.isActor()){
-		var id = subject.actorId()
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		} else {
-		var id = subject.enemyId()
-		if ($dataEnemies[id].meta.nameColor != null){
-			color = parseInt($dataEnemies[id].meta.nameColor);
-		}
-		if ($dataEnemies[id].meta.iconNum != null){
-			icon = parseInt($dataEnemies[id].meta.iconNum);
-		}
-		}
-		var name2 = "\\c[" + color + "]" + subject.name() + "\\c[0]";
-		if (icon != 0){
-			name2 = "\\i[" + icon + "]" + name2;
-		}
 	} else {
 		var name = item.name;
-		var name2 = subject.name();
 	}
     if (DataManager.isSkill(item)) {
         if (item.message1) {
-            this.push('addText', name2 + item.message1.format(name));
+            this.push('addText', subject.name() + item.message1.format(name));
         }
         if (item.message2) {
             this.push('addText', item.message2.format(name));
         }
     } else {
-		this.push('addText', TextManager.useItem.format(name2, name));
+		this.push('addText', TextManager.useItem.format(subject.name(), name));
     }
     if (this._methods.length === numMethods) {
         this.push('wait');
@@ -480,7 +428,7 @@ Window_BattleLog.prototype.displayCounter = function(target) {
 	var numb = Frashaw.Param.DSwitch5;
 	if ($gameSwitches.value(numb) == true || numb == 0){
     this.push('performCounter', target);
-    this.push('addText', TextManager.counterAttack.format(nameCaller(target)));
+    this.push('addText', TextManager.counterAttack.format(target.name()));
 	}
 };
 
@@ -488,7 +436,7 @@ Window_BattleLog.prototype.displayReflection = function(target) {
 	var numb = Frashaw.Param.DSwitch6;
 	if ($gameSwitches.value(numb) == true || numb == 0){
     this.push('performReflection', target);
-    this.push('addText', TextManager.magicReflection.format(nameCaller(target)));
+    this.push('addText', TextManager.magicReflection.format(target.name()));
 	}
 };
 
@@ -497,7 +445,7 @@ Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
 	if ($gameSwitches.value(numb) == true || numb == 0){
     var substName = substitute.name();
     this.push('performSubstitute', substitute, target);
-    this.push('addText', TextManager.substitute.format(substName, nameCaller(target)));
+    this.push('addText', TextManager.substitute.format(substName, target.name()));
 	}
 };
 
@@ -511,7 +459,7 @@ Window_BattleLog.prototype.displayMiss = function(target) {
     } else {
         fmt = TextManager.actionFailure;
     }
-    this.push('addText', fmt.format(nameCaller(target)));
+    this.push('addText', fmt.format(target.name()));
 	}
 };
 
@@ -526,7 +474,7 @@ Window_BattleLog.prototype.displayEvasion = function(target) {
         fmt = TextManager.magicEvasion;
         this.push('performMagicEvasion', target);
     }
-    this.push('addText', fmt.format(nameCaller(target)));
+    this.push('addText', fmt.format(target.name()));
 	}
 };
 
@@ -585,7 +533,7 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
         if (stateMsg) {
             this.push('popBaseLine');
             this.push('pushBaseLine');
-            this.push('addText', nameCaller(target) + stateMsg);
+            this.push('addText', target.name() + stateMsg);
             this.push('waitForEffect');
         }
     }, this);
@@ -599,7 +547,7 @@ Window_BattleLog.prototype.displayRemovedStates = function(target) {
         if (state.message4) {
             this.push('popBaseLine');
             this.push('pushBaseLine');
-            this.push('addText', nameCaller(target) + state.message4);
+            this.push('addText', target.name() + state.message4);
         }
     }, this);
 	}
@@ -639,7 +587,7 @@ Window_BattleLog.prototype.displayBuffs = function(target, buffs, fmt) {
 	buffs.forEach(function(paramId) {
 		this.push('popBaseLine');
 		this.push('pushBaseLine');
-		this.push('addText', fmt.format(nameCaller(target), TextManager.param(paramId)));
+		this.push('addText', fmt.format(target.name(), TextManager.param(paramId)));
 	}, this);
 };
 
@@ -667,16 +615,16 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-        return fmt.format(nameCaller(target), TextManager.hp, damage);
+        return fmt.format(target.name(), TextManager.hp, damage);
     } else if (damage > 0) {
         fmt = isActor ? TextManager.actorDamage : TextManager.enemyDamage;
-        return fmt.format(nameCaller(target), damage);
+        return fmt.format(target.name(), damage);
     } else if (damage < 0) {
         fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-        return fmt.format(nameCaller(target), TextManager.hp, -damage);
+        return fmt.format(target.name(), TextManager.hp, -damage);
     } else {
         fmt = isActor ? TextManager.actorNoDamage : TextManager.enemyNoDamage;
-        return fmt.format(nameCaller(target));
+        return fmt.format(target.name());
     }
 	}
 };
@@ -702,13 +650,13 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-        return fmt.format(nameCaller(target), TextManager.mp, damage);
+        return fmt.format(target.name(), TextManager.mp, damage);
     } else if (damage > 0) {
         fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-        return fmt.format(nameCaller(target), TextManager.mp, damage);
+        return fmt.format(target.name(), TextManager.mp, damage);
     } else if (damage < 0) {
         fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-        return fmt.format(nameCaller(target), TextManager.mp, -damage);
+        return fmt.format(target.name(), TextManager.mp, -damage);
     } else {
         return '';
     }
@@ -736,10 +684,10 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
     var fmt;
     if (damage > 0) {
         fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-        return fmt.format(nameCaller(target), TextManager.tp, damage);
+        return fmt.format(target.name(), TextManager.tp, damage);
     } else if (damage < 0) {
         fmt = isActor ? TextManager.actorGain : TextManager.enemyGain;
-        return fmt.format(nameCaller(target), TextManager.tp, -damage);
+        return fmt.format(target.name(), TextManager.tp, -damage);
     } else {
         return '';
     }
