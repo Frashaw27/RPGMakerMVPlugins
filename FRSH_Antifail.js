@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Antifail
 // FRSH_Antifail.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -32,6 +32,10 @@ Frashaw.Antifail = Frashaw.Antifail || {};
 * Event or other notetags. If this doesn't work at first, try shifting it 
 * in the plugin manager to see if that fixes it.
 * ===Change Log===============================================================
+* Version 1.0.1 (01/11/23) :
+* -Removed some Compatibility between Colored Names due to a script rewrite
+* that removed some manual code
+*
 * Version 1.0 (01/11/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -86,46 +90,12 @@ Frashaw.Antifail = Frashaw.Antifail || {};
 	//can show.
 	return true;
 	}
-	
-	//Function to add compatibility with another plugin, Colored Names
-	function nameCaller(fool){
-		if (Imported.CName){
-		var color = 0;
-		var icon = 0;
-		if (fool.isActor()){
-		name2 = fool.name();
-		var id = fool.actorId()
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		} else {
-		name2 = fool.name;
-		var id = fool.enemyId()
-		if ($dataEnemies[id].meta.nameColor != null){
-			color = parseInt($dataEnemies[id].meta.nameColor);
-		}
-		if ($dataEnemies[id].meta.iconNum != null){
-			icon = parseInt($dataEnemies[id].meta.iconNum);
-		}
-		}
-		var name = "\\c[" + color + "]" + name2 + "\\c[0]";
-		if (icon != 0){
-			name = "\\i[" + icon + "]" + name;
-		}
-		return name;
-		} else {
-		return fool.name();
-		}
-	}
 
 	//The fuction that shows the fail message (or not).
 	Window_BattleLog.prototype.displayFailure = function(target){
 		var check = checkChecker(target);
 		if (check) {
-			this.push('addText', TextManager.actionFailure.format(nameCaller(target)));
+			this.push('addText', TextManager.actionFailure.format(target.name()));
 		}
 	};
 
