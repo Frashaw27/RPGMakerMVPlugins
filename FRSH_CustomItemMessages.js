@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.0.0
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -228,6 +228,14 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * the true false parameter. You can also customize the message for giving
 * to a specific ally and the entire party, aswell as the name for the party.
 * ===Change Log===============================================================
+* Version 1.1 (01/12/23) :
+* -Removed some Compatibility between Colored Names due to a script rewrite
+* that removed some manual code
+* -Changed a method that called Class Id to just Actor Id
+* -Changed the way some names are called
+* -Added a conditional that makes the recipient message not appear if the 
+* item in question has an enemy scope
+*
 * Version 1.0 (01/11/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -307,35 +315,13 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 		}
 		var icon = 0;
 		if (item.meta.iconNum != null){
-			icon = parseInt(item.iconNum);
+			icon = parseInt(item.meta.iconNum);
 		}
 		var name = "\\c[" + color + "]" + item.name + "\\c[0]";
 		if (icon != 0){
 			name = "\\i[" + icon + "]" + name;
 		}
-		color = 0;
-		icon = 0;
-		if (subject.isActor()){
-		var id = subject.actorId()
-		if ($dataActors[id].meta.nameColor != null){
-			color = parseInt($dataActors[id].meta.nameColor);
-		}
-		if ($dataActors[id].meta.iconNum != null){
-			icon = parseInt($dataActors[id].meta.iconNum);
-		}
-		} else {
-		var id = subject.enemyId()
-		if ($dataEnemies[id].meta.nameColor != null){
-			color = parseInt($dataEnemies[id].meta.nameColor);
-		}
-		if ($dataEnemies[id].meta.iconNum != null){
-			icon = parseInt($dataEnemies[id].meta.iconNum);
-		}
-		}
-		var name2 = "\\c[" + color + "]" + subject.name() + "\\c[0]";
-		if (icon != 0){
-			name2 = "\\i[" + icon + "]" + name2;
-		}
+		var name2 = subject.name();
 	} else {
 	//If Colored Names isn't being used
 		var name = item.name;
@@ -351,59 +337,46 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
     } else {
 		//Makes the additional battlelog message if wanted
 		var booll = Frashaw.Param.dbB;
-		if (booll){
-		//Checks to see if the scope if all allies, dead or alive. Doesn't play the
-		//the message if the scope is alive members and only one is alive.
-		if (($dataItems[item.id].scope == 8 && $gameParty.aliveMembers().length > 1) || $dataItems[item.id].scope == 10){
-			var name3 = Frashaw.Param.dbP; //Gets the party name parameter
-			if (name3 == null || name3 == ""){ //Sets the name if the parameter is null or empty
-				name3 = "The Party";
-			}
-			var Message = Frashaw.Param.dbA; //Gets the party give message parameter
-			if (Message != null && Message != ""){ 
-			//Uses the below code if the message is not null and not empty
-				messArray = Message.split('%'); //Splits the message so that it flows good
-				if (messArray[1] == undefined) messArray[1] = "";//If there are no %, sets the array value to blank
-				if (messArray[2] == undefined) messArray[2] = "";
-				this.push('addText', name2 + " " + messArray[0] + name3 + messArray[1]);
+		//Will not run code if scope is targeted at an enemy/ies
+		//if (!$dataItems[item.id].scope == 1 && !$dataItems[item.id].scope == 2 && !$dataItems[item.id].scope == 3 || !$dataItems[item.id].scope == 4 && !$dataItems[item.id].scope == 5 && !$dataItems[item.id].scope == 6){
+			if (booll){
+			//Checks to see if the scope if all allies, dead or alive. Doesn't play the
+			//the message if the scope is alive members and only one is alive.
+			if (($dataItems[item.id].scope == 8 && $gameParty.aliveMembers().length > 1) || $dataItems[item.id].scope == 10){
+				var name3 = Frashaw.Param.dbP; //Gets the party name parameter
+				if (name3 == null || name3 == ""){ //Sets the name if the parameter is null or empty
+					name3 = "The Party";
+				}
+				var Message = Frashaw.Param.dbA; //Gets the party give message parameter
+				if (Message != null && Message != ""){ 
+				//Uses the below code if the message is not null and not empty
+					messArray = Message.split('%'); //Splits the message so that it flows good
+					if (messArray[1] == undefined) messArray[1] = "";//If there are no %, sets the array value to blank
+					if (messArray[2] == undefined) messArray[2] = "";
+					this.push('addText', subject.name() + " " + messArray[0] + name3 + messArray[1]);
+				} else {
+					//message if the paramter one is blank or null
+					this.push('addText', subject.name() + " gave the item to " + name3 + "!");
+				}
 			} else {
-				//message if the paramter one is blank or null
-				this.push('addText', name2 + " gave the item to " + name3 + "!");
+				var old = Object.entries(BattleManager._targets); //Gets the current target's values
+				var yes = old["0"][1]._name;//Get's the current target's name
+				if (yes != subject.name()){ //Checks to see if the target is different from the user by comparing names
+				var id = old["0"][1]._actorId;//Checks actor Id, because it works
+				var Message = Frashaw.Param.dbM;
+				if (Message != null && Message != ""){
+					messArray = Message.split('%');
+					if (messArray[1] == undefined) messArray[1] = "";
+					if (messArray[2] == undefined) messArray[2] = "";
+					this.push('addText', subject.name() + " " + messArray[0] + $gameActors.actor(id).name() + messArray[1]);
+				} else {
+					this.push('addText', subject.name() + " gave the item to " + $gameActors.actor(id).name() + "!");
+				}
+				name2 = $gameActors.actor(id).name(); //Sets the name to the recipient so it looks better
+				}
 			}
-		} else {
-			var old = Object.entries(BattleManager._targets); //Gets the current target's values
-			var yes = old["0"][1]._name;//Get's the current target's name
-			if (yes != subject.name()){ //Checks to see if the target is different from the user by comparing names
-			var id = $dataActors[old["0"][1]._classId];//Checks class Id, because it works
-			if (Imported.CName){ //Gets the color and icon from Colored Names
-			var color = 0;
-			if (id.meta.nameColor != null){
-				color = parseInt(id.meta.nameColor);
 			}
-			var icon = 0;
-			if (id.meta.iconNum != null){
-				icon = parseInt(id.meta.iconNum);
-			}
-			var name3 = "\\c[" + color + "]" + id.name + "\\c[0]";
-			if (icon != 0){
-				name3 = "\\i[" + icon + "]" + name3;
-			} 
-			} else {
-				name3 = name;
-			}
-			var Message = Frashaw.Param.dbM;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				if (messArray[2] == undefined) messArray[2] = "";
-				this.push('addText', name2 + " " + messArray[0] + name3 + messArray[1]);
-			} else {
-				this.push('addText', name2 + " gave the item to " + name3 + "!");
-			}
-			name2 = name3; //Sets the name to the recipient so it looks better
-			}
-		}
-		}
+		//}
 		
 		//Sets arrays for use.
 		var array1 = Frashaw.Param.Id1;
