@@ -59,6 +59,8 @@ Frashaw.IconScroll = Frashaw.IconScroll || {};
 * Note: The States in the Overworld Menu don't shift as I couldn't find a
 * way to passively update them like I could with Battle. Also switching 
 * between things like Fight and Actor commands forces the plugin to run.
+* Also I'm not sure what'll happen if you use a non-base Hud, probably
+* nothing good though.
 * ===Change Log===============================================================
 * Version 1.0 (02/08/23) :
 * -Finished Base Plugin
