@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -228,6 +228,15 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * the true false parameter. You can also customize the message for giving
 * to a specific ally and the entire party, aswell as the name for the party.
 * ===Change Log===============================================================
+* Version 1.1.2 (02/02/23) :
+* -Fixed a bug where Generic messages wouldn't work past array 1 & 2
+*
+* Version 1.1.1 (01/17/23) :
+* -Changed a conditional that was altered post Colored Names rewrite
+* -Uncommented a conditional and slightly tweaked is so that it
+* properly try to use the "give" message on enemy targets
+* -Added a line that sets the party name to the recipient's name
+*
 * Version 1.1 (01/12/23) :
 * -Removed some Compatibility between Colored Names due to a script rewrite
 * that removed some manual code
@@ -338,7 +347,7 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 		//Makes the additional battlelog message if wanted
 		var booll = Frashaw.Param.dbB;
 		//Will not run code if scope is targeted at an enemy/ies
-		//if (!$dataItems[item.id].scope == 1 && !$dataItems[item.id].scope == 2 && !$dataItems[item.id].scope == 3 || !$dataItems[item.id].scope == 4 && !$dataItems[item.id].scope == 5 && !$dataItems[item.id].scope == 6){
+		if ($dataItems[item.id].scope != 1 && $dataItems[item.id].scope != 2 && $dataItems[item.id].scope != 3 && $dataItems[item.id].scope != 4 && $dataItems[item.id].scope != 5 && $dataItems[item.id].scope != 6){
 			if (booll){
 			//Checks to see if the scope if all allies, dead or alive. Doesn't play the
 			//the message if the scope is alive members and only one is alive.
@@ -358,10 +367,11 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 					//message if the paramter one is blank or null
 					this.push('addText', subject.name() + " gave the item to " + name3 + "!");
 				}
+				name2 = name3;
 			} else {
 				var old = Object.entries(BattleManager._targets); //Gets the current target's values
 				var yes = old["0"][1]._name;//Get's the current target's name
-				if (yes != subject.name()){ //Checks to see if the target is different from the user by comparing names
+				if (yes != subject._name){ //Checks to see if the target is different from the user by comparing names
 				var id = old["0"][1]._actorId;//Checks actor Id, because it works
 				var Message = Frashaw.Param.dbM;
 				if (Message != null && Message != ""){
@@ -376,19 +386,19 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 				}
 			}
 			}
-		//}
+		}
 		
 		//Sets arrays for use.
 		var array1 = Frashaw.Param.Id1;
 		var array2 = Frashaw.Param.Id2;
-		var array3 = Frashaw.Param.Id1;
-		var array4 = Frashaw.Param.Id1;
-		var array5 = Frashaw.Param.Id1;
-		var array6 = Frashaw.Param.Id1;
-		var array7 = Frashaw.Param.Id1;
-		var array8 = Frashaw.Param.Id1;
-		var array9 = Frashaw.Param.Id1;
-		var array10 = Frashaw.Param.Id1;
+		var array3 = Frashaw.Param.Id3;
+		var array4 = Frashaw.Param.Id4;
+		var array5 = Frashaw.Param.Id5;
+		var array6 = Frashaw.Param.Id6;
+		var array7 = Frashaw.Param.Id7;
+		var array8 = Frashaw.Param.Id8;
+		var array9 = Frashaw.Param.Id9;
+		var array10 = Frashaw.Param.Id10;
 		var id = item.id;
 		if (item.meta.customMessage != null){
 		//Will override all other messages if a custom one in the tags.
