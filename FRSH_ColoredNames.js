@@ -43,6 +43,9 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 * this is your case, I'd recommend setting it lower as that seems to have the
 * last one to overwrite it to be the one that overwrites it.
 * ===Change Log===============================================================
+* Version 1.0 (01/09/23):
+* -Added a method to properly draw character's name in shop menu
+*
 * Version 1.1.0 (01/11/23):
 * -Rewrote method to get the Actor's Name, which removes many manual 
 * applications and allows more compatibility for more plugins
@@ -55,7 +58,7 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 * -Add Compatiblity with Custom Item Messages
 * -Added Battlelog messages being colored
 * 
-* Version 1.0 (01/09/23) :
+* Version 1.0 (01/09/23):
 * -Finished Base Plugin
 * ============================================================================
 */
@@ -272,7 +275,29 @@ Frashaw.DBLMessage = Frashaw.CName || {};
             $gameMessage.add(TextManager.obtainItem.format(makeItemName(item)));
         });
     }
-};
+	};
+
+	Window_ShopStatus.prototype.drawActorEquipInfo = function(x, y, actor) {
+		var enabled = actor.canEquip(this._item);
+		this.changePaintOpacity(enabled);
+		this.resetTextColor();
+		var id = actor.actorId(); 
+		if ($dataActors[id].meta.nameColor != null){
+			this.changeTextColor(this.textColor($dataActors[id].meta.nameColor))
+		}
+		if ($dataActors[id].meta.iconNum != null){
+			this.drawText(actor._name, x+32, y, 168);
+			this.drawIcon($dataActors[id].meta.iconNum, x, y);
+		} else {
+			this.drawText(actor._name, x, y, 168);
+		}
+		var item1 = this.currentEquippedItem(actor, this._item.etypeId);
+		if (enabled) {
+			this.drawActorParamChange(x, y, actor, item1);
+		}
+		this.drawItemName(item1, x, y + this.lineHeight());
+		this.changePaintOpacity(true);
+	};
 })();
 
 //=============================================================================
