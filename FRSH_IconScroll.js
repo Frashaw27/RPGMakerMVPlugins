@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_IconScroll
 // FRSH_IconScroll.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -62,7 +62,11 @@ Frashaw.IconScroll = Frashaw.IconScroll || {};
 * Also I'm not sure what'll happen if you use a non-base Hud, probably
 * nothing good though.
 * ===Change Log===============================================================
-* Version 1.0 (02/08/23) :
+* Version 1.0.1 (02/12/23):
+* -Fixed a crash that would occur if the game was running, but not loaded
+* (EX: looking a Dev Tools and pressing f5 with game minimized)
+*
+* Version 1.0.0 (02/08/23):
 * -Finished Base Plugin
 * ============================================================================
 */
@@ -74,8 +78,15 @@ Frashaw.Param.BMax = Parameters.battleMax;
 Frashaw.Param.MMax = Parameters.menuMax;
 Frashaw.Param.Sec = Parameters.seconds;
 
-//Sets up the constatnly repeating function to both turn on and to always run
-var repeater = setInterval(repeated, Frashaw.Param.Sec*1000);
+//sets up the variable to be global
+var reapeater
+
+//Sets up the constatnly repeating function to boteh turn on and to always run
+frsh_start = Scene_Boot.prototype.start
+Scene_Boot.prototype.start = function() {
+    frsh_start.call(this);
+	repeater = setInterval(repeated, Frashaw.Param.Sec*1000);
+};
 
 //Said function that's repeating
 function repeated() {
