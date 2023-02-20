@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.1.1
+// Version: 1.1.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -228,6 +228,9 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * the true false parameter. You can also customize the message for giving
 * to a specific ally and the entire party, aswell as the name for the party.
 * ===Change Log===============================================================
+* Version 1.1.3 (02/19/23) :
+* -Changed some syntax
+*
 * Version 1.1.2 (02/02/23) :
 * -Fixed a bug where Generic messages wouldn't work past array 1 & 2
 *
@@ -369,18 +372,19 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 				}
 				name2 = name3;
 			} else {
-				var old = Object.entries(BattleManager._targets); //Gets the current target's values
-				var yes = old["0"][1]._name;//Get's the current target's name
-				if (yes != subject._name){ //Checks to see if the target is different from the user by comparing names
-				var id = old["0"][1]._actorId;//Checks actor Id, because it works
+				var yes = $gameParty.members()[BattleManager._action._targetIndex];//Get's the current target's name
+				console.log(subject._name);
+				console.log(yes._name);
+				if (yes._name != subject._name){ //Checks to see if the target is different from the user by comparing names
+				var id = yes._actorId;//Checks actor Id, because it works
 				var Message = Frashaw.Param.dbM;
 				if (Message != null && Message != ""){
 					messArray = Message.split('%');
 					if (messArray[1] == undefined) messArray[1] = "";
 					if (messArray[2] == undefined) messArray[2] = "";
-					this.push('addText', subject.name() + " " + messArray[0] + $gameActors.actor(id).name() + messArray[1]);
+					this.push('addText', subject.name() + " " + messArray[0] + yes.name() + messArray[1]);
 				} else {
-					this.push('addText', subject.name() + " gave the item to " + $gameActors.actor(id).name() + "!");
+					this.push('addText', subject.name() + " gave the item to " + yes.name() + "!");
 				}
 				name2 = $gameActors.actor(id).name(); //Sets the name to the recipient so it looks better
 				}
