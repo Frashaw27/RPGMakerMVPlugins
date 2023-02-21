@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.0.0
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1143,6 +1143,10 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.1 (02/21/23) :
+* -Add a method for the consequence to apply to all allies if item targets
+* all allies
+*
 * Version 1.0 (02/19/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -1417,56 +1421,110 @@ Game_Battler.prototype.performActionEnd = function() {
 	var actor = eval(text);
 	//Checks to see if switches are on, target is ally, and if the last action was an item or not
 	if (bool && actor && itemId != 0){
-		//Gets target id how specified use
-		var aId = BattleManager._action.subject()._lastTargetIndex;
-		//Sets up target proper
-		var target = $gameParty.members()[aId];
 		var id = itemId;
-		var loop = 0;
-		while(loop != concLoopLength){
-			//Gets the name of the consequence
-			var text = "var peas = concequence" + concLoopArray[loop] + ";";
-			eval(text);
-			//Checks if the consequence is a tag on the item to use
-			var bool = eval("$dataItems[id].meta." + peas + " != null");
-			if (bool){
-				//adds the requisite points on use
-				var text = "target._" + peas + "+= Number($dataItems[id].meta." + peas + ");";
+		if (BattleManager._action.isForAll() == false){
+			//Gets target id how specified use
+			var aId = BattleManager._action.subject()._lastTargetIndex;
+			//Sets up target proper
+			var target = $gameParty.members()[aId];
+			var loop = 0;
+			while(loop != concLoopLength){
+				//Gets the name of the consequence
+				var text = "var peas = concequence" + concLoopArray[loop] + ";";
 				eval(text);
-				//Sets up limit variable for later comparison
-				var text = "var limit = target._" + peas + ";";
-				eval(text);
-				//Gets max variable for comparison
-				var text = "var max = max" + concLoopArray[loop] + ";";
-				eval(text);
-				//Checks if the amount the actor has is over the max amount
-				if (limit > max){
-					//checks to see if a message needs to be played
-					var text = ("message" + concLoopArray[loop] + " != ''");
-					var bool = eval(text);
-					if (bool){
-						//adds message if requested
-						var text = "var tex = message" + concLoopArray[loop] + ";";
-						eval(text);
-						var text = "SceneManager._scene._logWindow.addText(" + tex + ");" 
-						eval(text);
-						//Adds the eval for the effect
-						var text = "evaluation" + concLoopArray[loop];
-						var peanut = "eval(" + text + ")";
-						eval(peanut);
-						//Adds the wait in the battle log
-						SceneManager._scene._logWindow.waitt();
-						//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
-						setTimeout(clear,1000);
-					} else {
-						//Sets up the eval for use
-						var text = "evaluation" + concLoopArray[loop];
-						var peanut = "eval(" + text + ")";
-						eval(peanut);
+				//Checks if the consequence is a tag on the item to use
+				var bool = eval("$dataItems[id].meta." + peas + " != null");
+				if (bool){
+					//adds the requisite points on use
+					var text = "target._" + peas + "+= Number($dataItems[id].meta." + peas + ");";
+					eval(text);
+					//Sets up limit variable for later comparison
+					var text = "var limit = target._" + peas + ";";
+					eval(text);
+					//Gets max variable for comparison
+					var text = "var max = max" + concLoopArray[loop] + ";";
+					eval(text);
+					//Checks if the amount the actor has is over the max amount
+					if (limit > max){
+						//checks to see if a message needs to be played
+						var text = ("message" + concLoopArray[loop] + " != ''");
+						var bool = eval(text);
+						if (bool){
+							//adds message if requested
+							var text = "var tex = message" + concLoopArray[loop] + ";";
+							eval(text);
+							var text = "SceneManager._scene._logWindow.addText(" + tex + ");" 
+							eval(text);
+							//Adds the eval for the effect
+							var text = "evaluation" + concLoopArray[loop];
+							var peanut = "eval(" + text + ")";
+							eval(peanut);
+							//Adds the wait in the battle log
+							SceneManager._scene._logWindow.waitt();
+							//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
+							setTimeout(clear,1000);
+						} else {
+							//Sets up the eval for use
+							var text = "evaluation" + concLoopArray[loop];
+							var peanut = "eval(" + text + ")";
+							eval(peanut);
+						}
 					}
 				}
+				loop++;
 			}
-			loop++;
+		} else {
+			//The same thing as above, just added a loop to loop through all the members in the current active party
+			var pool = 0;
+			while (pool != $gameParty.members().length){
+				var target = $gameParty.members()[pool];
+				var loop = 0;
+				while(loop != concLoopLength){
+					var text = "var peas = concequence" + concLoopArray[loop] + ";";
+					eval(text);
+					//Checks if the consequence is a tag on the item to use
+					var bool = eval("$dataItems[id].meta." + peas + " != null");
+					if (bool){
+						//adds the requisite points on use
+						var text = "target._" + peas + "+= Number($dataItems[id].meta." + peas + ");";
+						eval(text);
+						//Sets up limit variable for later comparison
+						var text = "var limit = target._" + peas + ";";
+						eval(text);
+						//Gets max variable for comparison
+						var text = "var max = max" + concLoopArray[loop] + ";";
+						eval(text);
+						//Checks if the amount the actor has is over the max amount
+						if (limit > max){
+							//checks to see if a message needs to be played
+							var text = ("message" + concLoopArray[loop] + " != ''");
+							var bool = eval(text);
+							if (bool){
+								//adds message if requested
+								var text = "var tex = message" + concLoopArray[loop] + ";";
+								eval(text);
+								var text = "SceneManager._scene._logWindow.addText(" + tex + ");" 
+								eval(text);
+								//Adds the eval for the effect
+								var text = "evaluation" + concLoopArray[loop];
+								var peanut = "eval(" + text + ")";
+								eval(peanut);
+								//Adds the wait in the battle log
+								SceneManager._scene._logWindow.waitt();
+								//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
+								setTimeout(clear,1000);
+							} else {
+								//Sets up the eval for use
+								var text = "evaluation" + concLoopArray[loop];
+								var peanut = "eval(" + text + ")";
+								eval(peanut);
+							}
+						}
+					}
+					loop++;
+				}
+				pool++;
+			}
 		}
 	}
 };
@@ -1557,7 +1615,7 @@ Window_BattleStatus.prototype.drawGaugeAreaWithTp = function(rect, actor) {
     var hpW = parseInt(totalArea * 108 / 300);
     var otW = parseInt(totalArea * 96 / 300);
 	//An array to call the various x values for each bar
-	var xs = ["rect.x + 0", "rect.x + hpW", "rect.x + hpW + otW + 20"]
+	var xs = ["rect.x + 0", "rect.x + hpW + 11.5", "rect.x + hpW + otW + 30"]
 	//Checks to see if the required switches are on
 	var switchBool = switchAllowel();
     if (switchBool) {
