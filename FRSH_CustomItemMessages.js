@@ -373,8 +373,6 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 				name2 = name3;
 			} else {
 				var yes = $gameParty.members()[BattleManager._action._targetIndex];//Get's the current target's name
-				console.log(subject._name);
-				console.log(yes._name);
 				if (yes._name != subject._name){ //Checks to see if the target is different from the user by comparing names
 				var id = yes._actorId;//Checks actor Id, because it works
 				var Message = Frashaw.Param.dbM;
