@@ -1,14 +1,14 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.1.0
+// Version: 1.1.2
 //=============================================================================
 
 var Imported = Imported || {};
 Imported.CName = true;
 
 var Frashaw = Frashaw || {};
-Frashaw.DBLMessage = Frashaw.CName || {};
+Frashaw.CName = Frashaw.CName || {};
 
 /*:
 * @plugindesc Allows the ability to color Thing's Names w/o Text Codes.
@@ -43,7 +43,10 @@ Frashaw.DBLMessage = Frashaw.CName || {};
 * this is your case, I'd recommend setting it lower as that seems to have the
 * last one to overwrite it to be the one that overwrites it.
 * ===Change Log===============================================================
-* Version 1.0 (01/09/23):
+* Version 1.1.2 (01/09/23):
+* -Changed syntax
+*
+* Version 1.1.1 (01/09/23):
 * -Added a method to properly draw character's name in shop menu
 *
 * Version 1.1.0 (01/11/23):
