@@ -154,6 +154,11 @@ Game_Battler.prototype.removeState = function(stateId) {
 						this.revive();
 					}
 					this.eraseState(stateId);
+					//Yanfly Buffs and States Core compability
+					if (Imported.YEP_BuffsStatesCore){
+						this.removeStateEffects(stateId);
+						this.clearStateOrigin(stateId);
+					}
 					this.refresh();
 					this._result.pushRemovedState(stateId);
 				}
@@ -166,6 +171,11 @@ Game_Battler.prototype.removeState = function(stateId) {
 					this.revive();
 				}
 				this.eraseState(stateId);
+				//Yanfly Buffs and States Core compability
+				if (Imported.YEP_BuffsStatesCore){
+					this.removeStateEffects(stateId);
+					this.clearStateOrigin(stateId);
+				}
 				this.refresh();
 				this._result.pushRemovedState(stateId);
 			}
@@ -177,6 +187,11 @@ Game_Battler.prototype.removeState = function(stateId) {
 				this.revive();
 			}
 			this.eraseState(stateId);
+			//Yanfly Buffs and States Core compability
+			if (Imported.YEP_BuffsStatesCore){
+				this.removeStateEffects(stateId);
+				this.clearStateOrigin(stateId);
+			}
 			this.refresh();
 			this._result.pushRemovedState(stateId);
 		}
@@ -190,6 +205,11 @@ Game_Battler.prototype.removeStateSilent = function(stateId) {
             this.revive();
         }
         this.eraseState(stateId);
+		//Yanfly Buffs and States Core compability
+		if (Imported.YEP_BuffsStatesCore){
+			this.removeStateEffects(stateId);
+			this.clearStateOrigin(stateId);
+		}
         this.refresh();
     }
 };
