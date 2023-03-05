@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_StackableStates
 // FRSH_StackableStates.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -43,6 +43,9 @@ Frashaw.StackStates = Frashaw.StackStates || {};
 * Removing a state with a progression line in it will also remove all states
 * within that line to be removed, but this can be altered to just be itself.
 * ===Change Log===============================================================
+* Version 1.0.1 (03/04/23) :
+* -Added Compatibilty to Yanfly Buff and State Core
+*
 * Version 1.0 (03/03/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -115,6 +118,13 @@ Game_Battler.prototype.addState = function(stateId) {
 			this._result.pushAddedState(stateId);
 		}
 	}
+	//Yanfly Buffs and States Core compability
+	if (Imported.YEP_BuffsStatesCore){
+		if (this.isStateAddable(stateId)) {
+		  this.setStateOrigin(stateId);
+		  this.addStateEffects(stateId);
+		}
+	};
 };
 
 Game_Battler.prototype.removeState = function(stateId) {
