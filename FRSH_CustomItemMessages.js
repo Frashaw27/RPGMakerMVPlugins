@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.1.3
+// Version: 1.1.5
 //=============================================================================
 
 var Imported = Imported || {};
@@ -228,6 +228,13 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * the true false parameter. You can also customize the message for giving
 * to a specific ally and the entire party, aswell as the name for the party.
 * ===Change Log===============================================================
+* Version 1.1.5 (03/06/23) :
+* -Fixed a crash that happened when using an all allies item when all allies
+* were dead
+*
+* Version 1.1.4 (02/23/23) :
+* -Fixed a crash that happened when using an item that targeted user
+*
 * Version 1.1.3 (02/19/23) :
 * -Changed some syntax
 *
@@ -350,7 +357,7 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 		//Makes the additional battlelog message if wanted
 		var booll = Frashaw.Param.dbB;
 		//Will not run code if scope is targeted at an enemy/ies
-		if ($dataItems[item.id].scope != 1 && $dataItems[item.id].scope != 2 && $dataItems[item.id].scope != 3 && $dataItems[item.id].scope != 4 && $dataItems[item.id].scope != 5 && $dataItems[item.id].scope != 6){
+		if ($dataItems[item.id].scope != 1 && $dataItems[item.id].scope != 2 && $dataItems[item.id].scope != 3 && $dataItems[item.id].scope != 4 && $dataItems[item.id].scope != 5 && $dataItems[item.id].scope != 6 && $dataItems[item.id].scope != 11){
 			if (booll){
 			//Checks to see if the scope if all allies, dead or alive. Doesn't play the
 			//the message if the scope is alive members and only one is alive.
@@ -372,19 +379,21 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 				}
 				name2 = name3;
 			} else {
-				var yes = $gameParty.members()[BattleManager._action._targetIndex];//Get's the current target's name
-				if (yes._name != subject._name){ //Checks to see if the target is different from the user by comparing names
-				var id = yes._actorId;//Checks actor Id, because it works
-				var Message = Frashaw.Param.dbM;
-				if (Message != null && Message != ""){
-					messArray = Message.split('%');
-					if (messArray[1] == undefined) messArray[1] = "";
-					if (messArray[2] == undefined) messArray[2] = "";
-					this.push('addText', subject.name() + " " + messArray[0] + yes.name() + messArray[1]);
-				} else {
-					this.push('addText', subject.name() + " gave the item to " + yes.name() + "!");
-				}
-				name2 = $gameActors.actor(id).name(); //Sets the name to the recipient so it looks better
+				if ($gameParty.aliveMembers().length > 1){
+					var yes = $gameParty.members()[BattleManager._action._targetIndex];//Get's the current target's name
+					if (yes._name != subject._name){ //Checks to see if the target is different from the user by comparing names
+					var id = yes._actorId;//Checks actor Id, because it works
+					var Message = Frashaw.Param.dbM;
+					if (Message != null && Message != ""){
+						messArray = Message.split('%');
+						if (messArray[1] == undefined) messArray[1] = "";
+						if (messArray[2] == undefined) messArray[2] = "";
+						this.push('addText', subject.name() + " " + messArray[0] + yes.name() + messArray[1]);
+					} else {
+						this.push('addText', subject.name() + " gave the item to " + yes.name() + "!");
+					}
+					name2 = $gameActors.actor(id).name(); //Sets the name to the recipient so it looks better
+					}
 				}
 			}
 			}
