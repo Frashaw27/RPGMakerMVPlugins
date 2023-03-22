@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.0.0
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -104,18 +104,25 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * @default
 *
 * @param bMax
-* @text Enable Going Below Inital?
-* @parent ---Give Message----
+* @text Enable Below Inital?
+* @parent ---Options----------------
 * @type boolean
 * @desc Click True or False if you want to enable any decreased Max Tp to go below the inital max the subject had.
 * @default true
 *
 * @param atkTp
 * @text Enable Global Tp on Hit?
-* @parent ---Give Message----
+* @parent ---Options----------------
 * @type boolean
 * @desc Click True or False if you want to enable any attack getting the attack Tp boosts.
 * @default false
+*
+* @param addTcr
+* @text Enable give Tp using TCR?
+* @parent ---Options----------------
+* @type boolean
+* @desc Click True or False if you want to skill/item additional effect to use TCR in it's calculation.
+* @default true
 *
 * @help
 * ==Notetags==================================================================
@@ -141,9 +148,14 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * and the succession line for those checks are:
 * Actor/Enemy -> Weapon -> Armor
 * Also note that the Tp Gain from attacks only works if the attack itself
-* already gave Tp on use to begin with. YOu can override that with the
+* already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.0 (03/22/23) :
+* -Fixed some syntax
+* -Added Option to gain more Tp from the gain Tp command with a higher Tp
+* charge rate
+*
 * Version 1.0 (03/17/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -171,6 +183,11 @@ if (Parameters.atkTp === "true"){
 	Frashaw.Param.GlobalAttackTp = true;
 } else {
 	Frashaw.Param.GlobalAttackTp = false;
+}
+if (Parameters.addTcr === "true"){
+	Frashaw.Param.addTCR = true;
+} else {
+	Frashaw.Param.addTCR = false;
 }
 
 //Sets the users intial tp
@@ -475,6 +492,17 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
     this.subject().gainSilentTp(value);
 };
 
+//The function that plays when a skill/item give tp via an additional effect
+Game_Action.prototype.itemEffectGainTp = function(target, effect) {
+    var value = Math.floor(effect.value1);
+	if (Frashaw.Param.addTCR) {
+	value *= target.tcr;
+	}
+    if (value !== 0) {
+        target.gainTp(value);
+        this.makeSuccess(target);
+    }
+};
 
 //=============================================================================
 // End of File
