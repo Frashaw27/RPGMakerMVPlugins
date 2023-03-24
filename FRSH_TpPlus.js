@@ -236,7 +236,7 @@ Game_BattlerBase.prototype.maxTp = function() {
 		//Checks to see if any of the modifiers are in the user's states
 		var stateArray = this._states;
 		loop = 0;
-		while (loop != stateArray.length){
+		while (loop != stateArray.length && stateArray.length != 0){
 			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
 				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
 			}
@@ -267,7 +267,7 @@ Game_BattlerBase.prototype.maxTp = function() {
 		//Checks to see if any of the modifiers are in the user's states
 		var stateArray = this._states;
 		loop = 0;
-		while (loop != stateArray.length){
+		while (loop != stateArray.length && stateArray.length != 0){
 			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
 				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
 			}
@@ -470,7 +470,7 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 		//Checks to see if any of the modifiers are in the user's states
 		var stateArray = this._states;
 		loop = 0;
-		while (loop != stateArray.length){
+		while (loop != stateArray.length && stateArray.length != 0){
 			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
 				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
 			}
@@ -504,7 +504,7 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 		//Checks to see if any of the modifiers are in the user's states
 		var stateArray = this._states;
 		loop = 0;
-		while (loop != stateArray.length){
+		while (loop != stateArray.length && stateArray.length != 0){
 			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
 				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
 			}
@@ -574,9 +574,9 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 				loop++;
 			}
 			//Checks to see if any of the modifiers are in the user's states
-			var stateArray = this._states;
+			var stateArray = user._states;
 			loop = 0;
-			while (loop != stateArray.length){
+			while (loop != stateArray.length && stateArray.length != 0){
 				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
 					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
 				}
@@ -587,14 +587,14 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			}
 			//Does the same thing as above, but for passives, if the appropriate plugin is added
 			if (Imported.YEP_AutoPassiveStates){
-				var passiveArray = this._passiveStatesRaw;
+				var passiveArray = user._passiveStatesRaw;
 				loop = 0;
 				while (loop != passiveArray.length){
-					if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
-					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+					if ($dataStates[passiveArray[loop]].meta.atkTpBonus != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
 					}
-					if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
-						max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+					if ($dataStates[(passiveArray[loop])].meta.atkTpMult != null){
+						max += Number($dataStates[(passiveArray[loop])].meta.atkTpMult);
 					}
 					loop++;
 				}
@@ -608,9 +608,9 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 				value *= Number($dataEnemies[user.enemyId()].meta.atkTpMult)
 			}
 			//Checks to see if any of the modifiers are in the user's states
-			var stateArray = this._states;
+			var stateArray = user._states;
 			loop = 0;
-			while (loop != stateArray.length){
+			while (loop != stateArray.length && stateArray.length != 0){
 				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
 					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
 				}
@@ -621,14 +621,14 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			}
 			//Does the same thing as above, but for passives, if the appropriate plugin is added
 			if (Imported.YEP_AutoPassiveStates){
-				var passiveArray = this._passiveStatesRaw;
+				var passiveArray = user._passiveStatesRaw;
 				loop = 0;
 				while (loop != passiveArray.length){
-					if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
-						max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+					if ($dataStates[(passiveArray[loop])].meta.atkTpBonus != null){
+						max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
 					}
-					if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
-						max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+					if ($dataStates[(passiveArray[loop])].meta.atkTpMult != null){
+						max += Number($dataStates[(passiveArray[loop])].meta.atkTpMult);
 					}
 					loop++;
 				}
