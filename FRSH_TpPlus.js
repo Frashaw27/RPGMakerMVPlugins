@@ -151,7 +151,11 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
-* Version 1.0 (03/22/23) :
+* Version 1.1.0 (03/24/23) :
+* -Added checks for states of the user and passive states if Yanfly Auto
+* Passive States is on
+*
+* Version 1.0.1 (03/22/23) :
 * -Fixed some syntax
 * -Added Option to gain more Tp from the gain Tp command with a higher Tp
 * charge rate
@@ -229,6 +233,26 @@ Game_BattlerBase.prototype.maxTp = function() {
 			}
 			loop++;
 		}
+		//Checks to see if any of the modifiers are in the user's states
+		var stateArray = this._states;
+		loop = 0;
+		while (loop != stateArray.length){
+			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
+				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
+			}
+			loop++;
+		}
+		//Does the same thing as above, but for passives, if the appropriate plugin is added
+		if (Imported.YEP_AutoPassiveStates){
+			var passiveArray = this._passiveStatesRaw;
+			loop = 0;
+			while (loop != passiveArray.length){
+				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
+				}
+				loop++;
+			}
+		}
 		//Checks to see if the user's current max tp is below the Tp that is originally maxed at
 		if (Frashaw.Param.BelowMax == false && max < Frashaw.Param.ActorMaxTp){
 			//Reverts back the Tp to inital Tp Max if the condition above is true and it falls below that value
@@ -239,6 +263,26 @@ Game_BattlerBase.prototype.maxTp = function() {
 		max = Frashaw.Param.EnemyMaxTp;
 		if ($dataEnemies[this.enemyId()].meta.maxTpBonus != null){
 			max += Number($dataActors[this.actorId()].meta.maxTpBonus)
+		}
+		//Checks to see if any of the modifiers are in the user's states
+		var stateArray = this._states;
+		loop = 0;
+		while (loop != stateArray.length){
+			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
+				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
+			}
+			loop++;
+		}
+		//Does the same thing as above, but for passives, if the appropriate plugin is added
+		if (Imported.YEP_AutoPassiveStates){
+			var passiveArray = this._passiveStatesRaw;
+			loop = 0;
+			while (loop != passiveArray.length){
+				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
+				}
+				loop++;
+			}
 		}
 		if (Frashaw.Param.BelowMax == false && max < Frashaw.Param.EnemyMaxTp){
 			max = Frashaw.Param.EnemyMaxTp;
@@ -423,6 +467,32 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 			}
 			loop++;
 		}
+		//Checks to see if any of the modifiers are in the user's states
+		var stateArray = this._states;
+		loop = 0;
+		while (loop != stateArray.length){
+			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
+				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+			}
+			if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
+				max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+			}
+			loop++;
+		}
+		//Does the same thing as above, but for passives, if the appropriate plugin is added
+		if (Imported.YEP_AutoPassiveStates){
+			var passiveArray = this._passiveStatesRaw;
+			loop = 0;
+			while (loop != passiveArray.length){
+				if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
+					max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+				}
+				if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
+					max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+				}
+				loop++;
+			}
+		}
 	} else if (this.isEnemy()){
 		//Does the same thing as above but for enemies
 		if ($dataEnemies[this.enemyId()].meta.dmgTpBonus != null){
@@ -430,6 +500,32 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 		}
 		if ($dataEnemies[this.enemyId()].meta.dmgTpMult != null){
 			value *= Number($dataEnemies[this.enemyId()].meta.dmgTpMult)
+		}
+		//Checks to see if any of the modifiers are in the user's states
+		var stateArray = this._states;
+		loop = 0;
+		while (loop != stateArray.length){
+			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
+				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+			}
+			if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
+				max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+			}
+			loop++;
+		}
+		//Does the same thing as above, but for passives, if the appropriate plugin is added
+		if (Imported.YEP_AutoPassiveStates){
+			var passiveArray = this._passiveStatesRaw;
+			loop = 0;
+			while (loop != passiveArray.length){
+				if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
+					max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+				}
+				if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
+					max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+				}
+				loop++;
+			}
 		}
 	}
 	value = Math.round(value);
@@ -477,6 +573,32 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 				}
 				loop++;
 			}
+			//Checks to see if any of the modifiers are in the user's states
+			var stateArray = this._states;
+			loop = 0;
+			while (loop != stateArray.length){
+				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
+					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+				}
+				if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
+					max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+				}
+				loop++;
+			}
+			//Does the same thing as above, but for passives, if the appropriate plugin is added
+			if (Imported.YEP_AutoPassiveStates){
+				var passiveArray = this._passiveStatesRaw;
+				loop = 0;
+				while (loop != passiveArray.length){
+					if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
+					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+					}
+					if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
+						max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+					}
+					loop++;
+				}
+			}
 		} else if (user.isEnemy()){
 			//Does the same thing as above but for enemies
 			if ($dataEnemies[user.enemyId()].meta.atkTpBonus != null){
@@ -484,6 +606,32 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			}
 			if ($dataEnemies[user.enemyId()].meta.atkTpMult != null){
 				value *= Number($dataEnemies[user.enemyId()].meta.atkTpMult)
+			}
+			//Checks to see if any of the modifiers are in the user's states
+			var stateArray = this._states;
+			loop = 0;
+			while (loop != stateArray.length){
+				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
+					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+				}
+				if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
+					max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+				}
+				loop++;
+			}
+			//Does the same thing as above, but for passives, if the appropriate plugin is added
+			if (Imported.YEP_AutoPassiveStates){
+				var passiveArray = this._passiveStatesRaw;
+				loop = 0;
+				while (loop != passiveArray.length){
+					if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
+						max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
+					}
+					if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
+						max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
+					}
+					loop++;
+				}
 			}
 		}
 	}
