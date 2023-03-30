@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -151,6 +151,9 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.1.1 (03/30/23) :
+* -Various syntax fixes
+*
 * Version 1.1.0 (03/24/23) :
 * -Added checks for states of the user and passive states if Yanfly Auto
 * Passive States is on
@@ -246,7 +249,7 @@ Game_BattlerBase.prototype.maxTp = function() {
 		if (Imported.YEP_AutoPassiveStates){
 			var passiveArray = this._passiveStatesRaw;
 			loop = 0;
-			while (loop != passiveArray.length){
+			while (loop != passiveArray.length && passiveArray.length != 0){
 				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
 					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
 				}
@@ -277,7 +280,7 @@ Game_BattlerBase.prototype.maxTp = function() {
 		if (Imported.YEP_AutoPassiveStates){
 			var passiveArray = this._passiveStatesRaw;
 			loop = 0;
-			while (loop != passiveArray.length){
+			while (loop != passiveArray.length && passiveArray.length != 0){
 				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
 					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
 				}
@@ -483,12 +486,12 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 		if (Imported.YEP_AutoPassiveStates){
 			var passiveArray = this._passiveStatesRaw;
 			loop = 0;
-			while (loop != passiveArray.length){
-				if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
-					max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+			while (loop != passiveArray.length && passiveArray.length != 0){
+				if ($dataStates[(passiveArray[loop])].meta.dmgTpBonus != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpBonus);
 				}
-				if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
-					max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+				if ($dataStates[(passiveArray[loop])].meta.dmgTpMult != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpMult);
 				}
 				loop++;
 			}
@@ -517,12 +520,12 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 		if (Imported.YEP_AutoPassiveStates){
 			var passiveArray = this._passiveStatesRaw;
 			loop = 0;
-			while (loop != passiveArray.length){
-				if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
-					max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
+			while (loop != passiveArray.length && passiveArray.length != 0){
+				if ($dataStates[(passiveArray[loop])].meta.dmgTpBonus != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpBonus);
 				}
-				if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
-					max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
+				if ($dataStates[(passiveArray[loop])].meta.dmgTpMult != null){
+					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpMult);
 				}
 				loop++;
 			}
@@ -589,7 +592,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			if (Imported.YEP_AutoPassiveStates){
 				var passiveArray = user._passiveStatesRaw;
 				loop = 0;
-				while (loop != passiveArray.length){
+				while (loop != passiveArray.length && passiveArray.length != 0){
 					if ($dataStates[passiveArray[loop]].meta.atkTpBonus != null){
 					max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
 					}
@@ -623,7 +626,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			if (Imported.YEP_AutoPassiveStates){
 				var passiveArray = user._passiveStatesRaw;
 				loop = 0;
-				while (loop != passiveArray.length){
+				while (loop != passiveArray.length && passiveArray.length != 0){
 					if ($dataStates[(passiveArray[loop])].meta.atkTpBonus != null){
 						max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
 					}
