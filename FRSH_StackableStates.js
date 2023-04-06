@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_StackableStates
 // FRSH_StackableStates.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -43,6 +43,10 @@ Frashaw.StackStates = Frashaw.StackStates || {};
 * Removing a state with a progression line in it will also remove all states
 * within that line to be removed, but this can be altered to just be itself.
 * ===Change Log===============================================================
+* Version 1.0.2 (04/06/23) :
+* -Fixed Bug that caused Death State Buff and State Core Effects to not
+* work
+*
 * Version 1.0.1 (03/04/23) :
 * -Added Compatibilty to Yanfly Buff and State Core
 *
@@ -84,6 +88,11 @@ Game_Battler.prototype.addState = function(stateId) {
 						//Normal stateAdd code
 						if (!this.isStateAffected(stateId)) {
 							this.addNewState(stateId);
+							//Yanfly Buffs and States Core compability
+							if (Imported.YEP_BuffsStatesCore){
+								this.setStateOrigin(stateId);
+								this.addStateEffects(stateId);
+							};
 							this.refresh();
 						}
 						this.resetStateCounts(stateId);
@@ -112,19 +121,17 @@ Game_Battler.prototype.addState = function(stateId) {
 		if (this.isStateAddable(stateId)) {
 			if (!this.isStateAffected(stateId)) {
 				this.addNewState(stateId);
+				//Yanfly Buffs and States Core compability
+				if (Imported.YEP_BuffsStatesCore){
+					this.setStateOrigin(stateId);
+					this.addStateEffects(stateId);
+				};
 				this.refresh();
 			}
 			this.resetStateCounts(stateId);
 			this._result.pushAddedState(stateId);
 		}
 	}
-	//Yanfly Buffs and States Core compability
-	if (Imported.YEP_BuffsStatesCore){
-		if (this.isStateAddable(stateId)) {
-		  this.setStateOrigin(stateId);
-		  this.addStateEffects(stateId);
-		}
-	};
 };
 
 Game_Battler.prototype.removeState = function(stateId) {
