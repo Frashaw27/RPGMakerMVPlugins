@@ -64,6 +64,9 @@ Frashaw.ACosts = Frashaw.ACosts || {};
 * the actions needed, can't overflow it to use multi action skills after
 * all other actions.
 * ===Change Log===============================================================
+* Version 1.1.1 (04/13/23):
+* -Updated how the action cost is required
+*
 * Version 1.1.0 (03/31/23):
 * -Added Actions Required Display
 *
@@ -233,17 +236,10 @@ Frashaw.Param.fontColor = Number(Parameters.fontColor);
 	};
 	
 	//Determines the requirements for using the actions
+	_frsh_action_cost = Game_BattlerBase.prototype.canPaySkillCost;
 	Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
-		var bool3 = true;
-		//Some Skill Core compatibility
-		if (Imported.YEP_SkillCore) {
-			var cost = this.skillHpCost(skill);
-			if (cost > 0) {
-			bool3 =  eval("this._hp > cost;");
-			}
-		}
 		//Actually checks the # of actions v the # you have
-		var bool2 = true;
+		var bool = true;
 		if ($dataSkills[skill.id].meta.actionCost != null){
 			//Allows the skills to be used after selecting them
 			if (this._actionState == 'inputting'){
@@ -253,14 +249,14 @@ Frashaw.Param.fontColor = Number(Parameters.fontColor);
 				} else {
 				//Checks the number of actions needed to use skills
 					var actionNeed = Number($dataSkills[skill.id].meta.actionCost);
-					bool2 = eval("this._actionInputIndex+actionNeed <= this.numActions()");
+					bool = eval("this._actionInputIndex+actionNeed <= this.numActions()");
 				}
 			} else {
-				bool2 = true;
+				bool = true;
 			}
 		} 
-		var bool = this._tp >= this.skillTpCost(skill) && this._mp >= this.skillMpCost(skill);
-		return bool && bool2 && bool3;
+		if (bool == false) return false;
+		return _frsh_action_cost.call(this,skill);
 	};
 	
 	//Tacks on the action cost display
