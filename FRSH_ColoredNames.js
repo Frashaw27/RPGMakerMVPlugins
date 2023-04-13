@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.1.2
+// Version: 1.1.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -43,6 +43,9 @@ Frashaw.CName = Frashaw.CName || {};
 * this is your case, I'd recommend setting it lower as that seems to have the
 * last one to overwrite it to be the one that overwrites it.
 * ===Change Log===============================================================
+* Version 1.1.3 (04/13/23):
+* -Added compatibility with my Summons script
+*
 * Version 1.1.2 (01/09/23):
 * -Changed syntax
 *
@@ -182,22 +185,33 @@ Frashaw.CName = Frashaw.CName || {};
 	
 	//For drawing the the actors name in most menus
 	Window_Base.prototype.drawActorName = function(actor, x, y, width) {
-	var id = actor.actorId();
-	var icon = 0;
-	var name = actor._name;
-	if ($dataActors[id].meta.nameColor != null){
-		color = parseInt($dataActors[id].meta.nameColor);
-	}
-	if ($dataActors[id].meta.iconNum != null){
-		icon = parseInt($dataActors[id].meta.iconNum);
-	}
-    this.changeTextColor(this.nameHpColor(actor));
-    if (icon != 0){
-		this.drawText(name, x+32, y, width);
-		this.drawIcon(icon, x, y);
-	} else {
-		this.drawText(name, x, y, width);
-	}
+		var id = actor.actorId();
+		var icon = 0;
+		//My Summons Script compatibility
+		if (Imported.Summons){
+			summParameters = PluginManager.parameters('FRSH_Summons');
+			if (actor.summonTurns != null && summParameters.showTurnsActor === "true"){
+				var name = actor.summonTurns + summParameters.connector;
+			} else {
+				var name = "";
+			}
+		} else {
+			var name = ""; 
+		}
+		name += actor._name;
+		if ($dataActors[id].meta.nameColor != null){
+			color = parseInt($dataActors[id].meta.nameColor);
+		}
+		if ($dataActors[id].meta.iconNum != null){
+			icon = parseInt($dataActors[id].meta.iconNum);
+		}
+		this.changeTextColor(this.nameHpColor(actor));
+		if (icon != 0){
+			this.drawText(name, x+32, y, width);
+			this.drawIcon(icon, x, y);
+		} else {
+			this.drawText(name, x, y, width);
+		}
 	};
 	
 	//For making the color change based on how dead the actor is
