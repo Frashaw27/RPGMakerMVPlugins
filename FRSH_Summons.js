@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -148,6 +148,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
 * ===Change Log===============================================================
+* Version 1.0.1 (04/13/23) :
+* -Added in code to deny item use that summon if they don't follow the 
+* conditions
+*
 * Version 1.0 (04/13/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -739,6 +743,24 @@ Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
 	}
 	//Return the normal/other cost evals if this one is true
 	return frsh_summonCost.call(this,skill);
+};
+
+//Literally the same as above but for items
+frsh_itemConditions = Game_BattlerBase.prototype.meetsItemConditions;
+Game_BattlerBase.prototype.meetsItemConditions = function(item) {
+	var id = item.id;
+	if ($dataItems[id].meta.Summon != null){
+		if (summonArray.length == Frashaw.Param.maxSumms && Frashaw.Param.maxSumms != 0){
+			return false;
+		}
+		var array = arrayinator($dataItems[id].meta.Summon);
+		if (array[0] != null && array[0] > 0){
+			if ($gameParty.members().includes($gameActors.actor(array[0]))){
+				return false;
+			}
+		}
+	}
+    return frsh_itemConditions.call(this,item);
 };
 
 //A function to remove a summoned actor upon their death
