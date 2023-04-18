@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.1.1
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -151,6 +151,9 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.2.0 (03/30/23) :
+* -Heavily optimized code
+*
 * Version 1.1.1 (03/30/23) :
 * -Various syntax fixes
 *
@@ -202,6 +205,186 @@ Game_Battler.prototype.initTp = function(tp) {
     this.setTp(tp);
 };
 
+Game_Actor.prototype.getTpStuff = function() {
+	if (!$gameParty.members().includes(this)) return;
+	var id = this.actorId();
+	var labels = ['maxTpBonus','RandTpStart','StaticTpStart','tpBonus','dmgTpBonus','dmgTpMult','atkTpBonus','atkTpMult'];
+	for(var loop = 0; loop != 8; loop++){
+		var text = "$dataActors[id].meta." + labels[loop] + " != null";
+		var bool = eval(text);
+		if (bool){
+			var tex = "this." + labels[loop] + " = " + "$dataActors[id].meta." + labels[loop];
+			eval(tex);
+			var text = "typeof this." + labels[loop] + " != 'boolean'";
+			bool = eval(text);
+			if (bool){
+				var tex = "this." + labels[loop] + " = Number(this." + labels[loop] + ")";
+				eval(tex);
+			}
+		}
+	}
+	var id = this._classId;
+	for(var loop = 0; loop != 8; loop++){
+		var text = "$dataClasses[id].meta." + labels[loop] + " != null";
+		var bool = eval(text);
+		if (bool){
+			var text = "typeof $dataClasses[id].meta." + labels[loop] + " != 'boolean'";
+			var bool = eval(text);
+			if (bool){
+				var tex = "this." + labels[loop] + " != null";
+				bool = eval(tex);
+				if (bool){
+					var tex = "this." + labels[loop] + " += Number($dataClasses[id].meta." + labels[loop] + ")";
+				} else {
+					var tex = "this." + labels[loop] + " = " + "$dataClasses[id].meta." + labels[loop];
+				}
+				eval(tex);
+			} else {
+				var tex = "this." + labels[loop] + " = " + "$dataClasses[id].meta." + labels[loop];
+				eval(tex);
+			}
+		}
+	}
+	for (var i = 0; i != this.equips().length; i++){
+		var equip = this.equips()[i];
+		if (equip == null) continue;
+		var id = equip.id;
+		for(var loop = 0; loop != 8; loop++){
+			if (DataManager.isWeapon(equip)){
+				var text = "$dataWeapons[id].meta." + labels[loop] + " != null";
+				var bool = eval(text);
+				if (bool){
+					var text = "typeof $dataWeapons[id].meta." + labels[loop] + " != 'boolean'";
+					var bool = eval(text);
+					if (bool){
+						var tex = "this." + labels[loop] + " != null";
+						bool = eval(tex);
+						if (bool){
+							var tex = "this." + labels[loop] + " += Number($dataWeapons[id].meta." + labels[loop] + ")";
+						} else {
+							var tex = "this." + labels[loop] + " = " + "$dataWeapons[id].meta." + labels[loop];
+						}
+						eval(tex);
+					} else {
+						var tex = "this." + labels[loop] + " = " + "$dataWeapons[id].meta." + labels[loop];
+						eval(tex);
+					}
+				}
+			} else {
+				var text = "$dataArmors[id].meta." + labels[loop] + " != null";
+				var bool = eval(text);
+				if (bool){
+					var text = "typeof $dataArmors[id].meta." + labels[loop] + " != 'boolean'";
+					var bool = eval(text);
+					if (bool){
+						var tex = "this." + labels[loop] + " != null";
+						bool = eval(tex);
+						if (bool){
+							var tex = "this." + labels[loop] + " += Number($dataArmors[id].meta." + labels[loop] + ")";
+						} else {
+							var tex = "this." + labels[loop] + " = " + "$dataArmors[id].meta." + labels[loop];
+						}
+						eval(tex);
+					} else {
+						var tex = "this." + labels[loop] + " = " + "$dataArmors[id].meta." + labels[loop];
+						eval(tex);
+					}
+				}
+			}
+		}
+	}
+	var stateList = this.states();
+	if (this._passiveStatesRaw != null){
+		stateList =  stateList.concat(this.passiveStates());
+	}
+	for (var i = 0; i != stateList.length; i++){
+		var id = stateList[i].id;
+		for(var loop = 0; loop != 8; loop++){
+			var text = "$dataStates[id].meta." + labels[loop] + " != null";
+			var bool = eval(text);
+			if (bool){
+				var text = "typeof $dataStates[id].meta." + labels[loop] + " != 'boolean'";
+				var bool = eval(text);
+				if (bool){
+					var tex = "this." + labels[loop] + " != null";
+					bool = eval(tex);
+					if (bool){
+						var tex = "this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")";
+					} else {
+						var tex = "this." + labels[loop] + " = " + "$dataStates[id].meta." + labels[loop];
+					}
+					eval(tex);
+				} else {
+					var tex = "this." + labels[loop] + " = " + "$dataStates[id].meta." + labels[loop];
+					eval(tex);
+				}
+			}
+		}
+	}
+};
+
+Game_Enemy.prototype.getTpStuff = function() {
+	var id = this.actorId();
+	var labels = ['maxTpBonus','RandTpStart','StaticTpStart','tpBonus','dmgTpBonus','dmgTpMult','atkTpBonus','atkTpMult'];
+	for(var loop = 0; loop != 8; loop++){
+		var text = "$dataEnemy[id].meta." + labels[loop] + " != null";
+		var bool = eval(text);
+		if (bool){
+			var tex = "this." + labels[loop] + " = " + "$dataEnemy[id].meta." + labels[loop];
+			eval(tex);
+			var text = "typeof this." + labels[loop] + " != 'boolean'";
+			bool = eval(text);
+			if (bool){
+				var tex = "this." + labels[loop] + " = Number(this." + labels[loop] + ")";
+				eval(tex);
+			}
+		}
+	}
+	var stateList = this.states();
+	if (this._passiveStatesRaw != null){
+		stateList =  stateList.concat(this.passiveStates());
+	}
+	for (var i = 0; i != stateList.length; i++){
+		var id = stateList[i].id;
+		for(var loop = 0; loop != 8; loop++){
+			var text = "$dataStates[id].meta." + labels[loop] + " != null";
+			var bool = eval(text);
+			if (bool){
+				var text = "typeof $dataStates[id].meta." + labels[loop] + " != 'boolean'";
+				var bool = eval(text);
+				if (bool){
+					var tex = "this." + labels[loop] + " != null";
+					bool = eval(tex);
+					if (bool){
+						var tex = "this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")";
+					} else {
+						var tex = "this." + labels[loop] + " = " + "$dataStates[id].meta." + labels[loop];
+					}
+					eval(tex);
+				} else {
+					var tex = "this." + labels[loop] + " = " + "$dataStates[id].meta." + labels[loop];
+					eval(tex);
+				}
+			}
+		}
+	}
+}
+
+Game_BattlerBase.prototype.removeTpStuff = function() {
+	var labels = ['maxTpBonus','RandTpStart','StaticTpStart','tpBonus','dmgTpBonus','dmgTpMult','atkTpBonus','atkTpMult'];
+	for(var loop = 0; loop != 8; loop++){
+		var text = "this." + labels[loop] + " = undefined";
+		var bool = eval(text);
+	}
+};
+
+frsh_bbase_refresh_swap = Game_BattlerBase.prototype.refresh
+Game_BattlerBase.prototype.refresh = function(){
+	frsh_bbase_refresh_swap.call(this);
+	this.removeTpStuff();
+	this.getTpStuff();
+}
+
 //Determines how much max Tp the user is going to have
 Game_BattlerBase.prototype.maxTp = function() {
 	//starts off with 0 to initalize
@@ -212,49 +395,8 @@ Game_BattlerBase.prototype.maxTp = function() {
 		//Gets the value for the Actors base Max Tp
 		max = Frashaw.Param.ActorMaxTp;
 		//Checks to see if the Max Tp has been reduced or increased
-		if ($dataActors[this.actorId()].meta.maxTpBonus != null){
-			max += Number($dataActors[this.actorId()].meta.maxTpBonus)
-		}
-		//A loop to check equipment
-		var loop = 0;
-		var array = this.equips()
-		while (loop != array.length){
-			//it there's nothing in the slot, it goes to the next iteration
-			if (array[loop] == null){
-				loop++;
-				continue;
-			//Gets the Max Tp alter number if the weapon has one
-			} else if (DataManager.isWeapon(array[loop])){
-				if ($dataWeapons[(array[loop].id)].meta.maxTpBonus != null){
-					max += Number($dataWeapons[(array[loop].id)].meta.maxTpBonus)
-				}
-			//Gets the Max Tp alter number if the armor has one
-			} else if (DataManager.isArmor(array[loop])){
-				if ($dataArmors[(array[loop].id)].meta.maxTpBonus != null){
-					max += Number($dataArmors[(array[loop].id)].meta.maxTpBonus)
-				}
-			}
-			loop++;
-		}
-		//Checks to see if any of the modifiers are in the user's states
-		var stateArray = this._states;
-		loop = 0;
-		while (loop != stateArray.length && stateArray.length != 0){
-			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
-				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
-			}
-			loop++;
-		}
-		//Does the same thing as above, but for passives, if the appropriate plugin is added
-		if (Imported.YEP_AutoPassiveStates){
-			var passiveArray = this._passiveStatesRaw;
-			loop = 0;
-			while (loop != passiveArray.length && passiveArray.length != 0){
-				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
-				}
-				loop++;
-			}
+		if (this.maxTpBonus != null){
+			max += this.maxTpBonus;
 		}
 		//Checks to see if the user's current max tp is below the Tp that is originally maxed at
 		if (Frashaw.Param.BelowMax == false && max < Frashaw.Param.ActorMaxTp){
@@ -264,28 +406,8 @@ Game_BattlerBase.prototype.maxTp = function() {
 	} else if (this.isEnemy()){
 		//Does the same actions as above, but for enemy (sans the equipment checks)
 		max = Frashaw.Param.EnemyMaxTp;
-		if ($dataEnemies[this.enemyId()].meta.maxTpBonus != null){
-			max += Number($dataActors[this.actorId()].meta.maxTpBonus)
-		}
-		//Checks to see if any of the modifiers are in the user's states
-		var stateArray = this._states;
-		loop = 0;
-		while (loop != stateArray.length && stateArray.length != 0){
-			if ($dataStates[(stateArray[loop])].meta.maxTpBonus != null){
-				max += Number($dataStates[(stateArray[loop])].meta.maxTpBonus);
-			}
-			loop++;
-		}
-		//Does the same thing as above, but for passives, if the appropriate plugin is added
-		if (Imported.YEP_AutoPassiveStates){
-			var passiveArray = this._passiveStatesRaw;
-			loop = 0;
-			while (loop != passiveArray.length && passiveArray.length != 0){
-				if ($dataStates[(passiveArray[loop])].meta.maxTpBonus != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.maxTpBonus);
-				}
-				loop++;
-			}
+		if (this.maxTpBonus != null){
+			max += this.maxTpBonus;
 		}
 		if (Frashaw.Param.BelowMax == false && max < Frashaw.Param.EnemyMaxTp){
 			max = Frashaw.Param.EnemyMaxTp;
@@ -306,48 +428,15 @@ Game_Battler.prototype.onBattleStart = function() {
 	//Sets the tp you start with for later
 	var startTp = 0;
 	if (this.isActor()){
-		//Sets up a loop to check equips to see if they alter how tp starts
-		var loop = 0;
-		var array = this.equips()
 		//Starts undefined so that it doesn't trigger any future checks accidentaly
 		var random = undefined;
 		//Checks to see if the user has an override to use a random Tp value at start
-		if ($dataActors[this.actorId()].meta.RandTpStart != null){
+		if (this.RandTpStart != null){
 			random = 1;
-			//Sets loop variable so that it doesn't run the equipment check
-			loop = array.length;
 		}
 		//Checks to see if the user has an override to use a static Tp value at start and random hasn't already been chosen
-		if ($dataActors[this.actorId()].meta.StaticTpStart != null && random == undefined){
+		if (this.StaticTpStart != null && random == undefined){
 			random = 0;
-			loop = array.length;
-		}
-		while (loop != array.length){
-			if (array[loop] == null){
-				loop++;
-				continue;
-				//Same checks as above, but with weapons
-			} else if (DataManager.isWeapon(array[loop])){
-				if ($dataWeapons[(array[loop].id)].meta.RandTpStart != null){
-					random = 1;
-					break;
-				}
-				if ($dataWeapons[(array[loop].id)].meta.StaticTpStart != null && random == undefined){
-					random = 0;
-					break;
-				}
-				//Same checks as above but for armors
-			} else if (DataManager.isArmor(array[loop])){
-				if ($dataArmors[(array[loop].id)].meta.RandTpStart != null){
-					random = 1;
-					break;
-				}
-				if ($dataArmors[(array[loop].id)].meta.StaticTpStart != null && random == undefined){
-					random = 0;
-					break;
-				}
-			}
-			loop++;
 		}
 		//Will use a static Tp start if the override was set
 		if (random == 0){
@@ -360,63 +449,32 @@ Game_Battler.prototype.onBattleStart = function() {
 				startTp = Frashaw.Param.ActorMinRand
 			}
 		//Will use the static tp start if the start value isn't -1
-		} else if (Frashaw.Param.ActorStart != -1){
-			startTp = Frashaw.Param.ActorStart;
 		} else {
-		//Will use random if the start value is -1
-			startTp = Math.round(Math.random()*Frashaw.Param.ActorMaxRand);
-			if (startTp < Frashaw.Param.ActorMinRand){
-				startTp = Frashaw.Param.ActorMinRand
-			}
+			startTp = Frashaw.Param.ActorStart;
 		}
 		//Gives any inital bonuses
-		if ($dataActors[this.actorId()].meta.tpBonus != null){
-			startTp += Number($dataActors[this.actorId()].meta.tpBonus)
-		}
-		loop = 0;
-		//Gives any bonuses from equipment
-		while (loop != array.length){
-			if (array[loop] == null){
-				loop++;
-				continue;
-			} else if (DataManager.isWeapon(array[loop])){
-				if ($dataWeapons[(array[loop].id)].meta.tpBonus != null){
-					startTp += Number($dataWeapons[(array[loop].id)].meta.tpBonus)
-				}
-			} else if (DataManager.isArmor(array[loop])){
-				if ($dataArmors[(array[loop].id)].meta.tpBonus != null){
-					startTp += Number($dataArmors[(array[loop].id)].meta.tpBonus)
-				}
-			}
-			loop++;
-		}
 	} else if (this.isEnemy()){
 		//Does the same thing as above, but for enemies
 		var random = undefined;
-		if ($dataEnemies[this.enemyId()].meta.RandTpStart != null){
+		if (this.RandTpStart != null){
 			random = 1;
 		}
-		if ($dataEnemies[this.enemyId()].meta.StaticTpStart != null && random == undefined){
+		if (this.StaticTpStart != null && random == undefined){
 			random = 0;
 		}
 		if (random == 0){
 			startTp = Frashaw.Param.EnemyStatic;
-		} else  if (random == 1){
+		} else if (random == 1){
 			startTp = Math.round(Math.random()*Frashaw.Param.EnemyMaxRand);
 			if (startTp < Frashaw.Param.EnemyMinRand){
 				startTp = Frashaw.Param.EnemyMinRand
 			}
-		} else if (Frashaw.Param.EnemyStart != -1){
-			startTp = Frashaw.Param.EnemyStart;
 		} else {
-			startTp = Math.round(Math.random()*Frashaw.Param.EnemyMaxRand);
-			if (startTp < Frashaw.Param.EnemyMinRand){
-				startTp = Frashaw.Param.EnemyMinRand
-			}
+			startTp = Frashaw.Param.EnemyStart;
 		}
-		if ($dataEnemies[this.enemyId()].meta.tpBonus != null){
-			startTp += Number($dataActors[this.actorId()].meta.tpBonus)
-		}
+	}
+	if (this.tpBonus != null){
+		startTp += this.tpBonus;
 	}
 	//Sets inital tp to 0 if it's below that
 	if (startTp < 0){
@@ -437,99 +495,11 @@ Game_Battler.prototype.onBattleStart = function() {
 //Function that regulates how much tp is given when taking damage
 Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
     var value = Math.floor(50 * damageRate * this.tcr);
-	if (this.isActor()){
-		//Checks to see if the actor has a flat bonus to add on to it
-		if ($dataActors[this.actorId()].meta.dmgTpBonus != null){
-			value += Number($dataActors[this.actorId()].meta.dmgTpBonus)
-		}
-		//Checks to see if the actor has a multiplier to add on to it
-		if ($dataActors[this.actorId()].meta.dmgTpMult != null){
-			value *= Number($dataActors[this.actorId()].meta.dmgTpMult)
-		}
-		var loop = 0;
-		var array = this.equips()
-		//Checks all equipment for simular information
-		while (loop != array.length){
-			if (array[loop] == null){
-				loop++;
-				continue;
-			} else if (DataManager.isWeapon(array[loop])){
-				if ($dataWeapons[(array[loop].id)].meta.dmgTpBonus != null){
-					value += Number($dataWeapons[(array[loop].id)].meta.dmgTpBonus)
-				}
-				if ($dataWeapons[(array[loop].id)].meta.dmgTpMult != null){
-					value *= Number($dataWeapons[(array[loop].id)].meta.dmgTpMult)
-				}
-			} else if (DataManager.isArmor(array[loop])){
-				if ($dataArmors[(array[loop].id)].meta.dmgTpBonus != null){
-					value += Number($dataArmors[(array[loop].id)].meta.dmgTpBonus)
-				}
-				if ($dataArmors[(array[loop].id)].meta.dmgTpMult != null){
-					value *= Number($dataArmors[(array[loop].id)].meta.dmgTpMult)
-				}
-			}
-			loop++;
-		}
-		//Checks to see if any of the modifiers are in the user's states
-		var stateArray = this._states;
-		loop = 0;
-		while (loop != stateArray.length && stateArray.length != 0){
-			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
-				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
-			}
-			if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
-				max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
-			}
-			loop++;
-		}
-		//Does the same thing as above, but for passives, if the appropriate plugin is added
-		if (Imported.YEP_AutoPassiveStates){
-			var passiveArray = this._passiveStatesRaw;
-			loop = 0;
-			while (loop != passiveArray.length && passiveArray.length != 0){
-				if ($dataStates[(passiveArray[loop])].meta.dmgTpBonus != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpBonus);
-				}
-				if ($dataStates[(passiveArray[loop])].meta.dmgTpMult != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpMult);
-				}
-				loop++;
-			}
-		}
-	} else if (this.isEnemy()){
-		//Does the same thing as above but for enemies
-		if ($dataEnemies[this.enemyId()].meta.dmgTpBonus != null){
-			value += Number($dataActors[this.actorId()].meta.dmgTpBonus)
-		}
-		if ($dataEnemies[this.enemyId()].meta.dmgTpMult != null){
-			value *= Number($dataEnemies[this.enemyId()].meta.dmgTpMult)
-		}
-		//Checks to see if any of the modifiers are in the user's states
-		var stateArray = this._states;
-		loop = 0;
-		while (loop != stateArray.length && stateArray.length != 0){
-			if ($dataStates[(stateArray[loop])].meta.dmgTpBonus != null){
-				max += Number($dataStates[(stateArray[loop])].meta.dmgTpBonus);
-			}
-			if ($dataStates[(stateArray[loop])].meta.dmgTpMult != null){
-				max += Number($dataStates[(stateArray[loop])].meta.dmgTpMult);
-			}
-			loop++;
-		}
-		//Does the same thing as above, but for passives, if the appropriate plugin is added
-		if (Imported.YEP_AutoPassiveStates){
-			var passiveArray = this._passiveStatesRaw;
-			loop = 0;
-			while (loop != passiveArray.length && passiveArray.length != 0){
-				if ($dataStates[(passiveArray[loop])].meta.dmgTpBonus != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpBonus);
-				}
-				if ($dataStates[(passiveArray[loop])].meta.dmgTpMult != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.dmgTpMult);
-				}
-				loop++;
-			}
-		}
+	if (this.dmgTpBonus != null){
+		value += this.dmgTpBonus;
+	}
+	if (this.dmgTpMult != null){
+		value *= (this.dmgTpMult + 1);
 	}
 	value = Math.round(value);
 	//Gives the tp for the hit
@@ -543,99 +513,11 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 	var user = this.subject();
 	//checks to see if the tpGain from the action is above 0, or the check tto override that is true
 	if (this.item().tpGain > 0 || Frashaw.Param.GlobalAttackTp){
-		if (user.isActor()){
-			//Checks to see if the user has any points to add onto the item use
-			if ($dataActors[user.actorId()].meta.atkTpBonus != null){
-				value += Number($dataActors[user.actorId()].meta.atkTpBonus)
-			}
-			//Checks to see if the points to be added needs to be multiplied
-			if ($dataActors[user.actorId()].meta.atkTpMult != null){
-				value *= Number($dataActors[user.actorId()].meta.atkTpMult)
-			}
-			var loop = 0;
-			var array = user.equips()
-			//Checks the same things, but on equipment 
-			while (loop != array.length){
-				if (array[loop] == null){
-					loop++;
-					continue;
-				} else if (DataManager.isWeapon(array[loop])){
-					if ($dataWeapons[(array[loop].id)].meta.atkTpBonus != null){
-						value += Number($dataWeapons[(array[loop].id)].meta.atkTpBonus)
-					}
-					if ($dataWeapons[(array[loop].id)].meta.atkTpMult != null){
-						value *= Number($dataWeapons[(array[loop].id)].meta.atkTpMult)
-					}
-				} else if (DataManager.isArmor(array[loop])){
-					if ($dataArmors[(array[loop].id)].meta.atkTpBonus != null){
-						value += Number($dataArmors[(array[loop].id)].meta.atkTpBonus)
-					}
-					if ($dataArmors[(array[loop].id)].meta.atkTpMult != null){
-						value *= Number($dataArmors[(array[loop].id)].meta.atkTpMult)
-					}
-				}
-				loop++;
-			}
-			//Checks to see if any of the modifiers are in the user's states
-			var stateArray = user._states;
-			loop = 0;
-			while (loop != stateArray.length && stateArray.length != 0){
-				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
-					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
-				}
-				if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
-					max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
-				}
-				loop++;
-			}
-			//Does the same thing as above, but for passives, if the appropriate plugin is added
-			if (Imported.YEP_AutoPassiveStates){
-				var passiveArray = user._passiveStatesRaw;
-				loop = 0;
-				while (loop != passiveArray.length && passiveArray.length != 0){
-					if ($dataStates[passiveArray[loop]].meta.atkTpBonus != null){
-					max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
-					}
-					if ($dataStates[(passiveArray[loop])].meta.atkTpMult != null){
-						max += Number($dataStates[(passiveArray[loop])].meta.atkTpMult);
-					}
-					loop++;
-				}
-			}
-		} else if (user.isEnemy()){
-			//Does the same thing as above but for enemies
-			if ($dataEnemies[user.enemyId()].meta.atkTpBonus != null){
-				value += Number($dataActors[user.actorId()].meta.atkTpBonus)
-			}
-			if ($dataEnemies[user.enemyId()].meta.atkTpMult != null){
-				value *= Number($dataEnemies[user.enemyId()].meta.atkTpMult)
-			}
-			//Checks to see if any of the modifiers are in the user's states
-			var stateArray = user._states;
-			loop = 0;
-			while (loop != stateArray.length && stateArray.length != 0){
-				if ($dataStates[(stateArray[loop])].meta.atkTpBonus != null){
-					max += Number($dataStates[(stateArray[loop])].meta.atkTpBonus);
-				}
-				if ($dataStates[(stateArray[loop])].meta.atkTpMult != null){
-					max += Number($dataStates[(stateArray[loop])].meta.atkTpMult);
-				}
-				loop++;
-			}
-			//Does the same thing as above, but for passives, if the appropriate plugin is added
-			if (Imported.YEP_AutoPassiveStates){
-				var passiveArray = user._passiveStatesRaw;
-				loop = 0;
-				while (loop != passiveArray.length && passiveArray.length != 0){
-					if ($dataStates[(passiveArray[loop])].meta.atkTpBonus != null){
-						max += Number($dataStates[(passiveArray[loop])].meta.atkTpBonus);
-					}
-					if ($dataStates[(passiveArray[loop])].meta.atkTpMult != null){
-						max += Number($dataStates[(passiveArray[loop])].meta.atkTpMult);
-					}
-					loop++;
-				}
-			}
+		if (this.atkTpBonus != null){
+			value += this.atkTpBonus;
+		}
+		if (this.atkTpMult != null){
+			value *= (this.atkTpMult + 1);
 		}
 	}
 	value = Math.round(value);
