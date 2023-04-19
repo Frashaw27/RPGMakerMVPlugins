@@ -330,7 +330,7 @@ Game_Enemy.prototype.getTpStuff = function() {
 		var text = "$dataEnemies[id].meta." + labels[loop] + " != null";
 		var bool = eval(text);
 		if (bool){
-			var tex = "this." + labels[loop] + " = " + "$dataEnemy[id].meta." + labels[loop];
+			var tex = "this." + labels[loop] + " = " + "$dataEnemies[id].meta." + labels[loop];
 			eval(tex);
 			var text = "typeof this." + labels[loop] + " != 'boolean'";
 			bool = eval(text);
