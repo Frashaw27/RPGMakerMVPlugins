@@ -324,10 +324,10 @@ Game_Actor.prototype.getTpStuff = function() {
 };
 
 Game_Enemy.prototype.getTpStuff = function() {
-	var id = this.actorId();
+	var id = this.enemyId();
 	var labels = ['maxTpBonus','RandTpStart','StaticTpStart','tpBonus','dmgTpBonus','dmgTpMult','atkTpBonus','atkTpMult'];
 	for(var loop = 0; loop != 8; loop++){
-		var text = "$dataEnemy[id].meta." + labels[loop] + " != null";
+		var text = "$dataEnemies[id].meta." + labels[loop] + " != null";
 		var bool = eval(text);
 		if (bool){
 			var tex = "this." + labels[loop] + " = " + "$dataEnemy[id].meta." + labels[loop];
