@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,10 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.1 (04/27/23) :
+* -Added Evals to make the concequences reset on Battler Refresh
+* -Added Loops so all modifier types can be set with states, weapons, and armors
+*
 * Version 1.2.0 (04/19/23) :
 * -Redid a lot of code
 * -Added the Ability to add a Bonus and Mult to the user's and reciever's
@@ -1431,31 +1435,35 @@ Game_Actor.prototype.getConcequenceModifiers = function(name) {
 		if (equip == null) continue;
 		var id = equip.id;
 		if (DataManager.isWeapon(equip)){
-			var text = "$dataWeapons[id].meta." + name + labels[loop] + " != null";
-			var bool = eval(text);
-			if (bool){
-				var text = "this." + name + labels[loop] + " != null";
-				bool = eval(text)
+			for (var loop = 0; loop != loong; loop++){
+				var text = "$dataWeapons[id].meta." + name + labels[loop] + " != null";
+				var bool = eval(text);
 				if (bool){
-					var text = "this." + name + labels[loop] + " += Number($dataWeapons[id].meta." + name + labels[loop] + ");";
-					eval(text);
-				} else {
-					var text = "this." + name + labels[loop] + " = Number($dataWeapons[id].meta." + name + labels[loop] + ");";
-					eval(text);
+					var text = "this." + name + labels[loop] + " != null";
+					bool = eval(text)
+					if (bool){
+						var text = "this." + name + labels[loop] + " += Number($dataWeapons[id].meta." + name + labels[loop] + ");";
+						eval(text);
+					} else {
+						var text = "this." + name + labels[loop] + " = Number($dataWeapons[id].meta." + name + labels[loop] + ");";
+						eval(text);
+					}
 				}
 			}
 		} else {
-			var text = "$dataArmors[id].meta." + name + labels[loop] + " != null";
-			var bool = eval(text);
-			if (bool){
-				var text = "this." + name + labels[loop] + " != null";
-				bool = eval(text)
+			for (var loop = 0; loop != loong; loop++){
+				var text = "$dataArmors[id].meta." + name + labels[loop] + " != null";
+				var bool = eval(text);
 				if (bool){
-					var text = "this." + name + labels[loop] + " += Number($dataArmors[id].meta." + name + labels[loop] + ");";
-					eval(text);
-				} else {
-					var text = "this." + name + labels[loop] + " = Number($dataArmors[id].meta." + name + labels[loop] + ");";
-					eval(text);
+					var text = "this." + name + labels[loop] + " != null";
+					bool = eval(text)
+					if (bool){
+						var text = "this." + name + labels[loop] + " += Number($dataArmors[id].meta." + name + labels[loop] + ");";
+						eval(text);
+					} else {
+						var text = "this." + name + labels[loop] + " = Number($dataArmors[id].meta." + name + labels[loop] + ");";
+						eval(text);
+					}
 				}
 			}
 		}
@@ -1466,17 +1474,20 @@ Game_Actor.prototype.getConcequenceModifiers = function(name) {
 	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		var text = "$dataStates[id].meta." + name + labels[loop] + " != null";
-		var bool = eval(text);
-		if (bool){
-			var text = "this." + name + labels[loop] + " != null";
-			bool = eval(text)
+		for (var loop = 0; loop != loong; loop++){
+			var text = "$dataStates[id].meta." + name + labels[loop] + " != null";
+			var bool = eval(text);
 			if (bool){
-				var text = "this." + name + labels[loop] + " += Number($dataStates[id].meta." + name + labels[loop] + ");";
-				eval(text);
-			} else {
-				var text = "this." + name + labels[loop] + " = Number($dataStates[id].meta." + name + labels[loop] + ");";
-				eval(text);
+				console.log(text);
+				var text = "this." + name + labels[loop] + " != null";
+				bool = eval(text)
+				if (bool){
+					var text = "this." + name + labels[loop] + " += Number($dataStates[id].meta." + name + labels[loop] + ");";
+					eval(text);
+				} else {
+					var text = "this." + name + labels[loop] + " = Number($dataStates[id].meta." + name + labels[loop] + ");";
+					eval(text);
+				}
 			}
 		}
 	}
@@ -1548,17 +1559,25 @@ function drainModifier(user, name, number){
 	return value;
 }
 	
-frsh_actor_refresh_itemCon = Game_Actor.prototype.refresh
-Game_Actor.prototype.refresh = function(){
+frsh_actor_refresh_itemCon = Game_BattlerBase.prototype.refresh
+Game_BattlerBase.prototype.refresh = function(){
 	frsh_actor_refresh_itemCon.call(this);
-	for (var loop = 0; loop != length; loop++){
-		var text = "this." + Frashaw.Param.Concequence[loop] + "TakeBonus = undefined";
-		var text = "this." + Frashaw.Param.Concequence[loop] + "TakeMult = undefined";
-		var text = "this." + Frashaw.Param.Concequence[loop] + "GiveBonus = undefined";
-		var text = "this." + Frashaw.Param.Concequence[loop] + "GiveMult = undefined";
-		var text = "this." + Frashaw.Param.Concequence[loop] + "DrainBonus = undefined";
-		var text = "this." + Frashaw.Param.Concequence[loop] + "DrainMult = undefined";
-		this.getConcequenceModifiers(Frashaw.Param.Concequence[loop]);
+	if(this.isActor()){
+		for (var loop = 0; loop != length; loop++){
+			var text = "this." + Frashaw.Param.Concequence[loop] + "TakeBonus = undefined";
+			eval(text);
+			var text = "this." + Frashaw.Param.Concequence[loop] + "TakeMult = undefined";
+			eval(text);
+			var text = "this." + Frashaw.Param.Concequence[loop] + "GiveBonus = undefined";
+			eval(text);
+			var text = "this." + Frashaw.Param.Concequence[loop] + "GiveMult = undefined";
+			eval(text);
+			var text = "this." + Frashaw.Param.Concequence[loop] + "DrainBonus = undefined";
+			eval(text);
+			var text = "this." + Frashaw.Param.Concequence[loop] + "DrainMult = undefined";
+			eval(text);
+			this.getConcequenceModifiers(Frashaw.Param.Concequence[loop]);
+		}
 	}
 }
 
