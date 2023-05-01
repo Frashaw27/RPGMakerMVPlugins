@@ -129,7 +129,7 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * Inital Tp Boost/Decrease: <tpBonus: (interger you want to use)>
 * Max Tp Boost/Decrease: <maxTpBonus: (interger you want to use)>
 * Force User to Start with Random Tp: <RandTpStart>
-* Force User to Start with Static Tp: <StaticTp Start>
+* Force User to Start with Static Tp: <StaticTpStart>
 * Tp Gained from Damage Flat Increase/Decrease: <dmgTpBonus: (intrger)>
 * Tp Gained from Damage Multiplier Increase/Decrease: <dmgTpMult: (intrger)>
 * Tp Gained from Use Flat Increase/Decrease: <atkTpBonus: (intrger)>
