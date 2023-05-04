@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_IconChange
 // FRSH_IconChange.js
-// Version: 1.0.0
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -16,7 +16,7 @@ Frashaw.IChange = Frashaw.IChange || {};
 * 
 * @help 
 * ==Script Calls==============================================================
-* $gameSystem.changeIconSet('(your iconset name)')
+* $gameSystem.setIconSet('(your iconset name)')
 * ===Introduction=============================================================
 * I have always like Hime's Window Change for the way it allowed that little
 * bit of customization to some areas and/or fights. So I decided to make
@@ -26,7 +26,12 @@ Frashaw.IChange = Frashaw.IChange || {};
 * the above script call to change it. Do be warned that the icons will only
 * change on the next time they're drawn/called.
 * ===Change Log=============================================================== 
-* Version 1.0 (01/09/23):
+* Version 1.1.0 (05/04/23):
+* -Made the sprite sheet for icons also change (allowing plugins that use 
+* those to also be changed)
+* -Fixed a typo
+*
+* Version 1.0.0 (01/09/23):
 * -Finished Base Plugin
 * ============================================================================
 */
@@ -53,6 +58,11 @@ Frashaw.IChange = Frashaw.IChange || {};
     var sx = iconIndex % 16 * pw;
     var sy = Math.floor(iconIndex / 16) * ph;
     this.contents.blt(bitmap, sx, sy, pw, ph, x, y);
+  };
+  
+  Sprite_StateIcon.prototype.loadBitmap = function() {
+	this.bitmap = ImageManager.loadSystem(iconset);
+	this.setFrame(0, 0, 0, 0);
   };
   
 })();
