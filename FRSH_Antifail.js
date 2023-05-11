@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Antifail
 // FRSH_Antifail.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -26,12 +26,17 @@ Frashaw.Antifail = Frashaw.Antifail || {};
 * born from me getting smarter and learning how to mimic the results I
 * wanted.
 * ===How to Use===============================================================
+* !!! ~~This plugin has been depreciated. It still works but won't get~~ !!!
+*               !!! ~~any more support and updates~~ !!!
 * By inserting the <Antifail> tag into a skill or item, it won't show the 
 * fail message in the battle log. That's it. This can be used to combat the 
 * message appearing if you used a skill  or item that only uses a Common 
 * Event or other notetags. If this doesn't work at first, try shifting it 
 * in the plugin manager to see if that fixes it.
 * ===Change Log===============================================================
+* Version 1.0.2 (05/11/23) :
+* -Officiated Depreciation for AntiMessage
+*
 * Version 1.0.1 (01/11/23) :
 * -Removed some Compatibility between Colored Names due to a script rewrite
 * that removed some manual code
