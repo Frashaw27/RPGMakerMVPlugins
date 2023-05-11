@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.1.5
+// Version: 1.1.6
 //=============================================================================
 
 var Imported = Imported || {};
@@ -228,6 +228,9 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * the true false parameter. You can also customize the message for giving
 * to a specific ally and the entire party, aswell as the name for the party.
 * ===Change Log===============================================================
+* Version 1.1.6 (05/11/23) :
+* -Swapped compatiblity with Dynamic Battlelog Message for AntiMessage
+*
 * Version 1.1.5 (03/06/23) :
 * -Fixed a crash that happened when using an all allies item when all allies
 * were dead
@@ -311,15 +314,9 @@ function arrayizer(yes){
 
 //Where the shit goes down
 Window_BattleLog.prototype.displayAction = function(subject, item) {
-	//Used to add compatiblity with another of my plugins, Dynamic Battlelog Messages
-	if (Imported.DBLMessage){
-		var parameter = PluginManager.parameters('FRSH_DynamicBattlelogMessages')
-		var numb = parseInt(parameter['Action Results Switch']);
-		if ($gameSwitches.value(numb) == false || numb == 0){
-			var check = true;
-		} else {
-			var check = false;
-		}
+	//Used to add compatiblity with another of my plugins, AntiMessage
+	if (Imported.AMessage){
+		var check = checkChecker(2, "AntiActionResults"); 
 	} else {
 	//If Dynamic Battlelog Messages isn't on
 		var check = true;
