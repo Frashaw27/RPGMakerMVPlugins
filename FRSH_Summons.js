@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -148,6 +148,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
 * ===Change Log===============================================================
+* Version 1.0.2 (05/11/23) :
+* -Added Compatibility with AntiMessage
+*
 * Version 1.0.1 (04/13/23) :
 * -Added in code to deny item use that summon if they don't follow the 
 * conditions
@@ -1000,17 +1003,26 @@ Window_BattleLog.prototype.endAction = function(subject) {
 
 //Makes sure that it calls the alternative "waitForNewLine"
 Window_BattleLog.prototype.displayActionResults = function(subject, target) {
-	if (target.result().used) {
-		this.push('pushBaseLine');
-		this.displayCritical(target);
-		this.push('popupDamage', target);
-		this.push('popupDamage', subject);
-		this.displayDamage(target);
-		this.displayAffectedStatus(target);
-		this.displayFailure(target);
-		//Said alternative waitForNewLine
-		this.push('waitForNewLineOther');
-		this.push('popBaseLine');
+	//Compatibility with AntiMessage
+	if (Imported.AMessage) {
+		var check = checkChecker(2, "AntiActionResults");
+	} else {
+		check = true;
+	}
+	//Checks to see if the message needs to be displayed or not
+	if (check){
+		if (target.result().used) {
+			this.push('pushBaseLine');
+			this.displayCritical(target);
+			this.push('popupDamage', target);
+			this.push('popupDamage', subject);
+			this.displayDamage(target);
+			this.displayAffectedStatus(target);
+			this.displayFailure(target);
+			//Said alternative waitForNewLine
+			this.push('waitForNewLineOther');
+			this.push('popBaseLine');
+		}
 	}
 	//A line imported from battle engine it overwrites this function and better to be safe then sorry
 	//if removing the only difference will break the plugin
