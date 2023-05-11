@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DynamicBattlelogMessages
 // FRSH_DynamicBattlelogMessages.js
-// Version: 1.2.2
+// Version: 1.2.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -256,6 +256,8 @@ Frashaw.DBLMessage = Frashaw.DBLMessage || {};
 *
 * While these cases may be fringe in nature, they are nice QoLs for your game.
 * ===How to Use===============================================================
+* !!! ~~This plugin has been depreciated. It still works but won't get~~ !!!
+*               !!! ~~any more support and updates~~ !!!
 * If want to use them normally, just assign each of the messages a switch id 
 * for them to correspond to. While having multiple messages to a single switch
 * probably isn't the best idea, there shouldn't be any problems that arise from
@@ -284,6 +286,9 @@ Frashaw.DBLMessage = Frashaw.DBLMessage || {};
 *
 * Hope you get some use out of it.
 * ===Change Log===============================================================
+* Version 1.2.3 (01/12/23):
+* -Officiated Depreciation for AntiMessage
+*
 * Version 1.2.2 (01/12/23):
 * -Removed some Compatibility between Colored Names due to a script rewrite
 * that removed some manual code
