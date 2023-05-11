@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.1
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,9 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.2 (05/11/23) :
+* -Added Compatibility with AntiMessage
+*
 * Version 1.2.1 (04/27/23) :
 * -Added Evals to make the concequences reset on Battler Refresh
 * -Added Loops so all modifier types can be set with states, weapons, and armors
@@ -2099,17 +2102,26 @@ Window_BattleLog.prototype.startAction = function(subject, action, targets) {
 
 //Makes sure that it calls the alternative "waitForNewLine"
 Window_BattleLog.prototype.displayActionResults = function(subject, target) {
-	if (target.result().used) {
-		this.push('pushBaseLine');
-		this.displayCritical(target);
-		this.push('popupDamage', target);
-		this.push('popupDamage', subject);
-		this.displayDamage(target);
-		this.displayAffectedStatus(target);
-		this.displayFailure(target);
-		//Said alternative waitForNewLine
-		this.push('waitForNewLineOther');
-		this.push('popBaseLine');
+	//Compatibility with AntiMessage
+	if (Imported.AMessage) {
+		var check = checkChecker(2, "AntiActionResults");
+	} else {
+		check = true;
+	}
+	//Checks to see if the message needs to be displayed or not
+	if (check){
+		if (target.result().used) {
+			this.push('pushBaseLine');
+			this.displayCritical(target);
+			this.push('popupDamage', target);
+			this.push('popupDamage', subject);
+			this.displayDamage(target);
+			this.displayAffectedStatus(target);
+			this.displayFailure(target);
+			//Said alternative waitForNewLine
+			this.push('waitForNewLineOther');
+			this.push('popBaseLine');
+		}
 	}
 	//A line imported from battle engine it overwrites this function and better to be safe then sorry
 	//if removing the only difference will break the plugin
