@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -276,6 +276,9 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
+* Version 1.0.1 (05/11/23) :
+* -Fixed Bugs with Criticals
+*
 * Version 1.0 (05/11/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -483,8 +486,8 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 	//Criticals
 	Window_BattleLog.prototype.displayCritical = function(target) {
 		var check = checkChecker(10, "AntiCritical");
-		var numbA = checkChecker(11, "AntiActorCritical");
-		var numbB = checkChecker(12, "AntiEnemyCritical");
+		var checkA = checkChecker(11, "AntiActorCritical");
+		var checkB = checkChecker(12, "AntiEnemyCritical");
 		if (check){
 			if (target.result().critical) {
 				if (target.isActor()) {
