@@ -19,7 +19,7 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * @text Restrict 1 Turn States?
 * @type boolean
 * @desc Click True or False if you want to not add the buffer to 1 turn State Applications.
-* @default false
+* @default true
 *
 * @param buffOne
 * @text Restrict 1 Turn Buffs/Debuffs?
