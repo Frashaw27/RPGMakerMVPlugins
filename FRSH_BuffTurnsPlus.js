@@ -29,6 +29,9 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * etc. to influence how long either of these last, both when applying as well
 * as getting said BUffs and Debuffs. 
 * ===How to Use===============================================================
+* !!! Put this on top/ahead of any other script that affects Buff/Debuff
+* application as this plugin rewrites those, meaning all addons won't work!!!
+*
 * For the desired effect, use the above note tags in the Actors, Weapons,
 * Armors, and/or Enemies notetags as desired. Giving Turns influences how
 * many turns the Buff/Debuff lasts when the user gives them to a target.
