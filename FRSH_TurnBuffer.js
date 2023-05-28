@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TurnBuffer
 // FRSH_TurnBuffer.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -38,6 +38,9 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * !!! Action Removed Stats work normally with on !!!
 * Plug and Play, very simple. 
 * ===Change Log===============================================================
+* Version 1.0.1 (05/28/23) :
+* -Fix a typo that caused states to not go down
+*
 * Version 1.0 (05/11/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -100,7 +103,7 @@ Game_Battler.prototype.addDebuff = function(paramId, turns, user) {
 Game_BattlerBase.prototype.updateStateTurns = function() {
     this._states.forEach(function(stateId) {
 		//Checks to see if the removal is for specifically the turn end
-		if ($dataStates[stateId].autoRemovalTimer == 1){
+		if ($dataStates[stateId].autoRemovalTiming == 2){
 			//Checks if the state is in the index
 			if (!this.stateBufferIndex.contains(stateId)){
 				//Removes turn if no
