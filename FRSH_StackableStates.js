@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_StackableStates
 // FRSH_StackableStates.js
-// Version: 1.0.2
+// Version: 1.0.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -43,6 +43,10 @@ Frashaw.StackStates = Frashaw.StackStates || {};
 * Removing a state with a progression line in it will also remove all states
 * within that line to be removed, but this can be altered to just be itself.
 * ===Change Log===============================================================
+* Version 1.0.3 (05/30/23) :
+* -Fixed Bug that caused apply effects to only apply if state is new to the
+* actor instead of everytime it's applied
+*
 * Version 1.0.2 (04/06/23) :
 * -Fixed Bug that caused Death State Buff and State Core Effects to not
 * work
@@ -88,13 +92,13 @@ Game_Battler.prototype.addState = function(stateId) {
 						//Normal stateAdd code
 						if (!this.isStateAffected(stateId)) {
 							this.addNewState(stateId);
-							//Yanfly Buffs and States Core compability
-							if (Imported.YEP_BuffsStatesCore){
-								this.setStateOrigin(stateId);
-								this.addStateEffects(stateId);
-							};
 							this.refresh();
 						}
+						//Yanfly Buffs and States Core compability
+						if (Imported.YEP_BuffsStatesCore){
+							this.setStateOrigin(stateId);
+							this.addStateEffects(stateId);
+						};
 						this.resetStateCounts(stateId);
 						this._result.pushAddedState(stateId);	
 					}
@@ -112,6 +116,11 @@ Game_Battler.prototype.addState = function(stateId) {
 					this.addNewState(stateId);
 					this.refresh();
 				}
+				//Yanfly Buffs and States Core compability
+				if (Imported.YEP_BuffsStatesCore){
+					this.setStateOrigin(stateId);
+					this.addStateEffects(stateId);
+				};
 				this.resetStateCounts(stateId);
 				this._result.pushAddedState(stateId);
 			}
@@ -121,13 +130,13 @@ Game_Battler.prototype.addState = function(stateId) {
 		if (this.isStateAddable(stateId)) {
 			if (!this.isStateAffected(stateId)) {
 				this.addNewState(stateId);
-				//Yanfly Buffs and States Core compability
-				if (Imported.YEP_BuffsStatesCore){
-					this.setStateOrigin(stateId);
-					this.addStateEffects(stateId);
-				};
 				this.refresh();
 			}
+			//Yanfly Buffs and States Core compability
+			if (Imported.YEP_BuffsStatesCore){
+				this.setStateOrigin(stateId);
+				this.addStateEffects(stateId);
+			};
 			this.resetStateCounts(stateId);
 			this._result.pushAddedState(stateId);
 		}
