@@ -23,7 +23,7 @@ Frashaw.SMLevel = Frashaw.SMLevel || {};
 *
 * @help
 * ==Script Calls==============================================================
-* (actor).changeMaxLevel("max level you want here");
+* $gameActors.actor(actor id).changeMaxLevel(max level you want here);
 * ===Introduction=============================================================
 * Throughout a mjaority of my games, I've found one common aspect of them 
 * that I like working in, that being increasing the party's max level as
