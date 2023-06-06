@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.0.1
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -276,6 +276,10 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
+* Version 1.0.1 (06/06/23) :
+* -Fixed a crash that'd happen if a no skill enemy went before you
+* -Fixed a bug where item message would only check for antifail
+*
 * Version 1.0.1 (05/11/23) :
 * -Fixed Bugs with Criticals
 *
@@ -315,7 +319,7 @@ Frashaw.Param.DSwitch26 = Number(Frashaw.Parameters['Tp Damage Switch']);
 Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 
 	//Sets variables, so no fuckery happens
-	var lastUsed = 0;
+	var lastUsed = 1;
 	var thing = 0;
 	
 	//Adds an additional action upon using an item, namely seting last used to
@@ -341,11 +345,11 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 			return false;
 		}
 	}
-	var bool = eval("thing == 0 && $dataSkills[lastUsed].meta." + tag + " != null");
+	var bool = eval("lastUsed != 0 && (thing == 0 && $dataSkills[lastUsed].meta." + tag + " != null)");
 	if (bool){
 		return false;
 	}
-	var bool = eval("thing == 1 && $dataItems[lastUsed].meta." + tag + " != null");
+	var bool = eval("lastUsed != 0 && (thing == 1 && $dataItems[lastUsed].meta." + tag + " != null)");
 	if (thing == 1 && $dataItems[lastUsed].meta.Antifail != null){
 		return false;
 	}
