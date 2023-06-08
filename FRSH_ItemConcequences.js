@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.2
+// Version: 1.2.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,10 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.3 (06/08/23) :
+* -Added new array flattening method that should hopefully not crap the bed 
+* if you use an out of date version of Javascript
+*
 * Version 1.2.2 (05/11/23) :
 * -Added Compatibility with AntiMessage
 *
@@ -1366,6 +1370,28 @@ function arrayMaker(bar1, bar2, bar3, place1, place2, place3, pool){
 	}
 }
 
+//Makes the array go from multidimentional to 1 dimention for ease of use
+function arrayFlattener(array){
+	//Array to be returned
+	var sorted = [];
+	//Goes through all the arrays to flatten
+	for (var loop = 0; loop != array.length; loop++){
+		//sets current array to be dissected
+		var subarray = array[loop];
+		//Chcecks to see if vaue is actually an array or not
+		if (subarray.length != null){
+			//Goes through all the values of the array and addes them to the return array
+			for (var pool = 0; pool != subarray.length; pool++){
+				sorted.push(subarray[pool]);
+			}
+		} else {
+			//backup just incase it isn't an array for some reason
+			sorted.push(subarray);
+		}
+	}
+	return sorted;
+}
+
 var loop = 0;
 while (loop != length){
 	//Sets up the array
@@ -1375,7 +1401,7 @@ while (loop != length){
 	text = "placeArray" + (loop + 1) + ".sort(arraySort)"
 	eval(text);
 	//Flatens the array into just one dimention
-	text = "placeArray" + (loop + 1) + " = placeArray" + (loop + 1) + ".flat();"
+	text = "placeArray" + (loop + 1) + " = arrayFlattener(placeArray" + (loop + 1) + ");"
 	eval(text);
 	//Removes numbers from the array
 	text = "placeArray" + (loop + 1) + " = placeArray" + (loop + 1) + ".filter(arrayFilter);"
@@ -1481,7 +1507,6 @@ Game_Actor.prototype.getConcequenceModifiers = function(name) {
 			var text = "$dataStates[id].meta." + name + labels[loop] + " != null";
 			var bool = eval(text);
 			if (bool){
-				console.log(text);
 				var text = "this." + name + labels[loop] + " != null";
 				bool = eval(text)
 				if (bool){
