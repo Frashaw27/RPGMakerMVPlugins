@@ -194,7 +194,7 @@ if (Parameters.showTurnsActor === "true"){
 	Frashaw.Param.showTurnsActor = false;
 }
 Frashaw.Param.ConnectSymbol = Parameters.connector;
-if (Parameters.resetOther=== "false"){
+if (Parameters.resetOther === "false"){
 	Frashaw.Param.resetOther = true;
 } else {
 	Frashaw.Param.resetOther = false;
@@ -908,7 +908,8 @@ Window_BattleLog.prototype.waitForNewLineOther = function() {
 	if (sub != null) otherText.push(sub);
 };
 
-//A function overwritten to include the summons death message
+//A function overwritten to include the summons death message; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayAddedStates = function(target) {
     target.result().addedStateObjects().forEach(function(state) {
         var stateMsg = target.isActor() ? state.message1 : state.message2;
@@ -959,8 +960,10 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
         }
     }, this);
 };
+}
 
-//Purely here for getting the remove state message
+//Purely here for getting the remove state message; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayRemovedStates = function(target) {
     target.result().removedStateObjects().forEach(function(state) {
         if (state.message4) {
@@ -975,6 +978,7 @@ Window_BattleLog.prototype.displayRemovedStates = function(target) {
         }
     }, this);
 };
+}
 
 //Purely here for getting the buff message
 Window_BattleLog.prototype.displayBuffs = function(target, buffs, fmt) {
@@ -1001,7 +1005,8 @@ Window_BattleLog.prototype.endAction = function(subject) {
     this.push('clear');
 };
 
-//Makes sure that it calls the alternative "waitForNewLine"
+//Makes sure that it calls the alternative "waitForNewLine"; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 	//Compatibility with AntiMessage
 	if (Imported.AMessage) {
@@ -1028,6 +1033,7 @@ Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 	//if removing the only difference will break the plugin
 	if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
 };
+}
 //=============================================================================
 // End of File
 //=============================================================================
