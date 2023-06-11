@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.3
+// Version: 1.2.4
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,10 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.4 (06/11/23) :
+* -Added a variable initalization
+* -Added "compatability" with FRSH_AntiMessage
+*
 * Version 1.2.3 (06/08/23) :
 * -Added new array flattening method that should hopefully not crap the bed 
 * if you use an out of date version of Javascript
@@ -1237,9 +1241,19 @@ loop++;
   continue;
 }
 }
-Parameters.resetOther = true;
+if (!Imported.Summons){
+	Parameters.resetOther = true;
+} else {
+	Parameters.resetOther = PluginManager.parameters('FRSH_Summons').resetOther;
+	if (Parameters.resetOther === "false"){
+		Parameters.resetOther = true;
+	} else {
+		Parameters.resetOther = false;
+	}
+}
 //Processes the switches into an array to be checked
 Frashaw.Param.SwitchArray = arrayizer(Parameters.switched);
+var otherText = []; //Text for the battle log for text
 
 function resetWindow(){
 	currentWindow = 1;
@@ -2026,7 +2040,8 @@ Window_BattleLog.prototype.waitForNewLineOther = function() {
 	if (sub != null) otherText.push(sub);
 };
 
-//A function overwritten to include the summons death message
+//A function overwritten to include the summons death message; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayAddedStates = function(target) {
     target.result().addedStateObjects().forEach(function(state) {
         var stateMsg = target.isActor() ? state.message1 : state.message2;
@@ -2077,8 +2092,10 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
         }
     }, this);
 };
+}
 
-//Purely here for getting the remove state message
+//Purely here for getting the remove state message; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayRemovedStates = function(target) {
     target.result().removedStateObjects().forEach(function(state) {
         if (state.message4) {
@@ -2093,6 +2110,7 @@ Window_BattleLog.prototype.displayRemovedStates = function(target) {
         }
     }, this);
 };
+}
 
 //Purely here for getting the buff message
 Window_BattleLog.prototype.displayBuffs = function(target, buffs, fmt) {
@@ -2125,7 +2143,8 @@ Window_BattleLog.prototype.startAction = function(subject, action, targets) {
     frsh_strtAct_itemCon.call(this,subject,action,targets);
 };
 
-//Makes sure that it calls the alternative "waitForNewLine"
+//Makes sure that it calls the alternative "waitForNewLine"; doesn't run if FRSH_AntiMessage is in
+if (!Imported.AMessage){
 Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 	//Compatibility with AntiMessage
 	if (Imported.AMessage) {
@@ -2152,6 +2171,7 @@ Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 	//if removing the only difference will break the plugin
 	if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
 };
+}
 //=============================================================================
 // End of File
 //=============================================================================
