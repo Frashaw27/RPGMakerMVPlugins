@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.1.0
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -276,6 +276,9 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
+* Version 1.0.2 (06/06/23) :
+* -Added compatability with FRSH_Summons and FRSH_AntiMessage
+*
 * Version 1.0.1 (06/06/23) :
 * -Fixed a crash that'd happen if a no skill enemy went before you
 * -Fixed a bug where item message would only check for antifail
@@ -321,6 +324,17 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 	//Sets variables, so no fuckery happens
 	var lastUsed = 1;
 	var thing = 0;
+	var otherText = []; //Text for the battle log for summon and/or item concequences
+	if (!Imported.Summons){ //Text option imported from FRSH_Summons
+	Parameters.resetOther = true;
+	} else {
+		Parameters.resetOther = PluginManager.parameters('FRSH_Summons').resetOther;
+		if (Parameters.resetOther === "false"){
+			Parameters.resetOther = true;
+		} else {
+			Parameters.resetOther = false;
+		}
+	}
 	
 	//Adds an additional action upon using an item, namely seting last used to
 	//the id of the last used thing. Shouldn't conflict with anything.
@@ -345,7 +359,7 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 			return false;
 		}
 	}
-	var bool = eval("lastUsed != 0 && (thing == 0 && $dataSkills[lastUsed].meta." + tag + " != null)");
+	var bool = eval("lastUsed != 1 && (thing == 0 && $dataSkills[lastUsed].meta." + tag + " != null)");
 	if (bool){
 		return false;
 	}
@@ -357,6 +371,31 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 	//can show.
 	return true;
 	}
+	
+	//Acts like waitForNewLine, but adds a setter for battle log lines, only used when FRSH_Summons or FRSH_ItemConcequences is active
+	Window_BattleLog.prototype.waitForNewLineOther = function() {
+		var baseLine = 0;
+		if (this._baseLineStack.length > 0) {
+			baseLine = this._baseLineStack[this._baseLineStack.length - 1];
+		}
+		if (this._lines.length > baseLine) {
+			this.wait();
+		}
+		//Gets the length of the # of lines in the battle log
+		var length = SceneManager._scene._logWindow._lines.length;
+		//If the battle log already has messages it stores them for later
+		if (otherText.length != 0){
+			var sub = otherText[0];
+			otherText = [];
+		}
+		//Adds in all the lines from the battle log into otherText via push because a stright setting made
+		//them linked which made things messy
+		for (var loop = 0; loop != length; loop++){
+			otherText.push(SceneManager._scene._logWindow._lines[loop]);
+		}
+		//Adds in the previously stored lines if there were any
+		if (sub != null) otherText.push(sub);
+	};
 
 	//The fuction that shows the fail message (or not).
 	Window_BattleLog.prototype.displayFailure = function(target){
@@ -542,7 +581,43 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 				if (stateMsg) {
 					this.push('popBaseLine');
 					this.push('pushBaseLine');
-					this.push('addText', target.name() + stateMsg);
+					//resets the for each different state/buff message, if wanted
+					if (Parameters.resetOther){
+						otherText = [];
+					}
+					//Adds text to saved battlelog lines
+					otherText.push(target.name() + stateMsg);
+					//Checks to see if the current applying state is death
+					if (state.id === target.deathStateId()){
+						//Checks to see if target has the summon tag, and if the Summon plugin is added
+						if (Imported.Summons && target.summon){
+							//Checks to see if the actor has a custom death message
+							if (target.summonDeath != null || target.summonDeath == ''){
+								//Uses it if they do
+								this.push('addText', target.summonDeath);
+							} else {
+								//Uses default if they don't
+								var text = Frashaw.Param.defaultSummDeathText;
+								//Splits array to check to where to put the name
+								var textArray = text.split("%");
+								//A check to see if the name goes at start end or the middle
+								if (textArray.length > 1){
+									//Puts it into the middle if yes
+									text = textArray[0] + this.name() + textArray[1];
+								} else {
+									//Puts it at the start if not
+									text =  this.name() + textArray[0];
+								}
+								this.push('addText', text);
+							}
+						} else {
+							//Does normal message if target is not a summon
+							this.push('addText', target.name() + stateMsg);
+						}
+					} else {
+						//Does normal message if not death
+						this.push('addText', target.name() + stateMsg);	
+					}
 					this.push('waitForEffect');
 				}
 			}, this);
@@ -556,6 +631,11 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 				if (state.message4) {
 					this.push('popBaseLine');
 					this.push('pushBaseLine');
+					//Gets remove state message
+					if (Parameters.resetOther){
+						otherText = [];
+					}
+					otherText.push(target.name() + state.message4);
 					this.push('addText', target.name() + state.message4);
 				}
 			}, this);
