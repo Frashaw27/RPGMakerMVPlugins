@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.0.2
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -13,6 +13,12 @@ Frashaw.Summons = Frashaw.Summons || {};
 /*:
 * @plugindesc Allows the ability to summon actors for the battle/a # of turns.
 * @author Frashaw27
+*
+* @param summSame
+* @text Allow Same Summons(?)
+* @type boolean
+* @desc Click True or False if you want to allow multiples of the same summon.
+* @default false
 *
 * @param summMax
 * @text Max # of Summons
@@ -103,6 +109,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * number of Turns (set to 0 or leave blank to stay until death), Fourth
 * indicates if it's a "BIG" summon or not (set to 1 to activate, put
 * anything else or leave blank to not).
+* <MassSummon: (level), (turns), (id)> - Same rules apply as above. You do
+* need the first 2 values in, even if left at 0, in order for multiple 
+* summons. Each number after second number will act as another summon.
 * ===Introduction=============================================================
 * In RPG Maker, there is no innate way to summon actor fluidly for a certin
 * amount of turns without some extensive eventing/scripting. This plugin
@@ -143,12 +152,30 @@ Frashaw.Summons = Frashaw.Summons || {};
 * that the summon will temporarily replace the party, leave blank or at 0
 * to indicate otherwise.
 *
+* IF you need multiple summons in one you can use <MassSummon: x, x, for that
+* result for simular results. Although the format is different to 
+* accomedate the potential infinite number of actors you can summon at one 
+* time. 
+*
+* x1 - Level the summons will be at.
+*
+* x2 - Turns the summons will last.
+*
+* x3 and beyond - each one after the 2nd will add another actor to summon
+* following the same rules as before. Unlike the previous one, you do need
+* the first two values in place, even if they're just 0, in order for it to 
+* work.
+*
 * When using <Summon Eval> you can use the following terms to short hand
 * some code:
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
 * ===Change Log===============================================================
-* Version 1.0.2 (05/11/23) :
+* Version 1.1.0 (06/12/23) :
+* -Added an option to allow multiple of the same summon
+* -Added a way to Mass Summon several actors
+*
+* Version 1.0.2 (06/11/23) :
 * -Added Compatibility with AntiMessage
 *
 * Version 1.0.1 (04/13/23) :
@@ -163,6 +190,11 @@ Frashaw.Summons = Frashaw.Summons || {};
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_Summons');
 Frashaw.Param = Frashaw.Param || {};
+if (Parameters.summSame === "true"){
+	Frashaw.Param.SameSummon = true;
+} else {
+	Frashaw.Param.SameSummon = false;
+}
 Frashaw.Param.maxSumms = Number(Parameters.summMax);
 Frashaw.Param.defaultSummLevel = Number(Parameters.defSummLvl);
 if (Parameters.graceTurn === "true"){
@@ -591,7 +623,6 @@ Game_Battler.prototype.performActionEnd = function() {
 				if (actor.summonEnter != null){
 					var text = actor.summonEnter;
 					text = this.name() + text;
-					console.log(text);
 				} else {
 				//Uses default otherwise
 					var text = Frashaw.Param.defaultSummText;
@@ -657,6 +688,104 @@ Game_Battler.prototype.performActionEnd = function() {
 				//Shows an error if array[0] conditions are not met
 				console.error("Summons Id's must be higher then 0");
 			}
+		} 
+		if ($dataSkills[id].meta.massSummon != null){
+			//Gets an array for the summon tag
+			var array = arrayinator($dataSkills[id].meta.massSummon);
+			//Checks if there's 3 or more then 3 values
+			if (array.length >= 3){
+				//Sets up the level
+				if (array[0] != null && array[0] > 0){
+					var level = array[0];
+				} else {
+					var level = 0;
+				}
+				//Sets up the turns
+				if (array[1] != null && array[1] > 0){
+					var turns = array[1];
+				} else {
+					var turns = 0;
+				}
+				//
+				for (var loop = 2; loop != array.length; loop++){
+					//Ease of access of the actor id
+					var actorid = array[loop];
+					//Checks to see if the actor is already in the party and if it's allowed to add another
+					if ((!$gameParty.members().includes($gameActors.actor(actorid)) || Frashaw.Param.SameSummon) && (summonArray.length != Frashaw.Param.maxSumms || Frashaw.Param.maxSumms == 0)){ 
+					//Checks to see if the actor is valid
+					if (actorid != null && actorid > 0){
+						var actor = $gameActors.actor(actorid);
+						//adds actor to the party
+						$gameParty.addSummon(actor);
+						//Checks to see if actor has a unique summon message
+						if (actor.summonEnter != null){
+							var text = actor.summonEnter;
+							text = this.name() + text;
+						} else {
+						//Uses default otherwise
+							var text = Frashaw.Param.defaultSummText;
+							//Splits array to check to where to put the name
+							var textArray = text.split("%");
+							//A check to see if the name goes at the end or the middle
+							if (textArray.length > 1){
+								//Puts it into the middle if yes
+								text = textArray[0] + actor.name() + textArray[1];
+							} else {
+								//Puts it at the end if not
+								text =  textArray[0] + actor.name();
+							}
+							//Puts name of the summoner to the front of the message
+							text = this.name() + " " + text;
+						}
+						//Standardizes the actor
+						actor.setup(actorid);
+						//Checks to see if the level portion is equal to 0
+						if (level != 0){
+							//Uses the specified number as the level if not
+							actor.level = level;
+						} else {
+							//Uses the summoners level as the level if it is
+							actor.level = this.level;
+						}
+						//Gives the summons turns it can remain for
+						if (turns != 0){
+							//Sets the summons terms equal to the array value
+							actor.summonTurns = turns;
+							//Sets the "mulligan" turn on if allowed
+							if (Frashaw.Param.GraceTurn){
+								actor.summonBool = true;
+							}
+							//Adds turns text if allowed
+							if (Frashaw.Param.displayTurns){
+							text += " for " + turns + " turns";
+							}
+						}
+						//Runs the evaluation of the code if the actor has summon eval
+						if (actor.summonEval != null){
+							this.evaluateSummon(actor);
+						}
+						//If allowed, displays the exclaimnation mark at the of the battle log message
+						if (Frashaw.Param.displayExclaim){
+							text += "!";
+						}
+						//Sets the line of the previous battle logs lines, for consistancy
+						SceneManager._scene._logWindow._lines = otherText;
+						//Add the summon message to the battle log
+						SceneManager._scene._logWindow.addText(text);
+					} else {
+						//Error message if Id is wrong
+						console.error(actorid + " isn't a valid actor summon id.");
+					}
+				}
+				}
+				//Adds a wait to read
+				SceneManager._scene._logWindow.waitt();
+				//Adds a timeout for the clear command
+				setTimeout(clear, 1000);
+			} else {
+				//Error message if you don't have the needed values
+				console.error("Mass Summon Requires atleast 3 values. If you only want 1 summons with less set up, choose the other method.");
+			}
 		}
 	} else {
 		if ($dataItems[id].meta.Summon != null){
@@ -716,6 +845,104 @@ Game_Battler.prototype.performActionEnd = function() {
 				console.error("Summons Id's must be higher then 0");
 			}
 		}
+		if ($dataItems[id].meta.massSummon != null){
+			//Gets an array for the summon tag
+			var array = arrayinator($dataItems[id].meta.massSummon);
+			//Checks if there's 3 or more then 3 values
+			if (array.length >= 3){
+				//Sets up the level
+				if (array[0] != null && array[0] > 0){
+					var level = array[0];
+				} else {
+					var level = 0;
+				}
+				//Sets up the turns
+				if (array[1] != null && array[1] > 0){
+					var turns = array[1];
+				} else {
+					var turns = 0;
+				}
+				//
+				for (var loop = 2; loop != array.length; loop++){
+					//Ease of access of the actor id
+					var actorid = array[loop];
+					//Checks to see if the actor is already in the party and if it's allowed to add another
+					if ((!$gameParty.members().includes($gameActors.actor(actorid)) || Frashaw.Param.SameSummon) && (summonArray.length != Frashaw.Param.maxSumms || Frashaw.Param.maxSumms == 0)){ 
+					//Checks to see if the actor is valid
+					if (actorid != null && actorid > 0){
+						var actor = $gameActors.actor(actorid);
+						//adds actor to the party
+						$gameParty.addSummon(actor);
+						//Checks to see if actor has a unique summon message
+						if (actor.summonEnter != null){
+							var text = actor.summonEnter;
+							text = this.name() + text;
+						} else {
+						//Uses default otherwise
+							var text = Frashaw.Param.defaultSummText;
+							//Splits array to check to where to put the name
+							var textArray = text.split("%");
+							//A check to see if the name goes at the end or the middle
+							if (textArray.length > 1){
+								//Puts it into the middle if yes
+								text = textArray[0] + actor.name() + textArray[1];
+							} else {
+								//Puts it at the end if not
+								text =  textArray[0] + actor.name();
+							}
+							//Puts name of the summoner to the front of the message
+							text = this.name() + " " + text;
+						}
+						//Standardizes the actor
+						actor.setup(actorid);
+						//Checks to see if the level portion is equal to 0
+						if (level != 0){
+							//Uses the specified number as the level if not
+							actor.level = level;
+						} else {
+							//Uses the summoners level as the level if it is
+							actor.level = this.level;
+						}
+						//Gives the summons turns it can remain for
+						if (turns != 0){
+							//Sets the summons terms equal to the array value
+							actor.summonTurns = turns;
+							//Sets the "mulligan" turn on if allowed
+							if (Frashaw.Param.GraceTurn){
+								actor.summonBool = true;
+							}
+							//Adds turns text if allowed
+							if (Frashaw.Param.displayTurns){
+							text += " for " + turns + " turns";
+							}
+						}
+						//Runs the evaluation of the code if the actor has summon eval
+						if (actor.summonEval != null){
+							this.evaluateSummon(actor);
+						}
+						//If allowed, displays the exclaimnation mark at the of the battle log message
+						if (Frashaw.Param.displayExclaim){
+							text += "!";
+						}
+						//Sets the line of the previous battle logs lines, for consistancy
+						SceneManager._scene._logWindow._lines = otherText;
+						//Add the summon message to the battle log
+						SceneManager._scene._logWindow.addText(text);
+					} else {
+						//Error message if Id is wrong
+						console.error(actorid + " isn't a valid actor summon id.");
+					}
+				}
+				}
+				//Adds a wait to read
+				SceneManager._scene._logWindow.waitt();
+				//Adds a timeout for the clear command
+				setTimeout(clear, 1000);
+			} else {
+				//Error message if you don't have the needed values
+				console.error("Mass Summon Requires atleast 3 values. If you only want 1 summons with less set up, choose the other method.");
+			}
+		}
 	}
 	//Resets the other text
 	otherText = [];
@@ -738,9 +965,29 @@ Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
 		//Checks to see if id is both above 0 and not undefined
 		if (array[0] != null && array[0] > 0){
 			//Checks to see if the party includes the summoned actor
-			if ($gameParty.members().includes($gameActors.actor(array[0]))){
+			if ($gameParty.members().includes($gameActors.actor(array[0])) && !Frashaw.Param.SameSummon){
 				//Denies skill use if they are
 				return false;
+			}
+		}
+	}
+	if ($dataSkills[id].meta.massSummon != null){
+		//Checks to see if summon capacity is at max
+		if (summonArray.length == Frashaw.Param.maxSumms && Frashaw.Param.maxSumms != 0){
+			//Denies use if it is
+			return false;
+		}
+		//If it does it pulls it and puts it into an array
+		var array = arrayinator($dataSkills[id].meta.massSummon);
+		for (var loop = 2; loop != array.length; loop++){
+			var actid = array[loop];
+			//Checks to see if id is both above 0 and not undefined
+			if (actid != null && actid > 0){
+				//Checks to see if the party includes the summoned actor
+				if ($gameParty.members().includes($gameActors.actor(actid)) && !Frashaw.Param.SameSummon){
+					//Denies skill use if they are
+					return false;
+				}
 			}
 		}
 	}
