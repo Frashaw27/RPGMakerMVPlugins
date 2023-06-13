@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_IconScroll
 // FRSH_IconScroll.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -62,6 +62,9 @@ Frashaw.IconScroll = Frashaw.IconScroll || {};
 * Also I'm not sure what'll happen if you use a non-base Hud, probably
 * nothing good though.
 * ===Change Log===============================================================
+* Version 1.0.2 (06/13/23):
+* -Fixed a bug that caused buff turns to improperly display upon loops
+*
 * Version 1.0.1 (02/12/23):
 * -Fixed a crash that would occur if the game was running, but not loaded
 * (EX: looking a Dev Tools and pressing f5 with game minimized)
@@ -193,12 +196,12 @@ Window_Base.prototype.drawActorIconsTurns = function(actor, wx, wy, ww, max, mod
 		--shownMax;
 	  }
 	  for (var i = 0; i < 8; ++i) {
+		if (actor._buffs[i] === 0) continue;
 		if (exclude > 0){
 			exclude--;
 			continue;
 		}
 		if (shownMax <= 0) break;
-		if (actor._buffs[i] === 0) continue;
 		this.drawBuffTurns(actor, i, wx, wy);
 		if (Yanfly.Param.BSCShowBuffRate) {
 		  this.drawBuffRate(actor, i, wx, wy);
