@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.0.2
+// Version: 1.0.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -276,6 +276,9 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
+* Version 1.0.2 (06/13/23) :
+* -Fixed bug with summon death message
+*
 * Version 1.0.2 (06/06/23) :
 * -Added compatability with FRSH_Summons and FRSH_AntiMessage
 *
@@ -603,10 +606,10 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 								//A check to see if the name goes at start end or the middle
 								if (textArray.length > 1){
 									//Puts it into the middle if yes
-									text = textArray[0] + this.name() + textArray[1];
+									text = textArray[0] + target.name() + textArray[1];
 								} else {
 									//Puts it at the start if not
-									text =  this.name() + textArray[0];
+									text =  target.name() + textArray[0];
 								}
 								this.push('addText', text);
 							}
