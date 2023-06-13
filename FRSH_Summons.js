@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -101,7 +101,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * leave/summon turn up message from other summons. Use % to indicate the 
 * summon's name.
 * <Summon Eval></SummonEval> - Put code between these to run when actor is
-* summoned. 
+* summoned.
+* <Summon Leave Eval></Summon Leave Eval> - Put code between these to run
+* when the actor leaves by any means.
 * Skill/Item:
 * <Summon: (id), (level), (turns), (big)> - First number is the id of the 
 * actor summoned, Second is the level (use 0 if you want the level to be
@@ -171,6 +173,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
 * ===Change Log===============================================================
+* Version 1.1.1 (06/13/23) :
+* -Added a Leave Eval for summons when they die or leave via turns
+* -Fixed a bug where death message called the wrong name
+*
 * Version 1.1.0 (06/12/23) :
 * -Added an option to allow multiple of the same summon
 * -Added a way to Mass Summon several actors
@@ -307,6 +313,8 @@ DataManager.processActorNotetags = function(group) {
 	//Loads up various strings to check for
   var note1a = /<(?:Summon Eval)>/i;
   var note1b = /<\/(?:Summon Eval)>/i;
+  var note1c = /<(?:Summon Leave Eval)>/i;
+  var note1d = /<\/(?:Summon Leave Eval)>/i;
   var note2 = /<(?:Summon Death Message):[ ](.*)>/i;
   var note3 = /<(?:Summon Leave Message):[ ](.*)>/i;
   var note4 = /<(?:Summon Enter Message):[ ](.*)>/i;
@@ -317,6 +325,7 @@ DataManager.processActorNotetags = function(group) {
 		//Initalizes the actors for these various conditions
 		var customMode = 'none';
 		obj.summonEval = '';
+		obj.leaveEval = '';
 		obj.summonDeath = '';
 		obj.summonLeave = '';
 		obj.summonEnter = '';
@@ -328,6 +337,12 @@ DataManager.processActorNotetags = function(group) {
 				customMode = 'summon';
 			//For the end of the summon eval
 			} else if (line.match(note1b)){
+				customMode = 'none';
+			//For starting the summon leave eval
+			} else if (line.match(note1c)){
+				customMode = 'death';
+			//For ending the summon leave eval
+			} else if (line.match(note1d)){
 				customMode = 'none';
 			//For the summon death message
 			} else if (line.match(note2)){
@@ -341,6 +356,8 @@ DataManager.processActorNotetags = function(group) {
 			//For the summon enter message
 			} else if (customMode === 'summon') {
 				obj.summonEval = obj.summonEval + line + '\n';
+			} else if (customMode === 'death') {
+				obj.leaveEval = obj.leaveEval + line + '\n';
 			}
 		}
   }
@@ -370,6 +387,15 @@ Game_Actor.prototype.summonEvalMake = function() {
 	} else {
 		//Doesn't assign if no
 		this.summonEval = undefined;
+	}
+	//Checks to see if eval is not undefined and not blank
+	tex = eval($dataActors[id].leaveEval != undefined && $dataActors[id].leaveEval != '')
+	if (tex){
+		//Assigns the leave eval if yes
+		this.leaveEval = $dataActors[id].leaveEval;
+	} else {
+		//Doesn't assign if no
+		this.leaveEval = undefined;
 	}
 	//Checks to see if either form of death message is available or not
 	if (($dataActors[id].summonDeath != undefined && $dataActors[id].summonDeath != '') || ($dataActors[id].meta.summonDeath != undefined && $dataActors[id].meta.summonDeath != '')){
@@ -498,6 +524,11 @@ Game_Party.prototype.removeSummon = function(actor) {
 	this.summonTurns = undefined;
 	//Makes their turn bool undefined
 	this.summonBool = undefined;
+	//Adds a check for the leave eval
+	if (actor.leaveEval != null){
+		//Goes through if it exists
+		actor.evaluateLeave();
+	}
 	//Removes them from the array
 	summonArray = summonArray.filter(function (item){return item != actor});
 };
@@ -581,6 +612,36 @@ Game_Battler.prototype.evaluateSummon = function(target){
 		//Displays if an error happens
 		//Displays where the error occured
 		var text = target._name + " Summon Eval Error!!!!!"
+		console.log(text);
+		//Displays code to the console log
+		console.log(code || 'No Code');
+		//Produces the error itself to the console
+		console.error(e);
+		//Checks to see if the game is in testing
+		if (Utils.isOptionValid('test')){
+			//Force opens the console log if it is
+			require('nw.gui').Window.get().showDevTools();
+		}
+	}
+}
+
+//A function made to evaluate the summoning eval of actors
+Game_Battler.prototype.evaluateLeave = function(){
+	//Sets summoner shorthands
+	var a = this;
+	var user = this;
+	var summoner = this;
+	var b = this;
+	var code = this.leaveEval;
+	console.log(code);
+	//Sees if code will produce an error
+	try {
+		//Runs code, goes through if no errors
+		eval(code);
+	} catch (e) {
+		//Displays if an error happens
+		//Displays where the error occured
+		var text = target._name + " Leave Eval Error!!!!!"
 		console.log(text);
 		//Displays code to the console log
 		console.log(code || 'No Code');
@@ -1188,10 +1249,10 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
 						//A check to see if the name goes at start end or the middle
 						if (textArray.length > 1){
 							//Puts it into the middle if yes
-							text = textArray[0] + this.name() + textArray[1];
+							text = textArray[0] + target.name() + textArray[1];
 						} else {
 							//Puts it at the start if not
-							text =  this.name() + textArray[0];
+							text =  target.name() + textArray[0];
 						}
 						this.push('addText', text);
 					}
