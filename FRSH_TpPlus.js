@@ -227,7 +227,6 @@ Game_Actor.prototype.getTpStuff = function() {
 			}
 		}
 	}
-	eval("console.log(this." + labels[loop] + ")");
 	var id = this._classId;
 	for(var loop = 0; loop != 8; loop++){
 		var text = "$dataClasses[id].meta." + labels[loop] + " != null";
@@ -250,7 +249,6 @@ Game_Actor.prototype.getTpStuff = function() {
 			}
 		}
 	}
-	eval("console.log(this.maxTpBonus)");
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
 		if (equip == null) continue;
@@ -302,8 +300,7 @@ Game_Actor.prototype.getTpStuff = function() {
 	var stateList = this.states();
 	if (this._passiveStatesRaw != null){
 		stateList =  stateList.concat(this.passiveStates());
-	}
-	eval("console.log(this.maxTpBonus)"); 
+	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		for(var loop = 0; loop != 8; loop++){
@@ -329,7 +326,7 @@ Game_Actor.prototype.getTpStuff = function() {
 		}
 	}
 	for(var loop = 0; loop != 8; loop++){
-		var tex = "this." + labels[loop] + " = " + "Number(this." + labels[loop] + ")";
+		var tex = "if (this." + labels[loop] + " != null) this." + labels[loop] + " = Number(this." + labels[loop] + ")";
 		eval(tex);
 	}
 };
@@ -380,7 +377,7 @@ Game_Enemy.prototype.getTpStuff = function() {
 		}
 	}
 	for(var loop = 0; loop != 8; loop++){
-		var tex = "this." + labels[loop] + " = " + "Number(this." + labels[loop] + ")";
+		var tex = "if (this." + labels[loop] + " != null) this." + labels[loop] + " = Number(this." + labels[loop] + ")";
 		eval(tex);
 	}
 }
