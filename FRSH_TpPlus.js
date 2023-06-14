@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -129,7 +129,7 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * Inital Tp Boost/Decrease: <tpBonus: (interger you want to use)>
 * Max Tp Boost/Decrease: <maxTpBonus: (interger you want to use)>
 * Force User to Start with Random Tp: <RandTpStart>
-* Force User to Start with Static Tp: <StaticTpStart>
+* Force User to Start with Static Tp: <StaticTp Start>
 * Tp Gained from Damage Flat Increase/Decrease: <dmgTpBonus: (intrger)>
 * Tp Gained from Damage Multiplier Increase/Decrease: <dmgTpMult: (intrger)>
 * Tp Gained from Use Flat Increase/Decrease: <atkTpBonus: (intrger)>
@@ -151,6 +151,10 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.2.1 (06/14/23) :
+* -Added a fallback in case the tp bonuses don't become numbers for some 
+* reason
+*
 * Version 1.2.0 (03/30/23) :
 * -Heavily optimized code
 *
@@ -223,6 +227,7 @@ Game_Actor.prototype.getTpStuff = function() {
 			}
 		}
 	}
+	eval("console.log(this." + labels[loop] + ")");
 	var id = this._classId;
 	for(var loop = 0; loop != 8; loop++){
 		var text = "$dataClasses[id].meta." + labels[loop] + " != null";
@@ -245,6 +250,7 @@ Game_Actor.prototype.getTpStuff = function() {
 			}
 		}
 	}
+	eval("console.log(this.maxTpBonus)");
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
 		if (equip == null) continue;
@@ -297,6 +303,7 @@ Game_Actor.prototype.getTpStuff = function() {
 	if (this._passiveStatesRaw != null){
 		stateList =  stateList.concat(this.passiveStates());
 	}
+	eval("console.log(this.maxTpBonus)"); 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		for(var loop = 0; loop != 8; loop++){
@@ -320,6 +327,10 @@ Game_Actor.prototype.getTpStuff = function() {
 				}
 			}
 		}
+	}
+	for(var loop = 0; loop != 8; loop++){
+		var tex = "this." + labels[loop] + " = " + "Number(this." + labels[loop] + ")";
+		eval(tex);
 	}
 };
 
@@ -367,6 +378,10 @@ Game_Enemy.prototype.getTpStuff = function() {
 				}
 			}
 		}
+	}
+	for(var loop = 0; loop != 8; loop++){
+		var tex = "this." + labels[loop] + " = " + "Number(this." + labels[loop] + ")";
+		eval(tex);
 	}
 }
 
