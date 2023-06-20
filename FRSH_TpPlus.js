@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.2.1
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -151,6 +151,9 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.2.2 (06/20/23) :
+* -Added compatibility to Yanfly Buff and State Core (place this below it);
+*
 * Version 1.2.1 (06/14/23) :
 * -Added a fallback in case the tp bonuses don't become numbers for some 
 * reason
@@ -535,6 +538,13 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 	value = Math.round(value);
 	//Gives the tp on attack
     this.subject().gainSilentTp(value);
+	//Yanfly Buff and State Core Compatability
+	if (Imported.YEP_BuffsStatesCore){
+		if (!target) return;
+		this.applyModifyBuffTurns(target);
+		this.applyModifyDebuffTurns(target);
+		this.applyModifyStateTurns(target);
+	}
 };
 
 //The function that plays when a skill/item give tp via an additional effect
