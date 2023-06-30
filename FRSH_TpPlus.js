@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.2.2
+// Version: 1.2.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -151,8 +151,12 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.2.3 (06/30/23) :
+* -Rewrote how gaining tp from attacks works, now it shouldn't overrwrite
+* anything
+*
 * Version 1.2.2 (06/20/23) :
-* -Added compatibility to Yanfly Buff and State Core (place this below it);
+* -Added compatibility to Yanfly Buff and State Core (place this below it)
 *
 * Version 1.2.1 (06/14/23) :
 * -Added a fallback in case the tp bonuses don't become numbers for some 
@@ -522,29 +526,23 @@ Game_Battler.prototype.chargeTpByDamage = function(damageRate) {
 };
 
 //The function that plays when an item has tp to give on use
+frsh_applyItemUserEffect_tpplus = Game_Action.prototype.applyItemUserEffect;
 Game_Action.prototype.applyItemUserEffect = function(target) {
-    var value = Math.floor(this.item().tpGain * this.subject().tcr);
-	//Sets variable to call the current skill/item user
-	var user = this.subject();
-	//checks to see if the tpGain from the action is above 0, or the check tto override that is true
+	var revert = this.item().tpGain;
+	var value = this.item().tpGain;
 	if (this.item().tpGain > 0 || Frashaw.Param.GlobalAttackTp){
-		if (this.atkTpBonus != null){
-			value += this.atkTpBonus;
-		}
-		if (this.atkTpMult != null){
-			value *= (this.atkTpMult + 1);
+		if (this.subject().atkTpBonus != null){
+			value += this.subject().atkTpBonus;
 		}
 	}
-	value = Math.round(value);
-	//Gives the tp on attack
-    this.subject().gainSilentTp(value);
-	//Yanfly Buff and State Core Compatability
-	if (Imported.YEP_BuffsStatesCore){
-		if (!target) return;
-		this.applyModifyBuffTurns(target);
-		this.applyModifyDebuffTurns(target);
-		this.applyModifyStateTurns(target);
+	if (this.item().tpGain > 0){
+		if (this.subject().atkTpMult != null){
+			value *= (this.subject().atkTpMult + 1);
+		}
 	}
+	this.item().tpGain = value;
+	frsh_applyItemUserEffect_tpplus.call(this,target);
+	this.item().tpGain = revert;
 };
 
 //The function that plays when a skill/item give tp via an additional effect
