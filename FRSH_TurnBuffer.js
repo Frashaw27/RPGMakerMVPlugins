@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TurnBuffer
 // FRSH_TurnBuffer.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -28,6 +28,11 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * @default true
 *
 * @help
+* ==States====================================================================
+* States:
+* <ignoreBuffer> - Overrides Buffer rules to not be added to the buffer list
+* <alwaysBuffer> - Overrides Buffer rules to always be added to the buffer 
+* list
 * ===Introduction=============================================================
 * Base RPG Maker is kinda misleading with how it devies up turns, making the 
 * current turns it's applied a turn that is used when counting down the 
@@ -38,6 +43,10 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * !!! Action Removed Stats work normally with on !!!
 * Plug and Play, very simple. 
 * ===Change Log===============================================================
+* Version 1.0.2 (07/07/23) :
+* -Added notetags to allow the option for certain states to ignore/always
+* the buffer addition, ignoring the rules put in place 
+*
 * Version 1.0.1 (05/28/23) :
 * -Fix a typo that caused states to not go down
 *
@@ -73,9 +82,9 @@ frsh_addState_tbuffer = Game_Battler.prototype.addState;
 Game_Battler.prototype.addState = function(stateId) {
     frsh_addState_tbuffer.call(this,stateId);
 	//Checks to see if the index already includes this
-	if (!this.stateBufferIndex.contains(stateId)){
+	if (!this.stateBufferIndex.contains(stateId) && $dataStates[stateId].meta.ignoreBuffer == null){
 		//Checks to see if the turns are correct or the option is false, getting put into the buffer if yes
-		if (this._stateTurns[stateId] > 1 || Frashaw.Param.StateOne == false) this.stateBufferIndex.push(stateId);
+		if ($dataStates[stateId].meta.alwaysBuffer != null || (this._stateTurns[stateId] > 1 || Frashaw.Param.StateOne == false)) this.stateBufferIndex.push(stateId);
 	}
 };
 
