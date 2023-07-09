@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.0.0
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -15,26 +15,11 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * @author Frashaw27
 * @plugindesc Allows skills to have Recoil Damage upon use.
 *
-*
-* @param recWait
-* @text Number of Wait Frames
-* @type number
-* @min 0
-* @desc Put the number of frames you want to wait to show recoil.
-* @default 450
-*
 * @param recMsg
 * @text Recoil Message
 * @type text
 * @desc Put the message you want to show when taking recoil damage. Use 1% to represent user & 2% to represent damage.
 * @default 1% took 2% damage too!
-*
-* @param endLag
-* @text Wait after Recoil
-* @type number
-* @min 0
-* @desc Put the number of frames you want to add when you show recoil.
-* @default 30
 *
 * @param
 * @default
@@ -81,21 +66,28 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * @desc Click True or False if you want to enable Personal Recoil on User Targeting Skills.
 * @default false
 *
+* @param recoilessMsg
+* @text Enable Recoiless Message?
+* @type boolean
+* @desc Click True or False if you want to enable Custom Recoil Messages to play even when there is no Recoil.
+* @default false
+*
 * @help
 * ==Notetags==================================================================
 * Skills:
-* <recoil: insert formula here*>: Enables Recoil on skill, assessing based on 
+* <recoil: insert formula here>: Enables Recoil on skill, assessing based on 
 * formula (you can still add stuff like 500 and it'd work).
+* <recoilMsg: insert formula here>: Replaces the standard recoil message
+* with a different one
 * Actors, Enemies, Classes, Weapons, Armors, and States:
-* <recoil: insert formula here*>: Enables Recoil that activates on all 
-* skills** regardless if they have Recoil or not, adding on to Recoil
+* <recoil: insert formula here>: Enables Recoil that activates on all 
+* skills* regardless if they have Recoil or not, adding on to Recoil
 * if it does happen on the skill.
-* <recoilAdd: insert number here*>: Adds/Subtracts from the Recoil
+* <recoilAdd: insert number here>: Adds/Subtracts from the Recoil
 * Damage.
-* <recoilMult: insert number here*>: Multiplies Recoil Damage
+* <recoilMult: insert number here>: Multiplies Recoil Damage
 * <recoilNull>: Causes Recoil to not run
-* * - don't put '*' in the formula unless you want to multiply
-* ** - when Personal Recoils activate can be changed with the settings 
+* * - when Personal Recoils activate can be changed with the settings 
 * ===Introduction=============================================================
 * RPG Maker has no innate system to handle damage recoil. There's a few 
 * ways, but they left me unsatisfied. So I made this plugin so that you
@@ -107,6 +99,12 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
+* Version 1.1.0 (07/09/23) :
+* -Updated method of text adding for recoil
+* -Removed some bunk code after updated method
+* -Added an option for skill custom recoil messages
+* -Added option to have these recoil messages to run if there is no recoil
+*
 * Version 1.0 (06/23/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -115,9 +113,7 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_Recoil');
 Frashaw.Param = Frashaw.Param || {};
-Frashaw.Param.RecoilWait = Number(Parameters.recWait);
 Frashaw.Param.RecoilMessage = Parameters.recMsg;
-Frashaw.Param.RecoilLag = Number(Parameters.endLag);
 if (Parameters.perRecoilMod === "true"){
 	Frashaw.Param.PersonalRecoilMods = true;
 } else {
@@ -153,42 +149,18 @@ if (Parameters.recSelf === "true"){
 } else {
 	Frashaw.Param.PersonalRecoilUser = false;
 }
+if (Parameters.recoilessMsg === "true"){
+	Frashaw.Param.RecoillessMessage = true;
+} else {
+	Frashaw.Param.RecoillessMessage = false;
+}
 
 //Some variable setting
 var recoilMsg = Frashaw.Param.RecoilMessage;
-if (!recoilMsg.contains("1%") && !recoilMsg.contains("2%")){
-	var finalMsg = recoilMsg;
-} else if (recoilMsg.contains("1%") && !recoilMsg.contains("2%")) {
-	var finalMsg = recoilMsg.split("1%")[1];
-} else if (!recoilMsg.contains("1%") && recoilMsg.contains("2%")) {
-	var finalMsg = recoilMsg.split("2%")[1];
-} else if (recoilMsg.contains("1%") && recoilMsg.contains("2%")) {
-	var finalMsg = recoilMsg.split("1%")[1];
-	finalMsg = finalMsg.split("2%")[1];
-}
 var message = "";
 var dmgValue = 0;
-var waitValue = 0;
-
-//A funtion made to delay the appearence of the recoil text just slightly
-function recoilText(){
-	var array = [];
-	for (var loop = 0; loop != SceneManager._scene._logWindow._lines.length; loop++){
-		if (SceneManager._scene._logWindow._lines[loop].contains(finalMsg)) array.push(loop);
-	}
-	if (array.length != 0){
-		for (var pool = 0; pool != array.length; pool++){
-			SceneManager._scene._logWindow._lines.splice(array[pool], 1);
-		}
-	}
-	SceneManager._scene._logWindow.addText(message);
-	SceneManager._scene._logWindow.recoilWait();
-}
-
-//A function to add a wait after showing the recoil message
-Window_BattleLog.prototype.recoilWait = function() {
-	this._waitCount = Frashaw.Param.RecoilLag;
-};
+var recoilValue = 0;
+var recoilBool = false;
 
 //Gets all the modifiers for Recoil with actors
 Game_Actor.prototype.getRecoilStuff = function() {
@@ -417,16 +389,41 @@ function personalRecoilEval(action){
 	return true;
 }
 
+frsh_apply_recoil = Game_Action.prototype.apply
+Game_Action.prototype.apply = function(target) {
+	recoilBool = false;
+	frsh_apply_recoil.call(this,target);
+};
+
+frsh_displayDamage_recoil = Window_BattleLog.prototype.displayDamage
+Window_BattleLog.prototype.displayDamage = function(target) {
+	frsh_displayDamage_recoil.call(this,target);
+    if (target.result().missed == false && target.result().evaded == false){
+		this.displayRecoil(target);
+    }
+};
+
+function customMessage(text, user){
+	var tex = text;
+	if (tex.contains("1%")) tex = tex.replace("1%",user.name());
+	if (tex.contains("2%")) tex = tex.replace("2%",recoilValue);
+	return tex;
+}
+
+Window_BattleLog.prototype.displayRecoil = function(target) {
+	if (($dataSkills[BattleManager._action.item().id].meta.recoilMsg != null && Frashaw.Param.RecoillessMessage) || recoilBool){
+		if ($dataSkills[BattleManager._action.item().id].meta.recoilMsg != null){
+			this.push('addText', customMessage($dataSkills[BattleManager._action.item().id].meta.recoilMsg, BattleManager._action.subject()));
+		} else {
+			this.push('addText', message);
+		}
+	}
+};
+
 //The Meat and Potatoes
 frsh_applyItemUserEffect_recoil = Game_Action.prototype.applyItemUserEffect;
 Game_Action.prototype.applyItemUserEffect = function(target) {
 	frsh_applyItemUserEffect_recoil.call(this, target);
-	//Checks to see if the attack was a crit, increasing the timer before the recoil message shows for better timing
-	if (target.result().critical){
-		waitValue = Frashaw.Param.RecoilWait * 2;
-	} else {
-		waitValue = Frashaw.Param.RecoilWait;
-	}
 	//Runs if the action is a skill and the user doesn't negate recoil and if the attack connected
 	if (this.isSkill() && !this.subject().recoilNull && target.result().isHit()){
 		//Checks for recoil on the skill
@@ -458,11 +455,14 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 				//Reduces user's hp by the amount
 				this.subject().gainHp(-recoil);
 				//Sets up recoil message
-				message = recoilMsg;
+				if ($dataSkills[this.item().id].meta.recoilMsg == null){
+					message = recoilMsg;
+				} else {
+					message = $dataSkills[this.item().id].meta.recoilMsg
+				}
+				recoilBool = true;
 				if (message.contains("1%")) message = message.replace("1%", this.subject().name());
 				if (message.contains("2%")) message = message.replace("2%", recoil);
-				//Sets the timer to show the recoil message
-				setTimeout(recoilText,waitValue);
 			}
 		//Checks to see if the user has some recoil that goes on all attacks, along with the associated checks
 		//Otherwise the same
@@ -479,10 +479,15 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			recoil = Math.round(recoil);
 			if (recoil > 0 && recoil != null){
 				this.subject().gainHp(-recoil);
-				message = recoilMsg;
+				recoilValue = recoil;
+				recoilBool = true;
+				if ($dataSkills[this.item().id].meta.recoilMsg == null){
+					message = recoilMsg;
+				} else {
+					message = $dataSkills[this.item().id].meta.recoilMsg
+				}
 				if (message.contains("1%")) message = message.replace("1%", this.subject().name());
 				if (message.contains("2%")) message = message.replace("2%", recoil);
-				setTimeout(recoilText,waitValue);
 			}
 		}
 	}
