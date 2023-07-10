@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.0.3
+// Version: 1.0.4
 //=============================================================================
 
 var Imported = Imported || {};
@@ -276,7 +276,10 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
-* Version 1.0.2 (06/13/23) :
+* Version 1.0.4 (07/09/23) :
+* -Changed several method calls to make them more dynamic
+*
+* Version 1.0.3 (06/13/23) :
 * -Fixed bug with summon death message
 *
 * Version 1.0.2 (06/06/23) :
@@ -374,33 +377,9 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 	//can show.
 	return true;
 	}
-	
-	//Acts like waitForNewLine, but adds a setter for battle log lines, only used when FRSH_Summons or FRSH_ItemConcequences is active
-	Window_BattleLog.prototype.waitForNewLineOther = function() {
-		var baseLine = 0;
-		if (this._baseLineStack.length > 0) {
-			baseLine = this._baseLineStack[this._baseLineStack.length - 1];
-		}
-		if (this._lines.length > baseLine) {
-			this.wait();
-		}
-		//Gets the length of the # of lines in the battle log
-		var length = SceneManager._scene._logWindow._lines.length;
-		//If the battle log already has messages it stores them for later
-		if (otherText.length != 0){
-			var sub = otherText[0];
-			otherText = [];
-		}
-		//Adds in all the lines from the battle log into otherText via push because a stright setting made
-		//them linked which made things messy
-		for (var loop = 0; loop != length; loop++){
-			otherText.push(SceneManager._scene._logWindow._lines[loop]);
-		}
-		//Adds in the previously stored lines if there were any
-		if (sub != null) otherText.push(sub);
-	};
 
 	//The fuction that shows the fail message (or not).
+	frsh_displayFailure_antiMsg = Window_BattleLog.prototype.displayFailure;
 	Window_BattleLog.prototype.displayFailure = function(target){
 		if (target.result().isHit() && !target.result().success){
 			var check = checkChecker(1, "Antifail");
@@ -408,29 +387,15 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 			var check = false;
 		}
 		if (check) {
-			this.push('addText', TextManager.actionFailure.format(target.name()));
+			frsh_displayFailure_antiMsg.call(this, target);
 		}
 	};
 	
+	frsh_displayActionResults_antiMsg = Window_BattleLog.prototype.displayActionResults
 	Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 		var check = checkChecker(2, "AntiActionResults");
 		if (check){
-			if (target.result().used) {
-				this.push('pushBaseLine');
-				this.displayCritical(target);
-				this.push('popupDamage', target);
-				this.push('popupDamage', subject);
-				this.displayDamage(target);
-				this.displayAffectedStatus(target);
-				this.displayFailure(target);
-				//Compatibility with Summons and Item Concequences
-				if (Imported.Summons || Imported.IConcequence){
-					this.push('waitForNewLineOther');
-				} else {
-					this.push('waitForNewLine');
-				}
-				this.push('popBaseLine');
-			}
+			frsh_displayActionResults_antiMsg.call(this, subject, target);
 			//A line imported from battle engine it overwrites this function and better to be safe then sorry
 			//if removing the only difference will break the plugin
 			if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
@@ -439,93 +404,61 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 	
 	//Doesn't run when Custom Item Messages is in
 	if (!Imported.CIMessage){
+		frsh_displayAction_antiMsg = Window_BattleLog.prototype.displayAction
 		Window_BattleLog.prototype.displayAction = function(subject, item) {
 			var numMethods = this._methods.length;
 			var check = checkChecker(3, "AntiAction");
 			if (check){
-				if (DataManager.isSkill(item)) {
-					if (item.message1) {
-						this.push('addText', subject.name() + item.message1.format(item.name));
-					}
-					if (item.message2) {
-						this.push('addText', item.message2.format(item.name));
-					}
-				} else {
-					this.push('addText', TextManager.useItem.format(subject.name(), item.name));
-				}
-				if (this._methods.length === numMethods) {
-					this.push('wait');
-				}
+				frsh_displayAction_antiMsg.call(this,subject,item);
 			}
 		};
 	}
 	
+	frsh_displayDamage_antiMsg = Window_BattleLog.prototype.displayDamage
 	Window_BattleLog.prototype.displayDamage = function(target) {
 		var check = checkChecker(4, "AntiDamage");
 		if (check){
-			if (target.result().missed) {
-				this.displayMiss(target);
-			} else if (target.result().evaded) {
-				this.displayEvasion(target);
-			} else {
-				this.displayHpDamage(target);
-				this.displayMpDamage(target);
-				this.displayTpDamage(target);
-			}
+			frsh_displayDamage_antiMsg.call(this,target);
 		}
 	};
 	
+	frsh_displayCounter_antiMsg = Window_BattleLog.prototype.displayCounter;
 	Window_BattleLog.prototype.displayCounter = function(target) {
 		var check = checkChecker(5, "AntiCounter");
 		if (check){
-			this.push('performCounter', target);
-			this.push('addText', TextManager.counterAttack.format(target.name()));
+			frsh_displayCounter_antiMsg.call(this,target);
 		}
 	};
 
+	frsh_displayReflection_antiMsg = Window_BattleLog.prototype.displayReflection;
 	Window_BattleLog.prototype.displayReflection = function(target) {
 		var check = checkChecker(6, "AntiReflection");
 		if (check){
-			this.push('performReflection', target);
-			this.push('addText', TextManager.magicReflection.format(target.name()));
+			frsh_displayReflection_antiMsg.call(this,target);
 		}
 	};
-
+	
+	frsh_displaySubstitute_antiMsg = Window_BattleLog.prototype.displaySubstitute;
 	Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
 		var check = checkChecker(7, "AntiSubstitute");
 		if (check){
-			var substName = substitute.name();
-			this.push('performSubstitute', substitute, target);
-			this.push('addText', TextManager.substitute.format(substName, target.name()));
+			frsh_displaySubstitute_antiMsg.call(this, substitute, target);
 		}
 	};
 
+	frsh_displayMiss_antiMsg = Window_BattleLog.prototype.displayMiss;
 	Window_BattleLog.prototype.displayMiss = function(target) {
 		var check = checkChecker(8, "AntiMiss");
 		if (check){
-			var fmt;
-			if (target.result().physical) {
-				fmt = target.isActor() ? TextManager.actorNoHit : TextManager.enemyNoHit;
-				this.push('performMiss', target);
-			} else {
-				fmt = TextManager.actionFailure;
-			}
-			this.push('addText', fmt.format(target.name()));
+			frsh_displayMiss_antiMsg.call(this,target);
 		}
 	};
 
+	frsh_displayEvasion_antiMsg = Window_BattleLog.prototype.displayEvasion;
 	Window_BattleLog.prototype.displayEvasion = function(target) {
 		var check = checkChecker(9, "AntiEvasion");
 		if (check){
-			var fmt;
-			if (target.result().physical) {
-				fmt = TextManager.evasion;
-				this.push('performEvasion', target);
-			} else {
-				fmt = TextManager.magicEvasion;
-				this.push('performMagicEvasion', target);
-			}
-			this.push('addText', fmt.format(target.name()));
+			frsh_displayEvasion_antiMsg.call(this,target);
 		}
 	};
 
@@ -551,25 +484,20 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 
 
 	//Other Free One
+	frsh_displalyAffectedStatus_antiMsg = Window_BattleLog.prototype.displayAffectedStatus;
 	Window_BattleLog.prototype.displayAffectedStatus = function(target) {
 		var check = checkChecker(13, "AntiAffectedStatus");
 		if (check){
-			if (target.result().isStatusAffected()) {
-				this.push('pushBaseLine');
-				this.displayChangedStates(target);
-				this.displayChangedBuffs(target);
-				this.push('waitForNewLine');
-				this.push('popBaseLine');
-			}
+			frsh_displalyAffectedStatus_antiMsg.call(this,target);
 		}
 	};
 
 	//States
+	frsh_displalyChangedStatus_antiMsg = Window_BattleLog.prototype.displayChangedStates;
 	Window_BattleLog.prototype.displayChangedStates = function(target) {
 		var check = checkChecker(14, "AntiChangedStatuses");
 		if (check){
-			this.displayAddedStates(target);
-			this.displayRemovedStates(target);
+			frsh_displalyChangedStatus_antiMsg.call(this,target);
 		}
 	};
 
@@ -645,15 +573,11 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 
+	frsh_displalyCurrentStatus_antiMsg = Window_BattleLog.prototype.displayChangedStates;
 	Window_BattleLog.prototype.displayCurrentState = function(subject) {
 		var check = checkChecker(17, "AntiCurrentState");
 		if (check){
-			var stateText = subject.mostImportantStateText();
-			if (stateText) {
-				this.push('addText', subject.name() + stateText);
-				this.push('wait');
-				this.push('clear');
-			}
+			frsh_displalyCurrentStatus_antiMsg.call(this, subject);
 		}
 	};
 
@@ -677,21 +601,14 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 
+	frsh_displayHpDamage_antiMsg = Window_BattleLog.prototype.displayHpDamage;
 	Window_BattleLog.prototype.displayHpDamage = function(target) {
 		var check = checkChecker(22, "AntiHpDamage");
 		if (check){
-			if (target.result().hpAffected) {
-				if (target.result().hpDamage > 0 && !target.result().drain) {
-					this.push('performDamage', target);
-				}
-				if (target.result().hpDamage < 0) {
-					this.push('performRecovery', target);
-				}
-				this.push('addText', this.makeHpDamageText(target));
-			}
+			frsh_displayHpDamage_antiMsg.call(this,target);
 		}
 	};
-
+	
 	Window_BattleLog.prototype.makeHpDamageText = function(target) {
 		var check = checkChecker(23, "AntiHpDamageText");
 		if (check){
@@ -715,18 +632,16 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 
+
+	frsh_displayMpDamage_antiMsg = Window_BattleLog.prototype.displayMpDamage;
 	Window_BattleLog.prototype.displayMpDamage = function(target) {
 		var check = checkChecker(24, "AntiMpDamage");
 		if (check){
-			if (target.isAlive() && target.result().mpDamage !== 0) {
-				if (target.result().mpDamage < 0) {
-					this.push('performRecovery', target);
-				}
-				this.push('addText', this.makeMpDamageText(target));
-			}
+			frsh_displayMpDamage_antiMsg.call(this, target);
 		}
 	};
 
+	frsh_makeMpDamageText_antiMsg = Window_BattleLog.prototype.makeMpDamageText;
 	Window_BattleLog.prototype.makeMpDamageText = function(target) {
 		var check = checkChecker(25, "AntiMpDamageText");
 		if (check){
@@ -749,18 +664,15 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 
+	frsh_displayTpDamage_antiMsg = Window_BattleLog.prototype.displayTpDamage;
 	Window_BattleLog.prototype.displayTpDamage = function(target) {
 		var check = checkChecker(26, "AntiTpDamage");
 		if (check){
-			if (target.isAlive() && target.result().tpDamage !== 0) {
-				if (target.result().tpDamage < 0) {
-					this.push('performRecovery', target);
-				}
-				this.push('addText', this.makeTpDamageText(target));
-			}
+			frsh_displayTpDamage_antiMsg.call(this, target);
 		}
 	};
 
+	frsh_makeTpDamageText_antiMsg = Window_BattleLog.prototype.makeTpDamageText;
 	Window_BattleLog.prototype.makeTpDamageText = function(target) {
 		var check = checkChecker(27, "AntiTpDamageText");
 		if (check){
