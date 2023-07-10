@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.4
+// Version: 1.2.5
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,9 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.5 (07/10/23) :
+* -Changed the way text is shown to be WAY less jank
+*
 * Version 1.2.4 (06/11/23) :
 * -Added a variable initalization
 * -Added "compatability" with FRSH_AntiMessage
@@ -1186,6 +1189,7 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * ============================================================================
 */
 //============================================================================
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_ItemConcequences');
 Frashaw.Param = Frashaw.Param || {};
@@ -1251,6 +1255,10 @@ if (!Imported.Summons){
 		Parameters.resetOther = false;
 	}
 }
+conBool = false;
+conText = '';
+conEval = '';
+
 //Processes the switches into an array to be checked
 Frashaw.Param.SwitchArray = arrayizer(Parameters.switched);
 var otherText = []; //Text for the battle log for text
@@ -1635,196 +1643,66 @@ Game_BattlerBase.prototype.die = function() {
 	}
 };
 
-
-//Sets up variable for later use
-var itemId = 0;
-	
-_frsh_use = Game_Battler.prototype.useItem;
-Game_Battler.prototype.useItem = function(item) {
-	_frsh_use.call(this,item);
-	//if the last used thing was an item, sets the previously set variable to the id. else puts it at 0;
-	if (DataManager.isItem(item)){
-		itemId = item.id;
-		var loop = 0;
-	} else {
-		itemId = 0;
-	}
-}
-
-function clear(){
-	//hear because it didn't want to not crash when left by itself
-	SceneManager._scene._logWindow.clear();
-}
-
-Window_BattleLog.prototype.waitt = function() {
-	//adds a purposeful delay in the battlelog when called to sync up with the clear
-	this._waitCount = 60;
+frsh_apply_itemCon = Game_Action.prototype.apply
+Game_Action.prototype.apply = function(target) {
+	conBool = false;
+	frsh_apply_itemCon.call(this,target);
 };
 
 //The part where all variable adding happens
-_frsh_endAction = Game_Battler.prototype.performActionEnd;
-Game_Battler.prototype.performActionEnd = function() {
-	_frsh_endAction.call(this);
-	//Checks to see if switches are on
-	var bool = switchAllowel();
-	//Calls the target data to see if the last target was an actor
-	var text = "BattleManager._action.isForFriend()";
-	var actor = eval(text);
+frsh_applyItemUserEffect_itemCon = Game_Action.prototype.applyItemUserEffect;
+Game_Action.prototype.applyItemUserEffect = function(target) {
+	frsh_applyItemUserEffect_itemCon.call(this, target);
 	//Checks to see if switches are on, target is ally, and if the last action was an item or not
-	if (bool && actor && itemId != 0){
-		var id = itemId;
-		if (BattleManager._action.isForAll() == false){
-			//Gets target id how specified use
-			var aId = BattleManager._action.subject()._lastTargetIndex;
-			//Sets up target proper
-			var target = $gameParty.members()[aId];
-			var loop = 0;
-			while(loop != length){
-				//Checks if the consequence is a tag on the item to use
-				var bool = eval("$dataItems[id].meta." + Frashaw.Param.Concequence[loop] + " != null");
-				if (bool){
-					//adds the requisite points on use
-					var text = "target." + Frashaw.Param.Concequence[loop] + "+= concequenceModifier(this,target,Frashaw.Param.Concequence[loop],Number($dataItems[id].meta." + Frashaw.Param.Concequence[loop] + "));";
-					eval(text);
-					//Sets up limit variable for later comparison
-					var text = "var limit = target." + Frashaw.Param.Concequence[loop] + ";";
-					eval(text);
-					//Gets max variable for comparison
-					var text = "var max = " + Frashaw.Param.Concequence[loop] + "array[0];";
-					eval(text);
-					//Checks if the amount the actor has is over the max amount
-					if (limit > max){
-						//checks to see if a message needs to be played
-						var text = Frashaw.Param.Concequence[loop] + "array[7] != ''";
-						var bool = eval(text);
-						if (bool){
-							SceneManager._scene._logWindow._lines = otherText;
-							//adds message if requested
-							var text = "var tex = " + Frashaw.Param.Concequence[loop] + "array[7];";
-							eval(text);
-							SceneManager._scene._logWindow.addText(eval(tex));
-							//Adds the eval for the effect
-							var text = Frashaw.Param.Concequence[loop] + "array[1]";
-							var peanut = "eval(" + text + ")";
-							eval(peanut);
-							//Adds the wait in the battle log
-							SceneManager._scene._logWindow.waitt();
-							//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
-							setTimeout(clear,1000);
-						} else {
-							//Sets up the eval for use
-							var text = Frashaw.Param.Concequence[loop] + "array[1]";
-							var peanut = "eval(" + text + ")";
-							eval(peanut);
-						}
-					}
-				}
-				loop++;
-			}
-		} else if (!BattleManager._action.isForDeadFriend()) {
-			//The same thing as above, just added a loop to loop through all the members in the current active party
-			var pool = 0;
-			while (pool != $gameParty.aliveMembers().length && $gameParty.aliveMembers().length != 0){
-				var target = $gameParty.aliveMembers()[pool];
-				var loop = 0;
-				while(loop != length){
-					//Checks if the consequence is a tag on the item to use
-					var bool = eval("$dataItems[id].meta." + Frashaw.Param.Concequence[loop] + " != null");
+	if (this.isItem() && switchAllowel && this.isForFriend() && !this.isForDeadFriend()){
+		var id = this.item().id;
+		var loop = 0;
+		while(loop != length){
+			//Checks if the consequence is a tag on the item to use
+			var bool = eval("$dataItems[id].meta." + Frashaw.Param.Concequence[loop] + " != null");
+			if (bool){
+				//adds the requisite points on use
+				var text = "target." + Frashaw.Param.Concequence[loop] + "+= concequenceModifier(this,target,Frashaw.Param.Concequence[loop],Number($dataItems[id].meta." + Frashaw.Param.Concequence[loop] + "));";
+				eval(text);
+				//Sets up limit variable for later comparison
+				var text = "var limit = target." + Frashaw.Param.Concequence[loop] + ";";
+				eval(text);
+				//Gets max variable for comparison
+				var text = "var max = " + Frashaw.Param.Concequence[loop] + "array[0];";
+				eval(text);
+				//Checks if the amount the actor has is over the max amount
+				if (limit > max){
+					//checks to see if a message needs to be played
+					var text = Frashaw.Param.Concequence[loop] + "array[7] != ''";
+					var bool = eval(text);
 					if (bool){
-						//adds the requisite points on use
-						var text = "target." + Frashaw.Param.Concequence[loop] + "+= concequenceModifier(this,target,Frashaw.Param.Concequence[loop],Number($dataItems[id].meta." + Frashaw.Param.Concequence[loop] + "));";
+						conBool = true;
+						//adds message if requested
+						var text = "var tex = " + Frashaw.Param.Concequence[loop] + "array[7];";
 						eval(text);
-						//Sets up limit variable for later comparison
-						var text = "var limit = target." + Frashaw.Param.Concequence[loop] + ";";
-						eval(text);
-						//Gets max variable for comparison
-						var text = "var max = " + Frashaw.Param.Concequence[loop] + "array[0];";
-						eval(text);
-						//Checks if the amount the actor has is over the max amount
-						if (limit > max){
-							//checks to see if a message needs to be played
-							var text = Frashaw.Param.Concequence[loop] + "array[7] != ''";
-							var bool = eval(text);
-							if (bool){
-								SceneManager._scene._logWindow._lines = otherText;
-								//adds message if requested
-								var text = "var tex = " + Frashaw.Param.Concequence[loop] + "array[7];";
-								eval(text);
-								SceneManager._scene._logWindow.addText(eval(tex));
-								eval(text);
-								//Adds the eval for the effect
-								var text = Frashaw.Param.Concequence[loop] + "array[1]";
-								var peanut = "eval(" + text + ")";
-								eval(peanut);
-								//Adds the wait in the battle log
-								SceneManager._scene._logWindow.waitt();
-								//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
-								setTimeout(clear,1000);
-							} else {
-								//Sets up the eval for use
-								var text = Frashaw.Param.Concequence[loop] + "array[1]";
-								var peanut = "eval(" + text + ")";
-								eval(peanut);
-							}
-						}
+						conText = eval(tex);
+						var text = Frashaw.Param.Concequence[loop] + "array[1]";
+						conEval = "eval(" + text + ")";
+					} else {
+						conBool = true;
+						conText = '';
+						var text = Frashaw.Param.Concequence[loop] + "array[1]";
+						conEval = "eval(" + text + ")";
 					}
-					loop++;
 				}
-				pool++;
 			}
-		} else {
-			//The same thing as above, just added a loop to loop through all the dead members in the current active party
-			var pool = 0;
-			while (pool != $gameParty.deadMembers().length && $gameParty.deadMembers().length != 0){
-				var target = $gameParty.deadMembers()[pool];
-				var loop = 0;
-				while(loop != length){
-					//Checks if the consequence is a tag on the item to use
-					var bool = eval("$dataItems[id].meta." + Frashaw.Param.Concequence[loop] + " != null");
-					if (bool){
-						//adds the requisite points on use
-						var text = "target." + Frashaw.Param.Concequence[loop] + "+= concequenceModifier(this,target,Frashaw.Param.Concequence[loop],Number($dataItems[id].meta." + Frashaw.Param.Concequence[loop] + "));";
-						eval(text);
-						//Sets up limit variable for later comparison
-						var text = "var limit = target." + Frashaw.Param.Concequence[loop] + ";";
-						eval(text);
-						//Gets max variable for comparison
-						var text = "var max = " + Frashaw.Param.Concequence[loop] + "array[0];";
-						eval(text);
-						//Checks if the amount the actor has is over the max amount
-						if (limit > max){
-							//checks to see if a message needs to be played
-							var text = Frashaw.Param.Concequence[loop] + "array[7] != ''";
-							var bool = eval(text);
-							if (bool){
-								SceneManager._scene._logWindow._lines = otherText;
-								//adds message if requested
-								var text = "var tex = " + Frashaw.Param.Concequence[loop] + "array[7];";
-								eval(text);
-								SceneManager._scene._logWindow.addText(eval(tex));
-								eval(text);
-								//Adds the eval for the effect
-								var text = Frashaw.Param.Concequence[loop] + "array[1]";
-								var peanut = "eval(" + text + ")";
-								eval(peanut);
-								//Adds the wait in the battle log
-								SceneManager._scene._logWindow.waitt();
-								//Adds the synced up clear command. Doesn't have () as otherwise it would start the function immediatly
-								setTimeout(clear,1000);
-							} else {
-								//Sets up the eval for use
-								var text = Frashaw.Param.Concequence[loop] + "array[1]";
-								var peanut = "eval(" + text + ")";
-								eval(peanut);
-							}
-						}
-					}
-					loop++;
-				}
-				pool++;
-			}
+			loop++;
 		}
 	}
+};
+
+frsh_displayAffectedStatus_itemCon = Window_BattleLog.prototype.displayAffectedStatus
+Window_BattleLog.prototype.displayAffectedStatus = function(target) {
+	frsh_displayAffectedStatus_itemCon.call(this,target);
+    if (target.result().missed == false && target.result().evaded == false && conBool){
+		this.push('addText', conText);
+		eval(conEval);
+    }
 };
 
 //Decrease the actors shit at the end of every turn
@@ -2009,169 +1887,13 @@ Window_BattleStatus.prototype.drawGaugeAreaWithTp = function(rect, actor) {
 		//Draws the current value for the consequence
         this.drawCurrentAndMax(concequence, max, x, y, width, this.mpColor(actor), this.normalColor());
     };
-	
-	Window_BattleLog.prototype.waitt = function() {
-		//adds a purposeful delay in the battlelog when called to sync up with the clear
-		this._waitCount = 60;
-	};
-
-//Acts like waitForNewLine, but adds a setter for battle log lines
-Window_BattleLog.prototype.waitForNewLineOther = function() {
-    var baseLine = 0;
-    if (this._baseLineStack.length > 0) {
-        baseLine = this._baseLineStack[this._baseLineStack.length - 1];
-    }
-    if (this._lines.length > baseLine) {
-        this.wait();
-    }
-	//Gets the length of the # of lines in the battle log
-	var length = SceneManager._scene._logWindow._lines.length;
-	//If the battle log already has messages it stores them for later
-	if (otherText.length != 0){
-		var sub = otherText[0];
-		otherText = [];
-	}
-	//Adds in all the lines from the battle log into otherText via push because a stright setting made
-	//them linked which made things messy
-	for (var loop = 0; loop != length; loop++){
-		otherText.push(SceneManager._scene._logWindow._lines[loop]);
-	}
-	//Adds in the previously stored lines if there were any
-	if (sub != null) otherText.push(sub);
-};
-
-//A function overwritten to include the summons death message; doesn't run if FRSH_AntiMessage is in
-if (!Imported.AMessage){
-Window_BattleLog.prototype.displayAddedStates = function(target) {
-    target.result().addedStateObjects().forEach(function(state) {
-        var stateMsg = target.isActor() ? state.message1 : state.message2;
-        if (state.id === target.deathStateId()) {
-            this.push('performCollapse', target);
-        }
-        if (stateMsg) {
-            this.push('popBaseLine');
-            this.push('pushBaseLine');
-			//resets the for each different state/buff message, if wanted
-			if (Parameters.resetOther){
-				otherText = [];
-			}
-			//Adds text to saved battlelog lines
-			otherText.push(target.name() + stateMsg);
-			//Checks to see if the current applying state is death
-			if (state.id === target.deathStateId()){
-				//Checks to see if target has the summon tag
-				if (target.summon){
-					//Checks to see if the actor has a custom death message
-					if (target.summonDeath != null || target.summonDeath == ''){
-						//Uses it if they do
-						this.push('addText', target.summonDeath);
-					} else {
-						//Uses default if they don't
-						var text = Frashaw.Param.defaultSummDeathText;
-						//Splits array to check to where to put the name
-						var textArray = text.split("%");
-						//A check to see if the name goes at start end or the middle
-						if (textArray.length > 1){
-							//Puts it into the middle if yes
-							text = textArray[0] + this.name() + textArray[1];
-						} else {
-							//Puts it at the start if not
-							text =  this.name() + textArray[0];
-						}
-						this.push('addText', text);
-					}
-				} else {
-					//Does normal message if target is not a summon
-					this.push('addText', target.name() + stateMsg);
-				}
-			} else {
-				//Does normal message if not death
-				this.push('addText', target.name() + stateMsg);	
-			}
-            this.push('waitForEffect');
-        }
-    }, this);
-};
-}
-
-//Purely here for getting the remove state message; doesn't run if FRSH_AntiMessage is in
-if (!Imported.AMessage){
-Window_BattleLog.prototype.displayRemovedStates = function(target) {
-    target.result().removedStateObjects().forEach(function(state) {
-        if (state.message4) {
-            this.push('popBaseLine');
-            this.push('pushBaseLine');
-			//Said remove state message
-			if (Parameters.resetOther){
-				otherText = [];
-			}
-			otherText.push(target.name() + state.message4);
-            this.push('addText', target.name() + state.message4);
-        }
-    }, this);
-};
-}
-
-//Purely here for getting the buff message
-Window_BattleLog.prototype.displayBuffs = function(target, buffs, fmt) {
-    buffs.forEach(function(paramId) {
-        this.push('popBaseLine');
-        this.push('pushBaseLine');
-		//Said buff message
-		if (Parameters.resetOther){
-			otherText = [];
-		}
-		otherText.push(fmt.format(target.name(), TextManager.param(paramId)));
-        this.push('addText', fmt.format(target.name(), TextManager.param(paramId)));
-    }, this);
-};
-
-//Determines how endAction works
-Window_BattleLog.prototype.endAction = function(subject) {
-	//If Battle Engine Core is imported, this doesn't run as it is run by that aswell
-	if (!Imported.YEP_BattleEngineCore){
-		this.push('performActionEnd', subject);
-	}
-	//Other end action stuff, just rearranged
-	this.push('waitForNewLine');
-    this.push('clear');
-};
 
 frsh_strtAct_itemCon = Window_BattleLog.prototype.startAction
 Window_BattleLog.prototype.startAction = function(subject, action, targets) {
 	currentWindow = 1;
     frsh_strtAct_itemCon.call(this,subject,action,targets);
 };
-
-//Makes sure that it calls the alternative "waitForNewLine"; doesn't run if FRSH_AntiMessage is in
-if (!Imported.AMessage){
-Window_BattleLog.prototype.displayActionResults = function(subject, target) {
-	//Compatibility with AntiMessage
-	if (Imported.AMessage) {
-		var check = checkChecker(2, "AntiActionResults");
-	} else {
-		check = true;
-	}
-	//Checks to see if the message needs to be displayed or not
-	if (check){
-		if (target.result().used) {
-			this.push('pushBaseLine');
-			this.displayCritical(target);
-			this.push('popupDamage', target);
-			this.push('popupDamage', subject);
-			this.displayDamage(target);
-			this.displayAffectedStatus(target);
-			this.displayFailure(target);
-			//Said alternative waitForNewLine
-			this.push('waitForNewLineOther');
-			this.push('popBaseLine');
-		}
-	}
-	//A line imported from battle engine it overwrites this function and better to be safe then sorry
-	//if removing the only difference will break the plugin
-	if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
-};
-}
+})();
 //=============================================================================
 // End of File
 //=============================================================================
