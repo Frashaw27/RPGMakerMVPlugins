@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CallMetaValues
 // FRSH_CallMetaValues.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -52,7 +52,7 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * @param percBool
 * @text Percent False
 * @type boolean
-* @desc Click True or False if you want to enable setting the ungotten values to 0.
+* @desc Click True or False if you want to enable setting the ungotten values to 1.
 * @default false
 * @default
 *
@@ -98,6 +98,10 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * labels and data value into the notetags, at which point the plugin will
 * auto compile them for your use.
 * ===Change Log===============================================================
+* Version 1.0.1 (07/13/23) :
+* -Changed the percent "initalizer" to be 1 instead of 0 if the value is 
+* empty
+*
 * Version 1.0 (05/03/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -331,7 +335,7 @@ Game_Actor.prototype.getPercStuff = function() {
 		for (var loop = 0; loop != length; loop++){
 			var bool = eval("this." + labels[loop] + " == null");
 			if (bool){
-				eval("this." + labels[loop] + " = 0");
+				eval("this." + labels[loop] + " = 1");
 			}
 		}
 	}
