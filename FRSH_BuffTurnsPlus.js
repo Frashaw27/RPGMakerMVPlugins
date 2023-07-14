@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffTurnsPlus
 // FRSH_BuffTurnsPlus.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -44,6 +44,9 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * that. Ex: addBuff/Debuff(5, 3, $gameActors.actor(1)(or whatever you want
 * /need))
 * ===Change Log===============================================================
+* Version 1.0.1 (07/14/23) :
+* -Removed a method that crashed Yanfly_PartySystem
+*
 * Version 1.0 (05/02/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -52,7 +55,6 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 
 //Grabs the Buff Bonus for Givers
 Game_Actor.prototype.getGiveBuffBonus = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	if ($dataActors[id].meta.giveBuffBonus != null){
 		this.giveBuffBonus = Number($dataActors[id].meta.giveBuffBonus);
@@ -105,7 +107,6 @@ Game_Actor.prototype.getGiveBuffBonus = function() {
 
 //Grabs the Buff Bonus for Receivers
 Game_Actor.prototype.getTakeBuffBonus = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	if ($dataActors[id].meta.takeBuffBonus != null){
 		this.takeBuffBonus = Number($dataActors[id].meta.takeBuffBonus);
@@ -158,7 +159,6 @@ Game_Actor.prototype.getTakeBuffBonus = function() {
 
 //Grabs the Debuff Bonus for Givers
 Game_Actor.prototype.getGiveDebuffBonus = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	if ($dataActors[id].meta.giveDebuffBonus != null){
 		this.giveDebuffBonus = Number($dataActors[id].meta.giveDebuffBonus);
@@ -211,7 +211,6 @@ Game_Actor.prototype.getGiveDebuffBonus = function() {
 
 //Grabs the Debuff Bonus for Receivers
 Game_Actor.prototype.getTakeDebuffBonus = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	if ($dataActors[id].meta.takeDebuffBonus != null){
 		this.takeDebuffBonus = Number($dataActors[id].meta.takeDebuffBonus);
