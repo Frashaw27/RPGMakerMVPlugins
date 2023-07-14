@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CallMetaValues
 // FRSH_CallMetaValues.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -98,6 +98,9 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * labels and data value into the notetags, at which point the plugin will
 * auto compile them for your use.
 * ===Change Log===============================================================
+* Version 1.0.1 (07/14/23) :
+* -Removed a method that crashed Yanfly_PartySystem
+*
 * Version 1.0.1 (07/13/23) :
 * -Changed the percent "initalizer" to be 1 instead of 0 if the value is 
 * empty
@@ -169,7 +172,6 @@ var textLabels = Frashaw.Param.textLabels;
 
 //Gets the various number values
 Game_Actor.prototype.getNumStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = numbLabels;
 	var length = labels.length;
@@ -251,7 +253,6 @@ Game_Actor.prototype.getNumStuff = function() {
 
 //Gets the various percent values
 Game_Actor.prototype.getPercStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = percLabels;
 	var length = labels.length;
@@ -343,7 +344,6 @@ Game_Actor.prototype.getPercStuff = function() {
 
 //Gets the various bool values
 Game_Actor.prototype.getBoolStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = boolLabels;
 	var length = labels.length;
@@ -405,7 +405,6 @@ Game_Actor.prototype.getBoolStuff = function() {
 
 //Gets the various text values
 Game_Actor.prototype.getTextStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = textLabels;
 	var length = labels.length;
