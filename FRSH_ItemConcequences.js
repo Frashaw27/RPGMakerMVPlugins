@@ -1153,6 +1153,7 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * ===Change Log===============================================================
 * Version 1.2.6 (07/14/23) :
 * -Removed a method that crashed Yanfly_PartySystem
+* -Fixed a bug that only caused certain value to drain each turn
 *
 * Version 1.2.5 (07/10/23) :
 * -Changed the way text is shown to be WAY less jank
@@ -1716,8 +1717,8 @@ Game_Battler.prototype.onTurnEnd = function() {
 	var bool = switchAllowel();
 	while(loop != length && bool){
 		//Adds check to see if the consequence if above 0
-		var bool = eval("actor." + Frashaw.Param.Concequence[loop] + " > 0");
-		if (bool){
+		var bool2 = eval("actor." + Frashaw.Param.Concequence[loop] + " > 0");
+		if (bool2){
 			//Reduces consequence by the desired amount
 			var text = "actor." + Frashaw.Param.Concequence[loop] + "+= drainModifier(this, Frashaw.Param.Concequence[loop], Number(" + Frashaw.Param.Concequence[loop] +  "array[6]));";
 			eval(text);
