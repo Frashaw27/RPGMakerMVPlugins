@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.2.3
+// Version: 1.2.4
 //=============================================================================
 
 var Imported = Imported || {};
@@ -151,6 +151,9 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * already gave Tp on use to begin with. You can override that with the
 * "Enable Global Tp on Hit?" option.  
 * ===Change Log===============================================================
+* Version 1.2.4 (07/14/23) :
+* -Removed a method that crashed Yanfly_PartySystem
+*
 * Version 1.2.3 (06/30/23) :
 * -Rewrote how gaining tp from attacks works, now it shouldn't overrwrite
 * anything
@@ -217,7 +220,6 @@ Game_Battler.prototype.initTp = function(tp) {
 };
 
 Game_Actor.prototype.getTpStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = ['maxTpBonus','RandTpStart','StaticTpStart','tpBonus','dmgTpBonus','dmgTpMult','atkTpBonus','atkTpMult'];
 	for(var loop = 0; loop != 8; loop++){
