@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -99,6 +99,9 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
+* Version 1.1.1 (07/14/23) :
+* -Removed a method that crashed Yanfly_PartySystem
+*
 * Version 1.1.0 (07/09/23) :
 * -Updated method of text adding for recoil
 * -Removed some bunk code after updated method
@@ -110,6 +113,7 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * ============================================================================
 */
 //============================================================================
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_Recoil');
 Frashaw.Param = Frashaw.Param || {};
@@ -164,7 +168,7 @@ var recoilBool = false;
 
 //Gets all the modifiers for Recoil with actors
 Game_Actor.prototype.getRecoilStuff = function() {
-	if (!$gameParty.members().includes(this)) return;
+	//if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	//Gets the flat recoil that might get applied to every attack
 	if ($dataActors[id].meta.recoil != null){
@@ -492,3 +496,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 		}
 	}
 };
+})();
+//=============================================================================
+// End of File
+//=============================================================================
