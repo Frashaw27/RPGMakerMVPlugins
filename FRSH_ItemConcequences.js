@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.5
+// Version: 1.2.6
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,6 +1151,9 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.6 (07/14/23) :
+* -Removed a method that crashed Yanfly_PartySystem
+*
 * Version 1.2.5 (07/10/23) :
 * -Changed the way text is shown to be WAY less jank
 *
@@ -1453,7 +1456,6 @@ Game_Actor.prototype.setup = function(actorId) {
 };
 
 Game_Actor.prototype.getConcequenceModifiers = function(name) {
-	if (!$gameParty.members().includes(this)) return;
 	var id = this.actorId();
 	var labels = ['TakeBonus', 'TakeMult', 'GiveBonus', 'GiveMult','DrainBonus','DrainMult'];
 	var loong = labels.length
