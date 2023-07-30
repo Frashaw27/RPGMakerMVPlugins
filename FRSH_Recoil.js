@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.1.1
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -74,15 +74,28 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 *
 * @help
 * ==Notetags==================================================================
-* Skills:
+* <either of these|syntaxesWorks>
+* Skills/Items:
 * <recoil: insert formula here>: Enables Recoil on skill, assessing based on 
 * formula (you can still add stuff like 500 and it'd work).
-* <recoilMsg: insert formula here>: Replaces the standard recoil message
-* with a different one
+* <Recoil Eval|recoilEval></Recoil Eval|recoilEval>: Put code inbetween
+* these to run when using recoil. Use "recoil" as the variable to return
+* the amount of recoil that'll end up with.
+* <Recoil Message|recoilMsg: insert message here>: Replaces the standard 
+* recoil message with a different one.
+* <Recoil Message Eval|recoilMsgEval></Recoil Message Eval|recoilMsgEval>:
+* Put code in-between these two to evaluate the message you want. Use 'message'
+* as the variable to return the message you want to use. Follows the same 
+* rules as normal messages.
+* Actors and Enemies: 
+* <Recoil Message|recoilMsg: insert message here>: Replaces the all other
+* recoil messages for this one.
 * Actors, Enemies, Classes, Weapons, Armors, and States:
 * <recoil: insert formula here>: Enables Recoil that activates on all 
 * skills* regardless if they have Recoil or not, adding on to Recoil
 * if it does happen on the skill.
+* <Recoil Eval|recoilEval></Recoil Eval|recoilEval>: Same thing as above, but
+* you can use more complext logic for it.
 * <recoilAdd: insert number here>: Adds/Subtracts from the Recoil
 * Damage.
 * <recoilMult: insert number here>: Multiplies Recoil Damage
@@ -98,7 +111,17 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * equipment, states, and persons to have them activate Personal Recoil,
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
+*
+* Message Hierarchy/Prority of Use: User Message -> Skill Message Eval ->
+* Skill Message (normal) -> Default Recoil Message
 * ===Change Log===============================================================
+* Version 1.2.0 (07/30/23) :
+* -Add a Recoil Eval for more complex recoils
+* -Added Message Evals for simular purpose but with messages
+* -Added Actor/Enemy exclusive recoil messages
+* -Redid the method of getting the and setting the various aspects of these
+* -Added another way to call these methods easier 
+*
 * Version 1.1.1 (07/14/23) :
 * -Removed a method that crashed Yanfly_PartySystem
 *
@@ -161,114 +184,207 @@ if (Parameters.recoilessMsg === "true"){
 
 //Some variable setting
 var recoilMsg = Frashaw.Param.RecoilMessage;
-var message = "";
+var recoilMessage = "";
 var dmgValue = 0;
 var recoilValue = 0;
 var recoilBool = false;
+var FrshRecoilLoaded = false;
+
+//Starts the function to intialize all the summon notetags
+FrshRecoil_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	//The normal database initalization
+	if (!FrshRecoil_database.call(this)) return false; 
+	//Runs if the above variable is false
+	if (FrshRecoilLoaded == false) {
+		//Processes the notetags of actors
+		this.processRecoilNotetagsA($dataItems);
+		this.processRecoilNotetagsA($dataSkills);
+		this.processRecoilNotetagsB($dataActors);
+		this.processRecoilNotetagsC($dataActors);
+		this.processRecoilNotetagsB($dataClasses);
+		this.processRecoilNotetagsB($dataEnemies);
+		this.processRecoilNotetagsC($dataEnemies);
+		this.processRecoilNotetagsB($dataWeapons);
+		this.processRecoilNotetagsB($dataArmors);
+		this.processRecoilNotetagsB($dataStates);
+		//Make sure it doesn't run twice
+		FrshRecoilLoaded = true;
+	}
+	return true;
+};
+
+//Does the processing for the skills and items
+DataManager.processRecoilNotetagsA = function(group) {
+	//Loads up various strings to check for
+	var note1 = /<(?:RECOIL):[ ]+(.*?)>/i;
+	var note2 = /<(?:RECOIL MESSAGE|recoilMsg):[ ]+(.*?)>/i;
+	var noteA = /<(?:RECOIL EVAL|recoilEval)>/i;
+	var noteB = /<\/(?:RECOIL EVAL|recoilEval)>/i;
+	var noteC = /<(?:RECOIL MESSAGE EVAL|recoilMsgEval)>/i;
+	var noteD = /<\/(?:RECOIL MESSAGE EVAL|recoilMsgEval)>/i;
+	var noteE = /<(?:ALWAYS SHOW RECOIL MESSAGE|alwaysRecoilMsg)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+			
+		//Initalizes the shit for these various conditions
+		var customMode = 'none';
+		obj.recoil = '';
+		obj.recoilMsg = '';
+		obj.recoilEva = '';
+		obj.recoilMsgEval = '';
+		obj.alwaysRecoilMsg = false;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note1)) {
+				obj.recoil = RegExp.$1;
+			} else if (line.match(note2)) {
+				obj.recoilMsg = RegExp.$1;
+			//For the start of the recoil eval
+			} else if (line.match(noteA)) {
+				customMode = 'recoil';
+			//For the end of the message eval
+			} else if (line.match(noteB)){
+				customMode = 'none';
+			//For the start of the message eval
+			} else if (line.match(noteC)) {
+				customMode = 'message';
+			//For the end of the message eval
+			} else if (line.match(noteD)){
+				customMode = 'none';
+			} else if (line.match(noteE)){
+				obj.alwaysRecoilMsg = true;
+			//For the summon enter message
+			} else if (customMode === 'recoil') {
+				obj.recoilEva = obj.recoilEva + line + '\n';
+			} else if (customMode === 'message') {
+				obj.recoilMsgEval = obj.recoilMsgEval + line + '\n';
+			}
+		}
+	}
+}
+
+//Does the processing for Actors, Classes, Enemies, Weapons, and Armors
+DataManager.processRecoilNotetagsB = function(group) {
+	//Loads up various strings to check for
+	var note1 = /<(?:RECOIL):[ ]+(.*?)>/i;
+	var noteA = /<(?:RECOIL EVAL|recoilEva)>/i;
+	var noteB = /<\/(?:RECOIL EVAL|recoilEva)>/i;
+	var note2 = /<(?:RECOIL ADD|recoilAdd):[ ](\d+)>/i;
+	var note3 = /<(?:RECOIL MULT|recoilMult):[ ](\d+)>/i;
+	var note4 = /<(?:RECOIL Null|recoilNull)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+			
+		//Initalizes the shit for these various conditions
+		var customMode = 'none';
+		obj.recoil = '';
+		obj.recoilEva = '';
+		obj.recoilAdd = 0;
+		obj.recoilMult = 1;
+		obj.recoilNull = false;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note1)) {
+				obj.recoil = RegExp.$1;
+			} else if (line.match(note2)) {
+				obj.recoilAdd = Number(RegExp.$1);
+			} else if (line.match(note3)) {
+				obj.recoilMult = Number(RegExp.$1)*0.01;
+			} else if  (line.match(note4)) {
+				obj.recoilNull = true;
+			} else if (line.match(noteA)) {
+				customMode = 'recoil';
+			//For the end of the message eval
+			} else if (line.match(noteB)){
+				customMode = 'none';
+			//For the summon enter message
+			} else if (customMode === 'recoil') {
+				obj.recoilEva = obj.recoilEva + line + '\n';
+			}
+			
+		}
+	}
+}
+
+//Does the processing for the Actors and Enemies
+DataManager.processRecoilNotetagsC = function(group) {
+	//Loads up various strings to check for
+	var note = /<(?:RECOIL MESSAGE|recoilMsg):[ ]+(.*?)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+			
+		//Initalizes the shit for these various conditions
+		obj.recoilMsg = '';
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note)) {
+				obj.recoilMsg = RegExp.$1;
+			}
+		}
+	}
+}
+
+//Gets the results of the passive recoil eval 
+Game_BattlerBase.prototype.getRecoilEval = function(evaluate){
+	if (evaluate == '') return '';
+	var recoil = '';
+	try {
+		eval(evaluate)
+	} catch (e) {
+		//Displays if an error happens
+		//Displays where the error occured
+		var text = this._name + " Passive Recoil Eval Error!!!!!"
+		console.log(text);
+		//Displays code to the console log
+		console.log(code || 'No Code');
+		//Produces the error itself to the console
+		console.error(e);
+		//Checks to see if the game is in testing
+		if (Utils.isOptionValid('test')){
+			//Force opens the console log if it is
+			require('nw.gui').Window.get().showDevTools();
+		}
+    }
+	return " + " + recoil;
+}
 
 //Gets all the modifiers for Recoil with actors
 Game_Actor.prototype.getRecoilStuff = function() {
-	//if (!$gameParty.members().includes(this)) return;
-	var id = this.actorId();
-	//Gets the flat recoil that might get applied to every attack
-	if ($dataActors[id].meta.recoil != null){
-		this.recoil = $dataActors[id].meta.recoil;
-	}
-	//Gets the modifiers that adds a number to recoil
-	if ($dataActors[id].meta.recoilAdd != null && (Number($dataActors[id].meta.recoilAdd) > 0 || Number($dataActors[id].meta.recoilAdd) < 0)){
-		this.recoilAdd = Number($dataActors[id].meta.recoilAdd);
-	}
-	//Gets the modifiers that multiplie a number to recoil
-	if ($dataActors[id].meta.recoilMult != null && Number($dataActors[id].meta.recoilMult) >= 0){
-		this.recoilMult = Number($dataActors[id].meta.recoilMult);
-	}
-	//Get if recoil should be negated or not
-	if ($dataActors[id].meta.recoilNull != null){
-		this.recoilNull = true;
-	}
+	//Gets the modifiers from the base actor
+	this.recoil = $dataActors[this.actorId()].recoil;
+	this.recoil += this.getRecoilEval($dataActors[this.actorId()].recoilEva);
+	this.recoilAdd = $dataActors[this.actorId()].recoilAdd;
+	this.recoilMult = $dataActors[this.actorId()].recoilMult;
+	this.recoilNull = $dataActors[this.actorId()].recoilNull;
+	this.recoilMsg = $dataActors[this.actorId()].recoilMsg; 
+	//Gets the modifiers from the classe of the actor
 	var id = this._classId;
-	//Same as above, but for Classes
-	if ($dataClasses[id].meta.recoil != null){
-		if (this.recoil != null) {
-			this.recoil += " + " + $dataClasses[id].meta.recoil;
-		} else {
-			this.recoil = $dataClasses[id].meta.recoil;
-		}
-	}
-	if ($dataClasses[id].meta.recoilAdd != null && (Number($dataClasses[id].meta.recoilAdd) > 0 || Number($dataClasses[id].meta.recoilAdd) < 0)){
-		if (this.recoilAdd != null){
-			this.recoilAdd += Number($dataClasses[id].meta.recoilAdd);
-		} else {
-			this.recoilAdd = Number($dataClasses[id].meta.recoilAdd);
-		}
-	}
-	if ($dataClasses[id].meta.recoilMult != null && Number($dataClasses[id].meta.recoilMult) >= 0){
-		if (this.recoilMult != null) {
-			this.recoilMult *= Number($dataClasses[id].meta.recoilMult);
-		} else {
-			this.recoilMult = Number($dataClasses[id].meta.recoilMult);
-		}
-	}
-	if ($dataClasses[id].meta.recoilNull != null){
-		this.recoilNull = true;
+	this.recoil += $dataClasses[id].recoil;
+	this.recoil += this.getRecoilEval($dataClasses[id].recoilEva);
+	this.recoilAdd += $dataClasses[id].recoilAdd;
+	this.recoilMult *= $dataClasses[id].recoilMult;
+	if (this.recoilNull != true){
+		this.recoilNull = $dataClasses[id].recoilNull;
 	}
 	//Checks each equip the actor has
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
 		if (equip == null) continue;
 		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			//Runs the modifier get if the equip is a weapon
-			if ($dataWeapons[id].meta.recoil != null){
-				if (this.recoil != null) {
-					this.recoil += " + " + $dataWeapons[id].meta.recoil;
-				} else {
-					this.recoil = $dataWeapons[id].meta.recoil;
-				}
-			}
-			if ($dataWeapons[id].meta.recoilAdd != null && (Number($dataWeapons[id].meta.recoilAdd) > 0 || Number($dataWeapons[id].meta.recoilAdd) < 0)){
-				if (this.recoilAdd != null){
-					this.recoilAdd += Number($dataWeapons[id].meta.recoilAdd);
-				} else {
-					this.recoilAdd = Number($dataWeapons[id].meta.recoilAdd);
-				}
-			}
-			if ($dataWeapons[id].meta.recoilMult != null && Number($dataWeapons[id].meta.recoilMult) >= 0){
-				if (this.recoilMult != null) {
-					this.recoilMult *= Number($dataWeapons[id].meta.recoilMult);
-				} else {
-					this.recoilMult = Number($dataWeapons[id].meta.recoilMult);
-				}
-			}
-			if ($dataWeapons[id].meta.recoilNull != null){
-				this.recoilNull = true;
-			}
-		} else {
-			//Runs the modifier get if the equip is an armor
-			if ($dataArmors[id].meta.recoil != null){
-				if (this.recoil != null) {
-					this.recoil += " + " + $dataArmors[id].meta.recoil;
-				} else {
-					this.recoil = $dataArmors[id].meta.recoil;
-				}
-			}
-			if ($dataArmors[id].meta.recoilAdd != null && (Number($dataArmors[id].meta.recoilAdd) > 0 || Number($dataArmors[id].meta.recoilAdd) < 0)){
-				if (this.recoilAdd != null){
-					this.recoilAdd += Number($dataArmors[id].meta.recoilAdd);
-				} else {
-					this.recoilAdd = Number($dataArmors[id].meta.recoilAdd);
-				}
-			}
-			if ($dataArmors[id].meta.recoilMult != null && Number($dataArmors[id].meta.recoilMult) >= 0){
-				if (this.recoilMult != null) {
-					this.recoilMult *= Number($dataArmors[id].meta.recoilMult);
-				} else {
-					this.recoilMult = Number($dataArmors[id].meta.recoilMult);
-				}
-			}
-			if ($dataArmors[id].meta.recoilNull != null){
-				this.recoilNull = true;
-			}
+		//Gets the modifiers from the actor's equipment
+		this.recoil += equip.recoil;
+		this.recoil += this.getRecoilEval(equip.recoilEva);
+		this.recoilAdd += equip.recoilAdd;
+		this.recoilMult *= equip.recoilMult;
+		if (this.recoilNull != true){
+			this.recoilNull = equip.recoilNull;
 		}
 	}
 	//Gets actor's states
@@ -277,88 +393,52 @@ Game_Actor.prototype.getRecoilStuff = function() {
 	if (this._passiveStatesRaw != null){
 		stateList =  stateList.concat(this.passiveStates());
 	} 
-	//Checks each states they have applied to see if there's any modifiers to get
+	//Gets the modifiers from the base actor's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		if ($dataStates[id].meta.recoil != null){
-			if (this.recoil != null) {
-				this.recoil += " + " + $dataStates[id].meta.recoil;
-			} else {
-				this.recoil = $dataStates[id].meta.recoil;
-			}
-		}
-		if ($dataStates[id].meta.recoilAdd != null && (Number($dataStates[id].meta.recoilAdd) > 0 || Number($dataStates[id].meta.recoilAdd) < 0)){
-			if (this.recoilAdd != null){
-				this.recoilAdd += Number($dataStates[id].meta.recoilAdd);
-			} else {
-				this.recoilAdd = Number($dataStates[id].meta.recoilAdd);
-			}
-		}
-		if ($dataStates[id].meta.recoilMult != null && Number($dataStates[id].meta.recoilMult) >= 0){
-			if (this.recoilMult != null) {
-				this.recoilMult *= Number($dataStates[id].meta.recoilMult);
-			} else {
-				this.recoilMult = Number($dataStates[id].meta.recoilMult);
-			}
-		}
-		if ($dataStates[id].meta.recoilNull != null){
-			this.recoilNull = true;
+		this.recoil += $dataStates[id].recoil;
+		this.recoil += this.getRecoilEval($dataStates[id].recoilEva);
+		this.recoilAdd += $dataStates[id].recoilAdd;
+		this.recoilMult *= $dataStates[id].recoilMult;
+		if (this.recoilNull != true){
+			this.recoilNull = $dataStates[id].recoilNull;
 		}
 	}
 };
 
 //Same as above, but for enemies
 Game_Enemy.prototype.getRecoilStuff = function() {
-	var id = this.enemyId();
-	if ($dataEnemies[id].meta.recoil != null){
-		this.recoil = $dataEnemies[id].meta.recoil;
-	}
-	if ($dataEnemies[id].meta.recoilAdd != null && (Number($dataEnemies[id].meta.recoilAdd) > 0 || Number($dataEnemies[id].meta.recoilAdd) < 0)){
-		this.recoilAdd = Number($dataEnemies[id].meta.recoilAdd);
-	}
-	if ($dataEnemies[id].meta.recoilMult != null && Number($dataEnemies[id].meta.recoilMult) >= 0){
-		this.recoilMult = Number($dataEnemies[id].meta.recoilMult);
-	}
-	if ($dataEnemies[id].meta.recoilNull != null){
-		this.recoilNull = true;
-	}
+	//Gets the modifiers from the base enemy
+	this.recoil = $dataEnemies[this.enemyId()].recoil;
+	this.recoil += this.getRecoilEval($dataEnemies[this.enemyId()].recoilEva);
+	this.recoilAdd = $dataEnemies[this.enemyId()].recoilAdd;
+	this.recoilMult = $dataEnemies[this.enemyId()].recoilMult;
+	this.recoilNull = $dataEnemies[this.enemyId()].recoilNull;
+	this.recoilMsg = $dataEnemies[this.enemyId()].recoilMsg; 
+	//Gets enemy's states
 	var stateList = this.states();
+	//Tacks on passive stats as well, if applicable
 	if (this._passiveStatesRaw != null){
 		stateList =  stateList.concat(this.passiveStates());
 	} 
+	//Gets the modifiers from the base enemy's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		if ($dataStates[id].meta.recoil != null){
-			if (this.recoil != null) {
-				this.recoil += " + " + $dataStates[id].meta.recoil;
-			} else {
-				this.recoil = $dataStates[id].meta.recoil;
-			}
-		}
-		if ($dataStates[id].meta.recoilAdd != null && (Number($dataStates[id].meta.recoilAdd) > 0 || Number($dataStates[id].meta.recoilAdd) < 0)){
-			if (this.recoilAdd != null){
-				this.recoilAdd += Number($dataStates[id].meta.recoilAdd);
-			} else {
-				this.recoilAdd = Number($dataStates[id].meta.recoilAdd);
-			}
-		}
-		if ($dataStates[id].meta.recoilMult != null && Number($dataStates[id].meta.recoilMult) >= 0){
-			if (this.recoilMult != null) {
-				this.recoilMult *= Number($dataStates[id].meta.recoilMult);
-			} else {
-				this.recoilMult = Number($dataStates[id].meta.recoilMult);
-			}
-		}
-		if ($dataStates[id].meta.recoilNull != null){
-			this.recoilNull = true;
+		this.recoil += $dataStates[id].recoil;
+		this.recoil += this.getRecoilEval($dataStates[id].recoilEva);
+		this.recoilAdd += $dataStates[id].recoilAdd;
+		this.recoilMult *= $dataStates[id].recoilMult;
+		if (this.recoilNull != true){
+			this.recoilNull = $dataStates[id].recoilNull;
 		}
 	}
 }
 
+//Removes all the recoil modifiers so that it doesn't get repeated
 Game_BattlerBase.prototype.removeRecoilStuff = function() {
 	//Determines what 4 modifiers that will be reset 
-	var labels = ['recoil', 'recoilAdd','recoilMult','recoilNull'];
-	for(var loop = 0; loop != 4; loop++){
+	var labels = ['recoil', 'recoilAdd', 'recoilMult', 'recoilNull', 'recoilMsg'];
+	for(var loop = 0; loop != 5; loop++){
 		//Sets the modifier to undefined
 		var text = "this." + labels[loop] + " = undefined";
 		var bool = eval(text);
@@ -393,12 +473,7 @@ function personalRecoilEval(action){
 	return true;
 }
 
-frsh_apply_recoil = Game_Action.prototype.apply
-Game_Action.prototype.apply = function(target) {
-	recoilBool = false;
-	frsh_apply_recoil.call(this,target);
-};
-
+//Extention made to show the recoil results
 frsh_displayDamage_recoil = Window_BattleLog.prototype.displayDamage
 Window_BattleLog.prototype.displayDamage = function(target) {
 	frsh_displayDamage_recoil.call(this,target);
@@ -407,48 +482,117 @@ Window_BattleLog.prototype.displayDamage = function(target) {
     }
 };
 
-function customMessage(text, user){
-	var tex = text;
-	if (tex.contains("1%")) tex = tex.replace("1%",user.name());
-	if (tex.contains("2%")) tex = tex.replace("2%",recoilValue);
+//Gets the result of the eval of the recoil
+function getMessageEval(evaluate, target){
+	var user = BattleManager._action.subject();
+	var a = BattleManager._action.subject();
+	var b = target;
+	var message = '';
+	try {
+		eval(evaluate)
+	} catch (e) {
+		//Displays if an error happens
+		//Displays where the error occured
+		var text = this._name + " Recoil Message Eval Error!!!!!"
+		console.log(text);
+		//Displays code to the console log
+		console.log(code || 'No Code');
+		//Produces the error itself to the console
+		console.error(e);
+		//Checks to see if the game is in testing
+		if (Utils.isOptionValid('test')){
+			//Force opens the console log if it is
+			require('nw.gui').Window.get().showDevTools();
+		}
+    }
+	return message;
+}
+
+//Function to go through the messages to get the desired one
+//Hierarchy: User -> Item Eval -> Item Base -> Normal Recoil Message
+function customMessage(target){
+	if (BattleManager._action.subject().recoilMsg != ''){
+		var tex = BattleManager._action.subject().recoilMsg;
+	} else if (BattleManager._action.item().recoilMsg != '' || BattleManager._action.item().recoilMsgEval != ''){
+		if (BattleManager._action.item().recoilMsgEval != ''){
+			var tex = getMessageEval(BattleManager._action.item().recoilMsgEval, target);
+		} 
+		if (BattleManager._action.item().recoilMsgEval == '' || (tex == null || tex == '')) var tex = BattleManager._action.item().recoilMsg;
+	} else if (Frashaw.Param.RecoilMessage != null){
+		var tex = Frashaw.Param.RecoilMessage;
+	}
+	if (tex.contains("1%")) tex = tex.replace("1%", BattleManager._action.subject().name());
+	if (tex.contains("2%")) tex = tex.replace("2%", recoilValue);
 	return tex;
 }
 
+
+//Shows the recoil post damage
 Window_BattleLog.prototype.displayRecoil = function(target) {
-	if (($dataSkills[BattleManager._action.item().id].meta.recoilMsg != null && Frashaw.Param.RecoillessMessage) || recoilBool){
-		if ($dataSkills[BattleManager._action.item().id].meta.recoilMsg != null){
-			this.push('addText', customMessage($dataSkills[BattleManager._action.item().id].meta.recoilMsg, BattleManager._action.subject()));
-		} else {
-			this.push('addText', message);
-		}
+	if (recoilBool || BattleManager._action.item().alwaysRecoilMsg){
+		this.push('addText', customMessage(target));
 	}
 };
+
+//Gets the recoil result of recoil eval
+Game_Action.prototype.processRecoilEval = function(evaluate, target){
+	if (evaluate == '') return '';
+	var user = BattleManager._action.subject();
+	var a = BattleManager._action.subject();
+	var b = target;
+	var recoil = '';
+	try {
+		eval(evaluate)
+	} catch (e) {
+		//Displays if an error happens
+		//Displays where the error occured
+		var text = this._name + " Recoil Excution Eval Error!!!!!"
+		console.log(text);
+		//Displays code to the console log
+		console.log(code || 'No Code');
+		//Produces the error itself to the console
+		console.error(e);
+		//Checks to see if the game is in testing
+		if (Utils.isOptionValid('test')){
+			//Force opens the console log if it is
+			require('nw.gui').Window.get().showDevTools();
+		}
+    }
+	if (recoil != ''){
+		return " + " + recoil;
+	} else {
+		return '';
+	}
+}
 
 //The Meat and Potatoes
 frsh_applyItemUserEffect_recoil = Game_Action.prototype.applyItemUserEffect;
 Game_Action.prototype.applyItemUserEffect = function(target) {
 	frsh_applyItemUserEffect_recoil.call(this, target);
+	recoilBool = false;
 	//Runs if the action is a skill and the user doesn't negate recoil and if the attack connected
-	if (this.isSkill() && !this.subject().recoilNull && target.result().isHit()){
+	if (!this.subject().recoilNull && target.result().isHit()){
 		//Checks for recoil on the skill
-		if ($dataSkills[this.item().id].meta.recoil != null){
+		if (this.item().recoil != '' || this.item().recoilEva != ''){
 			//Setsup some terms
 			var user = this.subject();
 			var a = this.subject();
 			var b = target;
 			var value = dmgValue;
 			//Gets recoil of the skill
-			var recoil = eval($dataSkills[this.item().id].meta.recoil);
+			var recoil = this.item().recoil;
+			recoil += this.processRecoilEval(this.item().recoilEva);
+			recoil = eval(recoil);
 			//Adds the recoil of the user's personal recoil
-			if (this.subject().recoil != null && personalRecoilEval(this)) var bonus = eval(this.subject().recoil);
+			if (this.subject().recoil != '' && personalRecoilEval(this)) var bonus = eval(this.subject().recoil);
 			//Adds the recoil add modifier
-			if (this.subject().recoilAdd != null) recoil += this.subject().recoilAdd;
+			recoil += this.subject().recoilAdd;
 			//Multiplies the recoil multiplier modifier
-			if (this.subject().recoilMult != null) recoil *= this.subject().recoilMult;
+			recoil *= this.subject().recoilMult;
 			//Does the same applicaptions to the bonus, personal recoil damage, but only if turned on
 			if (Frashaw.Param.PersonalRecoilMods && bonus != null){
-				if (this.subject().recoilAdd != null) bonus += this.subject().recoilAdd;
-				if (this.subject().recoilMult != null) bonus *= this.subject().recoilMult;
+				bonus += this.subject().recoilAdd;
+				bonus *= this.subject().recoilMult;
 			}
 			//Adds bonus damage
 			if (bonus != null) recoil += bonus;
@@ -458,15 +602,8 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			if (recoil > 0 && recoil != null){
 				//Reduces user's hp by the amount
 				this.subject().gainHp(-recoil);
-				//Sets up recoil message
-				if ($dataSkills[this.item().id].meta.recoilMsg == null){
-					message = recoilMsg;
-				} else {
-					message = $dataSkills[this.item().id].meta.recoilMsg
-				}
+				recoilValue = recoil;
 				recoilBool = true;
-				if (message.contains("1%")) message = message.replace("1%", this.subject().name());
-				if (message.contains("2%")) message = message.replace("2%", recoil);
 			}
 		//Checks to see if the user has some recoil that goes on all attacks, along with the associated checks
 		//Otherwise the same
@@ -477,21 +614,14 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			var value = dmgValue;
 			var recoil = eval(this.subject().recoil);
 			if (Frashaw.Param.PersonalRecoilMods){
-			if (this.subject().recoilAdd != null) recoil += this.subject().recoilAdd;
-			if (this.subject().recoilMult != null) recoil *= this.subject().recoilMult;
+				recoil += this.subject().recoilAdd;
+				recoil *= this.subject().recoilMult;
 			}
 			recoil = Math.round(recoil);
 			if (recoil > 0 && recoil != null){
 				this.subject().gainHp(-recoil);
 				recoilValue = recoil;
 				recoilBool = true;
-				if ($dataSkills[this.item().id].meta.recoilMsg == null){
-					message = recoilMsg;
-				} else {
-					message = $dataSkills[this.item().id].meta.recoilMsg
-				}
-				if (message.contains("1%")) message = message.replace("1%", this.subject().name());
-				if (message.contains("2%")) message = message.replace("2%", recoil);
 			}
 		}
 	}
