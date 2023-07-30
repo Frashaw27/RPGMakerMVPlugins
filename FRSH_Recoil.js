@@ -95,7 +95,8 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * skills* regardless if they have Recoil or not, adding on to Recoil
 * if it does happen on the skill.
 * <Recoil Eval|recoilEval></Recoil Eval|recoilEval>: Same thing as above, but
-* you can use more complext logic for it.
+* you can use more complext logic for it. Can't use Target/B in their evals
+* like Skills can. Also can't use Value. use "recoil" for the value returned.
 * <recoilAdd: insert number here>: Adds/Subtracts from the Recoil
 * Damage.
 * <recoilMult: insert number here>: Multiplies Recoil Damage
@@ -335,6 +336,8 @@ DataManager.processRecoilNotetagsC = function(group) {
 Game_BattlerBase.prototype.getRecoilEval = function(evaluate){
 	if (evaluate == '') return '';
 	var recoil = '';
+	var user = this;
+	var a = this;
 	try {
 		eval(evaluate)
 	} catch (e) {
