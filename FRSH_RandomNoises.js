@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_RandomNoises
 // FRSH_RandomNoises.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -126,7 +126,7 @@ Frashaw.RNoises = Frashaw.RNoises || {};
 * @param Load Sound Effects
 * @default
 *
-* @param loadrChance
+* @param loadChance
 * @text Load SE Chance
 * @parent Load Sound Effects
 * @type number
@@ -495,6 +495,9 @@ Frashaw.RNoises = Frashaw.RNoises || {};
 * and defeat options, must be in the proper foulder in order for the game to
 * be horribley confused.
 * ===Change Log===============================================================
+* Version 1.0.1 (08/22/23) :
+* -Fixed a bug where the load sound effect wouldn't play
+*
 * Version 1.0 (07/12/23) :
 * -Finished Base Plugin
 * ============================================================================
