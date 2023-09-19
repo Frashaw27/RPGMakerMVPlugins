@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -85,6 +85,9 @@ Frashaw.CName = Frashaw.CName || {};
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log===============================================================
+* Version 1.2.1 (09/19/23):
+* -Added a fix for crash with shop names
+*
 * Version 1.2.0 (09/17/23):
 * -Rewrote a majority of the code to be more efficent and not call the 
 * notetags directly
@@ -750,10 +753,10 @@ Window_ShopStatus.prototype.drawActorEquipInfo = function(x, y, actor) {
 		outline = normalOutlineColor;
 	}
 	if (icon != 0){
-		this.drawTextSpecial(actor._name, x+32, y, width, 'left', outline);
+		this.drawTextSpecial(actor._name, x+32, y, 168, 'left', outline);
 		this.drawIcon(icon, x, y);
 	} else {
-		this.drawTextSpecial(actor._nickname, x, y, width, 'left', outline);
+		this.drawTextSpecial(actor._nickname, x, y, 168, 'left', outline);
 	}
 	var item1 = this.currentEquippedItem(actor, this._item.etypeId);
 	if (enabled) {
