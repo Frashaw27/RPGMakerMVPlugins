@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.2.1
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -85,6 +85,10 @@ Frashaw.CName = Frashaw.CName || {};
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log===============================================================
+* Version 1.2.2 (09/25/23):
+* -Fixed bug where shop would display nickname
+* -Added a check to stop crashing when plugins removed the enemy select box
+*
 * Version 1.2.1 (09/19/23):
 * -Added a fix for crash with shop names
 *
@@ -467,6 +471,7 @@ Game_Actor.prototype.name = function() {
 //Changes the Enemy Name in drawing their name for the selection
 Window_BattleEnemy.prototype.drawItem = function(index) {
 	this.resetTextColor();
+	if (typeof this.RectForText != "function") return;
 	var enemy = this._enemies[index];
 	var rect = this.RectForText(index);
 	var id = enemy.enemyId();
@@ -756,7 +761,7 @@ Window_ShopStatus.prototype.drawActorEquipInfo = function(x, y, actor) {
 		this.drawTextSpecial(actor._name, x+32, y, 168, 'left', outline);
 		this.drawIcon(icon, x, y);
 	} else {
-		this.drawTextSpecial(actor._nickname, x, y, 168, 'left', outline);
+		this.drawTextSpecial(actor._name, x, y, 168, 'left', outline);
 	}
 	var item1 = this.currentEquippedItem(actor, this._item.etypeId);
 	if (enabled) {
