@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_SkillScriptEval
 // FRSH_SkillScriptEval.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -32,6 +32,10 @@ Frashaw.SSEval = Frashaw.SSEval || {};
 * name is drawn. This can be used for various effects, the intended one being
 * changing the skills's properties when under certain conditions.
 * ===Change Log===============================================================
+* Version 1.0.1 (09/25/23):
+* -Added a fix makes the error log show the correct code when an eval error 
+* happens
+*
 * Version 1.0 (09/21/23):
 * -Finished Base Plugin
 * ============================================================================
@@ -91,7 +95,7 @@ Window_SkillList.prototype.evalSkill = function (skill){
 		var text = skill.name + " Skill Eval Evaluate Error!!!!!"
 		console.log(text);
 		//Displays code to the console log
-		console.log(code || 'No Code');
+		console.log(skill.skillEval || 'No Code');
 		//Produces the error itself to the console
 		console.error(e);
 		//Checks to see if the game is in testing
