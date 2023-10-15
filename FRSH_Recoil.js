@@ -177,13 +177,14 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
-* Version 1.3.0 (10/14/23):
+* Version 1.3.0 (10/15/23):
 * -Added a way to make Mp and Tp specific recoils with their own unique Messages
 * -Actor/Enemy specific recoil messages no longer overwrite all other messages, 
 * only the type they were assigned. Skill ones still overwrite though.
 * -Aded a way to make the recoils heal you, and a way to negate that
 * -Personal recoils are now calculated seperately from the ones from the Skills
 * -Updated description to include useable terms for evals
+* -Fixed a bug on the recoil eval
 *
 * Version 1.2.0 (07/30/23) :
 * -Add a Recoil Eval for more complex recoils
@@ -864,7 +865,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			var value = dmgValue;
 			//Gets recoil of the skill
 			var recoil = this.item().recoil;
-			recoil += this.processRecoilEval(this.item().recoilEva);
+			recoil += this.processRecoilEval(this.item().recoilEva, target);
 			recoil = eval(recoil);
 			//Adds the recoil of the user's personal recoil
 			if (this.subject().recoil != '' && personalRecoilEval(this)) var bonus = eval(this.subject().recoil);
