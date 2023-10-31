@@ -859,7 +859,7 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
 		damage -= (target.maxTp()-target.tp);
 		damage *= target.overhealMult;
 		damage = Math.round(damage);
-		var text2 = Frashaw.Param.MpOverhealMessage;
+		var text2 = Frashaw.Param.TpOverhealMessage;
 		text2 = text2.replace('1%', target.name()).replace('2%', damage);
 		return text2;
 	} else {
