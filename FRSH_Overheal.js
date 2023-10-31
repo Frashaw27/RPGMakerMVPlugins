@@ -853,10 +853,10 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
 frsh_overheal_tp_text = Window_BattleLog.prototype.makeTpDamageText;
 Window_BattleLog.prototype.makeTpDamageText = function(target) {
 	var text = frsh_overheal_tp_text.call(this, target);
-	var damage = target.result().mpDamage * -1;
-	if (damage > 0 && damage > (target.mmp-target.mp) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse)) {
+	var damage = target.result().tpDamage * -1;
+	if (damage > 0 && damage > (target.maxTp()-target.tp) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse)) {
 		this.push('addText', text);
-		damage -= (target.mmp-target.mp);
+		damage -= (target.maxTp()-target.tp);
 		damage *= target.overhealMult;
 		damage = Math.round(damage);
 		var text2 = Frashaw.Param.MpOverhealMessage;
