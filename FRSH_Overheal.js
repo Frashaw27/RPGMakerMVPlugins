@@ -634,7 +634,7 @@ Window_Base.prototype.tpColor = function(actor) {
 frsh_overheal_base_cost_draw = Window_SkillList.prototype.drawSkillCost;
 Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
 	costNull = false;
-    frsh_overheal_base_cost_draw.call(this, skill, x, y, width);
+    return frsh_overheal_base_cost_draw.call(this, skill, x, y, width);
 };
 
 //==============================================================================
