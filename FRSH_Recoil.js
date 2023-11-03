@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.3.0
+// Version: 1.3.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -177,6 +177,9 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
+* Version 1.3.1 (11/03/23):
+* -Fixed a buf with recoil hp healing
+*
 * Version 1.3.0 (10/15/23):
 * -Added a way to make Mp and Tp specific recoils with their own unique Messages
 * -Actor/Enemy specific recoil messages no longer overwrite all other messages, 
@@ -855,7 +858,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 	recoilBool = false;
 	personalRecoilBool = false;
 	//Runs if the action is a skill and the user doesn't negate recoil and if the attack connected
-	if (target.result().isHit()){
+	if (target.result().isHit() && $gameParty.inBattle()){
 		//Checks for recoil on the skill
 		if (this.item().recoil != '' || this.item().recoilEva != ''){
 			//Sets up some terms
@@ -926,9 +929,9 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 				}
 			} else if (recoil < 0){
 				if (!this.subject().healRecoilNull && recoil != null){
-					recoil = Math.round(-recoil);
+					recoil = Math.round(recoil);
 					//Increases user's hp by the amount
-					this.subject().gainHp(recoil);
+					this.subject().gainHp(-recoil);
 					this.subject().personalRecoilValues[0] = recoil;
 					personalRecoilBool = true;
 				}
