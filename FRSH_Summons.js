@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.1.2
+// Version: 1.1.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -173,6 +173,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
 * ===Change Log===============================================================
+* Version 1.1.3 (11/03/23):
+* -Added a hot fix that makes it so that all summoned actors are removed at 
+* the end of action, instead of just one dying 
+*
 * Version 1.1.2 (07/09/23) :
 * -Change the way text is shown so that it shows after the use message in a
 * less "hacky" way
@@ -613,7 +617,7 @@ Game_Battler.prototype.evaluateLeave = function(){
 	var summoner = this;
 	var b = this;
 	var code = this.leaveEval;
-	console.log(code);
+	//console.log(code);
 	//Sees if code will produce an error
 	try {
 		//Runs code, goes through if no errors
@@ -891,6 +895,18 @@ Game_BattlerBase.prototype.meetsItemConditions = function(item) {
 		}
 	}
     return frsh_itemConditions.call(this,item);
+};
+
+//Literally the same as above but for items
+frsh_summons_actor_removal = Game_Battler.prototype.onAllActionsEnd;
+Game_Battler.prototype.onAllActionsEnd = function() {
+    frsh_summons_actor_removal.call(this);
+	for (var loop = $gameParty.members().length-1; loop != 0; loop--){
+		if ($gameParty.members()[loop].summon != null && $gameParty.members()[loop].isDead()){
+			$gameParty.removeSummon($gameParty.members()[loop]);
+		} 
+	}
+	$gameParty.refreshMembers()
 };
 
 //A function to remove a summoned actor upon their death
