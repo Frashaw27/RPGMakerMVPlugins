@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -195,6 +195,14 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
 * ===Change Log===============================================================
+* Version 1.0.1 (11/20/23) :
+* -Added an condition to have overheals not look funky with non full bars
+* -Fixed a bug with Tp Number Colors
+* -Added a componet for specific items to alter the amount of overheal they 
+* give
+* -Added a division to the overheal rates for the shown overheal, for better
+* representation of the current rate
+*
 * Version 1.0 (10/31/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -272,16 +280,20 @@ DataManager.isDatabaseLoaded = function() {
 DataManager.processOverhealNotetagsA = function(group) {
 	//Loads up various strings to check for
 	var note = /<(OVERHEAL)>/i;
+	var note2 = /<(?:OVERHEAL MULTIPLIER|overhealMult):[ ](.*)>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
 		
 		obj.overheal = false;
+		obj.overhealMult = 1;
 
 		for (var i = 0; i < notedata.length; i++) {
 			var line = notedata[i];
 			if (line.match(note)) {
 				obj.overheal = true;
+			} else if (line.match(note2)){
+				obj.overhealMult *= Number(RegExp.$1);
 			}
 		}
 	}
@@ -293,7 +305,7 @@ DataManager.processOverhealNotetagsB = function(group) {
 	var note1 = /<(OVERHEAL|OVERHEAL USE|overhealUse)>/i;
 	var note2 = /<(?:MP OVERHEAL USE|mpOverhealUse|MP OVERHEAL|mpOverheal)>/i;
 	var note3 = /<(?:TP OVERHEAL USE|tpOverhealUse|TP OVERHEAL|tpOverheal)>/i;
-	var noteA = /<(?:OVERHEAL MULTIPLIER|overMult)>/i;
+	var noteA = /<(?:OVERHEAL MULTIPLIER|overMult):[ ](.*)>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
@@ -490,12 +502,22 @@ Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
 		}
 		//Gets the rate of the overheal to max hp for bar appearences.
 		var overhealRate = actor.overheal/actor.mhp;
+		overhealRate /= 2;
 		//Adds a max and min to the rate so it neither fully eclipses the bar nor is a sliver on it.
 		if (overhealRate < 0.01) overhealRate = 0.01;
 		if (overhealRate > 0.9) overhealRate = 0.9;
-		this.drawGauge(x, y, width*(1-overhealRate), actor.hpRate(), color1, color2);
-		//Draws the overheal gauge
-		this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), actor.hpRate(), overhealColor1, overhealColor2);
+		//Checks to see if the actor's hp is full or not
+		if (actor.hpRate() == 1){
+			this.drawGauge(x, y, width*(1-overhealRate), actor.hpRate(), color1, color2);
+			//Draws the overheal gauge
+			this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), 1, overhealColor1, overhealColor2);
+		} else {
+			//Draws an empty gauge
+			this.drawGauge(x, y, width, 0, color1, color2);
+			this.drawGauge(x, y, width*actor.hpRate(), 1, color1, color2);
+			//Draws the overheal gauge
+			this.drawGauge(x+width*actor.hpRate(), y, width*(overhealRate), 1, overhealColor1, overhealColor2);
+		}
 		this.changeTextColor(this.systemColor());
 		this.drawText(TextManager.hpA, x, y, 44);
 		//Draws both the current hp and overheal
@@ -534,10 +556,17 @@ Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
 			var overhealColor2 = Frashaw.Param.MpCustom2;
 		}
 		var overhealRate = actor.mpOverheal/actor.mmp;
+		overhealRate /= 2;
 		if (overhealRate < 0.01) overhealRate = 0.01;
 		if (overhealRate > 0.9) overhealRate = 0.9;
-		this.drawGauge(x, y, width*(1-overhealRate), actor.mpRate(), color1, color2);
-		this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), actor.mpRate(), overhealColor1, overhealColor2);
+		if (actor.mpRate() == 1){
+			this.drawGauge(x, y, width*(1-overhealRate), actor.mpRate(), color1, color2);
+			this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), actor.mpRate(), overhealColor1, overhealColor2);
+		} else {
+			this.drawGauge(x, y, width, 0, color1, color2);
+			this.drawGauge(x, y, width*actor.mpRate(), 1, color1, color2);
+			this.drawGauge(x+width*actor.mpRate(), y, width*(overhealRate), 1, overhealColor1, overhealColor2);
+		}
 		this.changeTextColor(this.systemColor());
 		this.drawText(TextManager.mpA, x, y, 44);
 		this.drawCurrentAndMax(actor.mp+actor.mpOverheal, actor.mmp, x, y, width, this.mpColor(actor), this.normalColor());
@@ -575,13 +604,20 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
 			var overhealColor2 = Frashaw.Param.TpCustom2;
 		}
 		var overhealRate = actor.tpOverheal/actor.maxTp();
+		overhealRate /= 2;
 		if (overhealRate < 0.01) overhealRate = 0.01;
 		if (overhealRate > 0.9) overhealRate = 0.9;
-		this.drawGauge(x, y, width*(1-overhealRate), actor.tpRate(), color1, color2);
-		this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), actor.hpRate(), colorShift(color1), colorShift(color2));
+		if (actor.tpRate() == 1){
+			this.drawGauge(x, y, width*(1-overhealRate), actor.tpRate(), color1, color2);
+			this.drawGauge(x+width*(1-overhealRate), y, width*(overhealRate), actor.hpRate(), colorShift(color1), colorShift(color2));
+		} else {
+			this.drawGauge(x, y, width, 0, color1, color2);
+			this.drawGauge(x, y, width*actor.tpRate(), 1, color1, color2);
+			this.drawGauge(x+width*actor.tpRate(), y, width*(overhealRate), 1, overhealColor1, overhealColor2);
+		}
 		this.changeTextColor(this.systemColor());
-		this.drawText(TextManager.hpA, x, y, 44);
-		this.changeTextColor(this.hpColor(actor));
+		this.drawText(TextManager.tpA, x, y, 44);
+		this.changeTextColor(this.tpColor(actor));
 		this.drawText(actor.tp+actor.tpOverheal, x + width - 64, y, 64, 'right');
 	} else {
 		frsh_overheal_tp_base.call(this, actor, x, y, width);
@@ -738,6 +774,7 @@ Game_Battler.prototype.gainHp = function(value) {
 		value -= this.mhp - this.hp;
 		this.setHp(this.mhp);
 		value *= this.overhealMult;
+		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.overheal += value;
 	} else {
@@ -761,6 +798,7 @@ Game_Battler.prototype.gainMp = function(value) {
 		value -= this.mmp - this.mp;
 		this.setMp(this.mmp);
 		value *= this.overhealMult;
+		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.mpOverheal += value;
 	} else {
@@ -784,6 +822,7 @@ Game_Battler.prototype.gainTp = function(value) {
 		value -= this.maxTp() - this.tp;
 		this.setTp(this.maxTp());
 		value *= this.overhealMult;
+		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.tpOverheal += value;
 	} else {
@@ -818,6 +857,7 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
 		damage -= (target.mhp-target.hp);
 		//Times it by the multiplier for accurate results
 		damage *= target.overhealMult;
+		damage *= BattleManager._action.item().overhealMult;
 		damage = Math.round(damage);
 		//Gets the appropriate text
 		var text2 = Frashaw.Param.OverhealMessage;
@@ -840,6 +880,7 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
 		this.push('addText', text);
 		damage -= (target.mmp-target.mp);
 		damage *= target.overhealMult;
+		damage *= BattleManager._action.item().overhealMult;
 		damage = Math.round(damage);
 		var text2 = Frashaw.Param.MpOverhealMessage;
 		text2 = text2.replace('1%', target.name()).replace('2%', damage);
@@ -858,6 +899,7 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
 		this.push('addText', text);
 		damage -= (target.maxTp()-target.tp);
 		damage *= target.overhealMult;
+		damage *= BattleManager._action.item().overhealMult;
 		damage = Math.round(damage);
 		var text2 = Frashaw.Param.TpOverhealMessage;
 		text2 = text2.replace('1%', target.name()).replace('2%', damage);
