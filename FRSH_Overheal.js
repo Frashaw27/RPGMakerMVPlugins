@@ -161,6 +161,8 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * Skills/Items:
 * <overheal> - Causes the desisred skill/item to always overheal the Target 
 * regardless of what stat it is and the user's personal overheal permissions.
+* <overhealMult: x> - Give a multiplier to whatever overheal the skill/item
+* produces.
 * Actors, Enemies, Classes, Weapons, Armors, and States:
 * <overheal|Overheal Use|overhealUse> - Causes all skills and items to
 * give the target hp overheal. 
