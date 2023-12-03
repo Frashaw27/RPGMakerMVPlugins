@@ -31,7 +31,7 @@ Frashaw.HpTpCostRate = Frashaw.HpTpCostRate || {};
 * Insert the above notetags into the respective places and it should work. 
 * You need Yanfly skill core to do the hp costs though.
 * ===Change Log===============================================================
-* Version 1.0 (11/29/23):
+* Version 1.0 (12/03/23):
 * -Finished Base Plugin
 * ============================================================================
 */
