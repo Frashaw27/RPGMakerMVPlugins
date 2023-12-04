@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_EvalEquipEffects
 // FRSH_EvalEquipEffects.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -71,6 +71,9 @@ Frashaw.EEEffects = Frashaw.EEEffects || {};
 * Just put whatever you'd place in the states for the respective thing and
 * it shouldn't work.
 * ===Change Log===============================================================
+* Version 1.0.1 (12/04/23) :
+* -Removed apart of when you mess up code so it doesn't display the wrong thing
+*
 * Version 1.0 (01/11/23) :
 * -Finished Base Plugin
 * ============================================================================
@@ -193,7 +196,7 @@ Game_Battler.prototype.noTargetEval = function(target, code) {
       eval(code);
     } catch (e) {
       Yanfly.Util.displayError(e, code,
-        'CUSTOM EQUIP ' + stateId + ' CODE ERROR');
+        'CUSTOM EQUIP CODE ERROR');
     }
     return;
 };
@@ -325,7 +328,7 @@ Game_Battler.prototype.targetEval = function(target, value, code) {
       eval(code);
     } catch (e) {
       Yanfly.Util.displayError(e, code,
-        'CUSTOM EQUIP ' + stateId + ' CODE ERROR');
+        'CUSTOM EQUIP CODE ERROR');
     }
     return value;
 };
