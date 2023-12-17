@@ -276,6 +276,9 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log===============================================================
+* Version 1.0.5 (12/14/23) :
+* -Changed two state relate sections to be calls instead of overwrites
+*
 * Version 1.0.4 (07/09/23) :
 * -Changed several method calls to make them more dynamic
 *
@@ -391,7 +394,7 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 	
-	frsh_displayActionResults_antiMsg = Window_BattleLog.prototype.displayActionResults
+	frsh_displayActionResults_antiMsg = Window_BattleLog.prototype.displayActionResults;
 	Window_BattleLog.prototype.displayActionResults = function(subject, target) {
 		var check = checkChecker(2, "AntiActionResults");
 		if (check){
@@ -501,75 +504,19 @@ Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
 		}
 	};
 
+	frsh_displalyAddedStates_antiMsg = Window_BattleLog.prototype.displayAddedStates;
 	Window_BattleLog.prototype.displayAddedStates = function(target) {
 		var check = checkChecker(15, "AntiAddedStates");
 		if (check){
-			target.result().addedStateObjects().forEach(function(state) {
-				var stateMsg = target.isActor() ? state.message1 : state.message2;
-				if (state.id === target.deathStateId()) {
-					this.push('performCollapse', target);
-				}
-				if (stateMsg) {
-					this.push('popBaseLine');
-					this.push('pushBaseLine');
-					//resets the for each different state/buff message, if wanted
-					if (Parameters.resetOther){
-						otherText = [];
-					}
-					//Adds text to saved battlelog lines
-					otherText.push(target.name() + stateMsg);
-					//Checks to see if the current applying state is death
-					if (state.id === target.deathStateId()){
-						//Checks to see if target has the summon tag, and if the Summon plugin is added
-						if (Imported.Summons && target.summon){
-							//Checks to see if the actor has a custom death message
-							if (target.summonDeath != null || target.summonDeath == ''){
-								//Uses it if they do
-								this.push('addText', target.summonDeath);
-							} else {
-								//Uses default if they don't
-								var text = Frashaw.Param.defaultSummDeathText;
-								//Splits array to check to where to put the name
-								var textArray = text.split("%");
-								//A check to see if the name goes at start end or the middle
-								if (textArray.length > 1){
-									//Puts it into the middle if yes
-									text = textArray[0] + target.name() + textArray[1];
-								} else {
-									//Puts it at the start if not
-									text =  target.name() + textArray[0];
-								}
-								this.push('addText', text);
-							}
-						} else {
-							//Does normal message if target is not a summon
-							this.push('addText', target.name() + stateMsg);
-						}
-					} else {
-						//Does normal message if not death
-						this.push('addText', target.name() + stateMsg);	
-					}
-					this.push('waitForEffect');
-				}
-			}, this);
+			frsh_displalyAddedStates_antiMsg.call(this, target);
 		}
 	};
 
+	frsh_displayRemovedStates_antiMsg = Window_BattleLog.prototype.displayRemovedStates;
 	Window_BattleLog.prototype.displayRemovedStates = function(target) {
 		var check = checkChecker(16, "AntiRemovedStates");
 		if (check){
-			target.result().removedStateObjects().forEach(function(state) {
-				if (state.message4) {
-					this.push('popBaseLine');
-					this.push('pushBaseLine');
-					//Gets remove state message
-					if (Parameters.resetOther){
-						otherText = [];
-					}
-					otherText.push(target.name() + state.message4);
-					this.push('addText', target.name() + state.message4);
-				}
-			}, this);
+			frsh_displayRemovedStates_antiMsg.call(this, target);
 		}
 	};
 
