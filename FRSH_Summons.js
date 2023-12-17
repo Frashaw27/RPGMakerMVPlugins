@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.1.3
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -13,12 +13,6 @@ Frashaw.Summons = Frashaw.Summons || {};
 /*:
 * @plugindesc Allows the ability to summon actors for the battle/a # of turns.
 * @author Frashaw27
-*
-* @param summSame
-* @text Allow Same Summons(?)
-* @type boolean
-* @desc Click True or False if you want to allow multiples of the same summon.
-* @default false
 *
 * @param summMax
 * @text Max # of Summons
@@ -81,39 +75,31 @@ Frashaw.Summons = Frashaw.Summons || {};
 * @type text
 * @desc Input the symbol(s) that you want to use to connect the name and remaining turns (if shown).
 * @default :
-*
-* @param resetOther
-* @text Stack State/Buff Message?
-* @type boolean
-* @desc Click True or False if you want to stack the State/Buff messages or just have 1 during the Summon Battle Message.
-* @default false
 * 
 * @help 
 * ==Notetags==================================================================
+* | = either one works
+* Non-case sensitive
 * Actor:
-* <Summon> - Indicates actors is a summon !Must include or Summon will Break!
-* <summonEnter: ...> or <Summon Enter Message: ...> - Shows a different enter 
-* message from other summons. Use % to indicate the summon's name. Summoner's 
-* name will always appear at the front.
-* <summonDeath: ...> or <Summon Death Message: ...> - Shows a different death 
-* message from other summons. Use % to indicate the summon's name.
-* <summonLeave: ...> or <Summon Leave Message: ...> - Shows a different 
-* leave/summon turn up message from other summons. Use % to indicate the 
-* summon's name.
-* <Summon Eval></SummonEval> - Put code between these to run when actor is
-* summoned.
-* <Summon Leave Eval></Summon Leave Eval> - Put code between these to run
-* when the actor leaves by any means.
+* <Summon Enter Message|summonEnter: ...>- Shows a different enter message 
+* from other summons. Use % to indicate the summon's name. Summoner's name 
+* will always appear at the front. Ex: "summoned % to the field!"
+* <Summon Death Message|summonDeath: ...>- Shows a different death message 
+* from other summons. Use % to indicate the summon's name. Ex: "% perished!"
+* <Summon Leave Message|summonLeave: ...>- Shows a different leave message 
+* from other summons. Use % to indicate the summon's name. Ex: "% left!"
+* <Summon Eval|summonEval></Summon Eval|summonEval> - Put code between these 
+* to run when actor is summoned.
+* <Summon Leave Eval|summonLeaveEval></Summon Leave Eval|summonLeaveEval> - 
+* Put code between these to run when the actor leaves/dies by any means.
 * Skill/Item:
-* <Summon: (id), (level), (turns), (big)> - First number is the id of the 
-* actor summoned, Second is the level (use 0 if you want the level to be
-* the same as the summoner, leave blank for default level), Third is the 
-* number of Turns (set to 0 or leave blank to stay until death), Fourth
-* indicates if it's a "BIG" summon or not (set to 1 to activate, put
-* anything else or leave blank to not).
-* <MassSummon: (level), (turns), (id)> - Same rules apply as above. You do
-* need the first 2 values in, even if left at 0, in order for multiple 
-* summons. Each number after second number will act as another summon.
+* <Summon: (id), (level), (turns)> - First number is the id of the actor 
+* summoned, Second is the level (use 0 if you want the level to be
+* the same as the summoner, use -1 for default level), Third is the 
+* number of Turns (set to 0 or leave blank to stay until death). Can be put 
+* multiple time in a single skill/item to summon multiple things.
+* <Big Summon|bigSummon> - Makes the summon (singular) overtake the entire
+* party for their duration.
 * ===Introduction=============================================================
 * In RPG Maker, there is no innate way to summon actor fluidly for a certin
 * amount of turns without some extensive eventing/scripting. This plugin
@@ -125,14 +111,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * temporarily replaces your party ala Final Fantasy X.
 * ===How to Use===============================================================
 * Note: That all summons will be removed upon battle end and upon death.
-* 
-* For any actor that is going to be used as a summon, they need to be setup
-* before hand with the <Summon> notetag in their notes. This needs to be done
-* to properly check if they need to be checked for removal via turns/battle 
-* end. You can also use the other notetages to prepare any other essentials
-* before hand.
+* Also if the summoner dies, all their summons go with them.
 *
-* For the skill/item portion, simply put <Summon: x, x, x, x> into the 
+* For the skill/item portion, simply put <Summon: x, x, x> into the 
 * desired notes and start replacing the x with the corresponding numbers.
 *
 * x1 - The Summoned Actors's Id. Pretty self explanetory. Make sure to make
@@ -142,8 +123,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 *
 * x2 - The Summoned Actor's Level. Put the number here to set their level.
 * If you put 0 in this slot, the summoned actor will instead use the 
-* summoner's level. Leaving this blank will result in them using the default
-* level determined via the plugin parameters.
+* summoner's level. Putting this to -1 will result in them using the default
+* level determined via the plugin parameters. Will follow the summoner's level
+* if left blank.
 *
 * x3 - The Summoned Actor's # of turns they shall remain in battle. Put the
 * number here for the amount of turns you want the actor to remain in the 
@@ -154,25 +136,27 @@ Frashaw.Summons = Frashaw.Summons || {};
 * that the summon will temporarily replace the party, leave blank or at 0
 * to indicate otherwise.
 *
-* IF you need multiple summons in one you can use <MassSummon: x, x, for that
-* result for simular results. Although the format is different to 
-* accomedate the potential infinite number of actors you can summon at one 
-* time. 
-*
-* x1 - Level the summons will be at.
-*
-* x2 - Turns the summons will last.
-*
-* x3 and beyond - each one after the 2nd will add another actor to summon
-* following the same rules as before. Unlike the previous one, you do need
-* the first two values in place, even if they're just 0, in order for it to 
-* work.
+* If you need several summons, simply put the note tag in several times for
+* each summon.
 *
 * When using <Summon Eval> you can use the following terms to short hand
 * some code:
 * The Summoner - user, summoner, a
 * The Summonee - target, summonee, b
+* You can use <Summon Leave Eval> for a simular effect but for when the 
+* summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.0 (12/17/23):
+* -Rewritten the code significantly
+* -Removed "option" for multiple of the same actor due to no longer working
+* -Removed option for text caching as it no longer is needed
+* -Added alt calls for all the summon tags
+* -Made the plugin a function so that variables can't be messed with outside
+* of this plugin
+* -Change the default level setting to following the summoner's level
+* -Multiple summons are now just done with using the same summon tag
+* multiple times
+*
 * Version 1.1.3 (11/03/23):
 * -Added a hot fix that makes it so that all summoned actors are removed at 
 * the end of action, instead of just one dying 
@@ -201,14 +185,11 @@ Frashaw.Summons = Frashaw.Summons || {};
 * ============================================================================
 */
 //============================================================================
+
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_Summons');
 Frashaw.Param = Frashaw.Param || {};
-if (Parameters.summSame === "true"){
-	Frashaw.Param.SameSummon = true;
-} else {
-	Frashaw.Param.SameSummon = false;
-}
 Frashaw.Param.maxSumms = Number(Parameters.summMax);
 Frashaw.Param.defaultSummLevel = Number(Parameters.defSummLvl);
 if (Parameters.graceTurn === "true"){
@@ -228,7 +209,7 @@ if (Parameters.displayExclaim === "true"){
 }
 Frashaw.Param.defaultSummDeathText = Parameters.defSumDeathText;
 Frashaw.Param.defaultSummLeaveText = Parameters.defSumLeaveText;
-Frashaw.Param.defaultSummText = Parameters.defSumText;
+Frashaw.Param.defaultSummEnterText = Parameters.defSumText;
 if (Parameters.displayExclaim === "true"){
 	Frashaw.Param.displayExclaim = true;
 } else {
@@ -240,67 +221,18 @@ if (Parameters.showTurnsActor === "true"){
 	Frashaw.Param.showTurnsActor = false;
 }
 Frashaw.Param.ConnectSymbol = Parameters.connector;
-if (Parameters.resetOther === "false"){
-	Frashaw.Param.resetOther = true;
-} else {
-	Frashaw.Param.resetOther = false;
-}
 
 //Sets up various variables for use
-var FrshSummonLoaded = false; //A bool to check if the Notetags are loaded
-
-var id = 0; //Id of the skill.item to check if they can summon
-var skill = false; //Bool to check if it's a skill or item
-var otherText = []; //Text for the battle log for summon
-
-var summonOverride = false; //An override for big summons
-var summonArray = []; //The array used to house summons
-var bigSummonArray = []; //The array used to house big summons
-var deathGlobal = 0; //A variable to hold a summon that needs to be removed from the party
+var FrshSummonLoaded = false;
+var summonOverride = undefined;
 var summonTextBool = false;
+var summonList = [];
+var summonEntered = [];
 var summonText = '';
 var summonsText = '';
 
-//A function that checks if the value in the array is both a value and above negative 1,
-//and removes them if they're not
-function isNumber(yes){
-	return yes > -1;
-}
-
-//Turns all the array elements into intergers
-function eacher(item, index, arr){
-	arr[index] = parseInt(item);
-}
-
-//A function meant to seperate the values gotten from the summon calls
-//into arrays along with removing any not used valeus
-function arrayinator(yes){
-	array = yes.split(",");
-	array.forEach(eacher);
-	array = array.filter(isNumber);
-	return array;
-}
-
-//Used to better flow the big summons
-function bigSummon(){
-	//Add a big summon based on the global actor
-	$gameParty.addBigSummon(deathGlobal);
-}
-
-//Used to better flow the removal of summons
-function removeSummon(){
-	//Checks if the summon override is in effect or not
-	if (summonOverride){
-		//If true, removes a big summon 
-		$gameParty.removeBigSummon(deathGlobal);
-	} else {
-		//If false removes a normal summon
-		$gameParty.removeSummon(deathGlobal);
-	}
-}
-
 function clear(){
-	//hear because it didn't want to not crash when left by itself
+	//Here because it didn't want to not crash when left by itself
 	SceneManager._scene._logWindow.clear();
 }
 
@@ -311,25 +243,27 @@ DataManager.isDatabaseLoaded = function() {
 	if (!FrshSummon_database.call(this)) return false; 
 	//Runs if the above variable is false
 	if (FrshSummonLoaded == false) {
-		//Processes the notetags of actors
-		this.processActorNotetags($dataActors);
+		//Processes the notetags of actors, skills, and items
+		this.processSummonee($dataActors);
+		this.processSummoner($dataSkills);
+		this.processSummoner($dataItems);
 		//Make sure it doesn't run twice
 		FrshSummonLoaded = true;
 	}
 	return true;
 };
 
-//Does the processing
-DataManager.processActorNotetags = function(group) {
+//Does the processing to get aspects of actors
+DataManager.processSummonee = function(group) {
 	//Loads up various strings to check for
-  var note1a = /<(?:Summon Eval)>/i;
-  var note1b = /<\/(?:Summon Eval)>/i;
-  var note1c = /<(?:Summon Leave Eval)>/i;
-  var note1d = /<\/(?:Summon Leave Eval)>/i;
-  var note2 = /<(?:Summon Death Message):[ ](.*)>/i;
-  var note3 = /<(?:Summon Leave Message):[ ](.*)>/i;
-  var note4 = /<(?:Summon Enter Message):[ ](.*)>/i;
-  for (var n = 1; n < group.length; n++) {
+	var note1a = /<(?:SUMMON EVAL|summonEval)>/i;
+	var note1b = /<\/(?:SUMMON EVAL|summonEval)>/i;
+	var note1c = /<(?:SUMMON LEAVE EVAL|summonLeaveEval)>/i;
+	var note1d = /<\/(?:SUMMON LEAVE EVAL|summonLeaveEval)>/i;
+	var note2 = /<(?:SUMMON DEATH MESSAGE|summonDeath):[ ](.*)>/i;
+	var note3 = /<(?:SUMMON LEAVE MESSAGE|summonLeave):[ ](.*)>/i;
+	var note4 = /<(?:SUMMON ENTER MESSAGE|summonEnter):[ ](.*)>/i;
+	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
 		
@@ -340,6 +274,7 @@ DataManager.processActorNotetags = function(group) {
 		obj.summonDeath = '';
 		obj.summonLeave = '';
 		obj.summonEnter = '';
+		obj.uniqueSummon = false;
 
 		for (var i = 0; i < notedata.length; i++) {
 			var line = notedata[i];
@@ -374,206 +309,88 @@ DataManager.processActorNotetags = function(group) {
   }
 }
 
+//Does the processing
+DataManager.processSummoner = function(group) {
+	//Loads up various strings to check for
+	var note1 = /<SUMMON:[ ](.*)>/i;
+	var note2 = /<(?:BIG SUMMON|bigSummon)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		//Initalizes the actors for these various conditions
+		var customMode = 'none';
+		obj.summon = [];
+		obj.bigSummon = false;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			//For the start of the summon eval
+			if (line.match(note1)) {
+				var array = RegExp.$1.split(",");
+				for (var loop = 0; loop != array.length; loop++){
+					array[loop] = Number(array[loop])
+				}
+				while (array.length < 3){
+					array.push(0);
+				}
+				obj.summon.push(array);
+			} else if (line.match(note2)){
+				obj.bigSummon = true;
+			}
+		}
+  }
+}
 //==========================================================================================
-//A function made to link the values of the $dataActors and the in-game actors
-Game_Actor.prototype.summonEvalMake = function() {
-	//A simple check if the summon eval was already assigned or not
-    if (this.summonEval !== undefined) return this.summonEval;
-	//Gets the id of the actor for more convient use
-    var id = this.actorId();
-	//Checks to see if the actor's note tag has the Summon tag
-	var tex = eval($dataActors[id].meta.Summon != undefined);
-	if (tex){
-		//Assigns it true if it is
-		this.summon = true;
-	} else {
-		//Doesn't assign it if it isn't
-		this.summon = undefined;
-	}
-	//Checks to see if eval is not undefined and not blank
-	tex = eval($dataActors[id].summonEval != undefined && $dataActors[id].summonEval != '')
-	if (tex){
-		//Assigns the summon eval if yes
+//A function to give the summon values to the actual actors
+Game_Actor.prototype.summonAttributesGet = function() {
+	var id = this.actorId();
+	if ($dataActors[id].summonEval != ''){
 		this.summonEval = $dataActors[id].summonEval;
 	} else {
-		//Doesn't assign if no
 		this.summonEval = undefined;
 	}
-	//Checks to see if eval is not undefined and not blank
-	tex = eval($dataActors[id].leaveEval != undefined && $dataActors[id].leaveEval != '')
-	if (tex){
-		//Assigns the leave eval if yes
+	if ($dataActors[id].leaveEval != ''){
 		this.leaveEval = $dataActors[id].leaveEval;
 	} else {
-		//Doesn't assign if no
 		this.leaveEval = undefined;
 	}
-	//Checks to see if either form of death message is available or not
-	if (($dataActors[id].summonDeath != undefined && $dataActors[id].summonDeath != '') || ($dataActors[id].meta.summonDeath != undefined && $dataActors[id].meta.summonDeath != '')){
-		if ($dataActors[id].summonDeath != null && $dataActors[id].summonDeath != ''){
-			//Assigns the "Summon Death Message" varient
-			var text = $dataActors[id].summonDeath;
-		} else {
-			//Assigns the "summonDeath" variant
-			var text = String($dataActors[id].meta.summonDeath);
-		}
-		//Splits array to check to where to put the name
-		var textArray = text.split("%");
-		//A check to see if the name goes at the start or the middle
-		if (textArray.length > 1){
-			//Puts it into the middle if yes
-			text = textArray[0] + this.name() + textArray[1];
-		} else {
-			//Puts it at the start if not
-			text = this.name() + textArray[0];
-		}
-		//Assigns the summonDeath text
-		this.summonDeath = text;
+	if ($dataActors[id].summonDeath != ''){
+		var text = $dataActors[id].summonDeath.replace("%", this.name());
 	} else {
-		//Leaves unassigned if it's not available
-		this.summonDeath = undefined;
+		var text = Frashaw.Param.defaultSummDeathText.replace("%", this.name());
 	}
-	//Checks to see if either form of leave message is available or not
-	if (($dataActors[id].summonLeave != undefined && $dataActors[id].summonLeave != '') || ($dataActors[id].meta.summonLeave != undefined && $dataActors[id].meta.summonLeave != '')){
-		if ($dataActors[id].summonLeave != null && $dataActors[id].summonLeave != ''){
-			//Assigns the "Summon Leave Message" varient
-			var text = $dataActors[id].summonLeave;
-		} else {
-			//Assigns the "summonLeave" variant
-			var text = String($dataActors[id].meta.summonLeave);
-		}
-		//Splits array to check to where to put the name
-		var textArray = text.split("%");
-		//A check to see if the name goes at the start or the middle
-		if (textArray.length > 1){
-			//Puts it into the middle if yes
-			text = textArray[0] + this.name() + textArray[1];
-		} else {
-			//Puts it at the start if not
-			text = this.name() + textArray[0];
-		}
-		//Assigns the summonLeave text
-		this.summonLeave = text;
+	this.summonDeath = text;
+	if ($dataActors[id].summonLeave != ''){
+		var text = $dataActors[id].summonLeave.replace("%", this.name());
 	} else {
-		//Leaves unassigned if it's not available
-		this.summonLeave = undefined;
+		var text = Frashaw.Param.defaultSummLeaveText.replace("%", this.name());
 	}
-	//Checks to see if either form of enter message is available or not
-	if (($dataActors[id].summonEnter != undefined && $dataActors[id].summonEnter != '') || ($dataActors[id].meta.summonEnter != undefined && $dataActors[id].meta.summonEnter != '')){
-		if ($dataActors[id].summonEnter != null && $dataActors[id].summonEnter != ''){
-			//Assigns the "Summon Enter Message" varient
-			var text = $dataActors[id].summonEnter;
-			//Assigns a Bool for later
-			var bool = true;
-		} else {
-			//Assigns the "summonEnter" variant
-			var text = String($dataActors[id].meta.summonEnter);
-			var bool = false;
-		}
-		//Checks to see if the bool is set to true
-		if (bool){
-			//If yes, it adds space at the start of the text
-			var text = " " + text;
-		}
-		//Assigns the summonEnter text
-		this.summonEnter = text;
+	this.summonLeave = text;
+	if ($dataActors[id].summonEnter != ''){
+		var text = $dataActors[id].summonEnter.replace("%", this.name());
 	} else {
-		//Leaves unassigned if it's not available
-		this.summonEnter = undefined;
+		var text = Frashaw.Param.defaultSummEnterText.replace("%", this.name());
 	}
+	this.summonEnter = text;
+	this.summons = [];
 };
 
-//Makes the above function be used
-frsh_summonEvalInit = Game_Actor.prototype.initialize;
-Game_Actor.prototype.initialize = function(actorId) {
-    frsh_summonEvalInit.call(this,actorId);
-    this.summonEvalMake();
+//An extention to call said summon value get function
+frsh_summons_values_get = Game_Actor.prototype.setup;
+Game_Actor.prototype.setup = function(actorId) {
+    frsh_summons_values_get.call(this, actorId);
+	this.summonAttributesGet();
 };
 
-//Function to add a big summon
-Game_Party.prototype.addBigSummon = function(actor) {
-	//Adds actor to the big summon array
-	bigSummonArray.push(actor);
-	//Sets the override to true
-	summonOverride = true;
-};
-
-//Function to remove a big summon
-Game_Party.prototype.removeBigSummon = function(actor) {
-	//Makes their turns null
-	this.summonTurns = undefined;
-	//Makes their turn bool undefined
-	this.summonBool = undefined;
-	//Removes them from the array
-	bigSummonArray = bigSummonArray.filter(function (item){return item != actor});
-	//Checks to see if the big summon array is empty or not
-	if (bigSummonArray.length == 0){
-		//Override returns to false if true
-		summonOverride = false;
-	}
-};
-
-//Function to summon actor
-Game_Party.prototype.addSummon = function(actor) {
-	//Add actor to the summon aeeay
-	summonArray.push(actor);
-};
-
-//Function to remove summon
-Game_Party.prototype.removeSummon = function(actor) {
-	//Makes their turns null
-	this.summonTurns = undefined;
-	//Makes their turn bool undefined
-	this.summonBool = undefined;
-	//Adds a check for the leave eval
-	if (actor.leaveEval != null){
-		//Goes through if it exists
-		actor.evaluateLeave();
-	}
-	//Removes them from the array
-	summonArray = summonArray.filter(function (item){return item != actor});
-};
-
-//A function overwrite to make the summons appear properly
+//an overwrite to get either the big summon or the normal party + summons
+frsh_summons_member_list = Game_Party.prototype.battleMembers;
 Game_Party.prototype.battleMembers = function() {
-	//Checks if summon override is in effect
-	if (summonOverride){
-		//If true, the member list is just the big summons
-		var list = bigSummonArray; 
+	if (summonOverride != null){
+		var list = [$gameActors.actor(summonOverride)]; 
     } else {
-		//Yanfly Party System Compatibility
-		if (!Imported.YEP_PartySystem){
-			//Normal battle members code, except it assigns it's value to a variable instead of a
-			//stright return
-			var list = this.allMembers().slice(0, this.maxBattleMembers()).filter(function(actor) {
-				return actor.isAppeared();
-			});
-		} else {
-			//The code Yanfly made, but replaced a variable name with "list"
-			if (this.toInitializeBattleMembers()) this.initializeBattleMembers();
-			var list = [];
-			for (var i = 0; i < this._battleMembers.length; ++i) {
-				var actorId = this._battleMembers[i];
-				if (list.length > this.maxBattleMembers()) break;
-				if (actorId === null) continue;
-				if (!$gameActors.actor(actorId)) continue;
-				if (!$gameActors.actor(actorId).isAppeared()) continue;
-				list.push($gameActors.actor(actorId));
-			}
-		}
-		//Adds the summons to the active party
-		if (summonArray.length > 0){
-			//Adds the summons to the active party
-			for(loop = 0; loop != summonArray.length; loop++){
-				//Adds the summons to the returned list
-				list.push(summonArray[loop]);
-				//Checks to see if current number of summons doesn't exceed the maximum, if there is one
-				if (loop == Frashaw.Param.maxSumms-1 && Frashaw.Param.maxSumms != 0){
-					//ends loop prematurely if true
-					break;
-				}
-			}
-		}
+		var list = frsh_summons_member_list.call(this);
+		list = list.concat(summonList);
 	}
 	return list;
 };
@@ -611,27 +428,19 @@ Game_Battler.prototype.evaluateSummon = function(target){
 
 //A function made to evaluate the summoning eval of actors
 Game_Battler.prototype.evaluateLeave = function(){
-	//Sets summoner shorthands
 	var a = this;
 	var user = this;
 	var summoner = this;
 	var b = this;
 	var code = this.leaveEval;
-	//console.log(code);
 	//Sees if code will produce an error
 	try {
-		//Runs code, goes through if no errors
 		eval(code);
 	} catch (e) {
-		//Displays if an error happens
-		//Displays where the error occured
 		var text = target._name + " Leave Eval Error!!!!!"
 		console.log(text);
-		//Displays code to the console log
 		console.log(code || 'No Code');
-		//Produces the error itself to the console
 		console.error(e);
-		//Checks to see if the game is in testing
 		if (Utils.isOptionValid('test')){
 			//Force opens the console log if it is
 			require('nw.gui').Window.get().showDevTools();
@@ -639,367 +448,183 @@ Game_Battler.prototype.evaluateLeave = function(){
 	}
 }
 
-frsh_apply_summon = Game_Action.prototype.apply
-Game_Action.prototype.apply = function(target) {
-	summonTextBool = false;
-	frsh_apply_summon.call(this,target);
-};
-
 //Where the actual summoning happens
-frsh_skillSummon = Game_Action.prototype.applyItemUserEffect ;
+frsh_summons_summoning = Game_Action.prototype.applyItemUserEffect ;
 Game_Action.prototype.applyItemUserEffect = function(target) {
 	//All other preformActionEnd things
-	frsh_skillSummon.call(this,target);
-	//Checks to see if the used item was a skill or item
-	if (this.isSkill()){
-		var thing = $dataSkills[this.item().id];
-	} else {
-		var thing = $dataItems[this.item().id];
-	}
-	//If skill, it checks to see if the skill had the summon tag
-	if (thing.meta.Summon != null){
-			summonTextBool = true;
-			//Gets an array for the summon tag
-			var array = arrayinator(thing.meta.Summon);
-			//Checks to see if the first value is a valid id or not
-			if (array[0] != null && array[0] > 0){
-			//Assigns a variable to an actor based on it if it is
-			var actor = $gameActors.actor(array[0]);
-			//Checks to see if summon is big or normal summon
-			if (array[3] != null && array[3] == 1){
-				//Calls the bigSummon function for ease of use
-				$gameParty.addBigSummon(actor);
+	frsh_summons_summoning.call(this,target);
+	//Checks to see if the used skill/item has summon potential
+	if (this.item().summon.length != 0){
+		//Loops through all the summons until either all the summons are summoned or the cap is reached
+		for (var loop = 0; loop != this.item().summon.length && summonList.length < $gameParty.maxSummons(); loop++){
+			//Adds all the summon to the party
+			$gameParty.addSummon(this.item().summon[loop][0]);
+			//Sets the actor for ease of use
+			var actor = $gameActors.actor(this.item().summon[loop][0]);
+			//Initalizes out said actor
+			actor.setup(this.item().summon[loop][0]);
+			//Checks to see if the summon has a specified set level, is going to copy the 
+			//summoner's level, or is going to be the default summon level 
+			if (this.item().summon[loop][1] > 0){
+				actor._level = this.item().summon[loop][1];
+			} else if (this.item().summon[loop][1] == -1){
+				actor._level = Frashaw.Param.defaultSummLevel;
 			} else {
-				//Summons normal actor
-				$gameParty.addSummon(actor);
+				actor._level = this.subject()._level;
 			}
-			//If the actor has special summon enter text, uses it
-			if (actor.summonEnter != null){
-				var summonText = actor.summonEnter;
-				summonsText = actor.name() + summonText;
-			} else {
-			//Uses default otherwise
-				var summonText = Frashaw.Param.defaultSummText;
-				//Splits array to check to where to put the name
-				var texts = summonText.split("%");
-				//A check to see if the name goes at the end or the middle
-				if (texts.length > 1){
-					//Puts it into the middle if yes
-					summonText = texts[0] + actor.name() + texts[1];
-				} else {
-					//Puts it at the end if not
-					summonText =  texts[0] + actor.name();
-				}
-				//Puts name of the summoner to the front of the message
-				summonsText = this.subject().name() + " " + summonText;
+			//A simple thing to make sure that the leveled up actor doesn't have missing Hp/Mp
+			actor.setHp(actor.mhp);
+			actor.setMp(actor.mmp);
+			//Sets the turns if applicable
+			if (this.item().summon[loop][2] != 0){
+				actor.summonTurns = this.item().summon[loop][2];
+				//If the setting is on, adds a grace turn to the turn counter for the summoned turn
+				if (Frashaw.Param.GraceTurn) actor.summonBool = true;
 			}
-			//Intializes the actor
-			actor.setup(array[0]);
-			//Checks to see if the level portion of the array is valid
-			if (array[1] != null){
-				//Checks to see if the level portion is equal to 0
-				if (array[1] != 0){
-					//Uses the specified number as the level if not
-					actor.level = array[1];
-				} else {
-					//Uses the summoners level as the level if it is
-					actor.level = this.subject().level;
-				}
-			} else {
-				//Uses the summon default level if not present
-				actor.level = Frashaw.Param.defaultSummLevel;
+			//A setting that allows for an ease of use for the various summon functions
+			actor.summoned = true;
+			//Checks if the summon is gonna be a big summon
+			if (this.item().bigSummon){
+				summonOverride = actor.actorId();
 			}
-			//Checks to see if the array has valid turns or not
-			if (array[2] != null && array[2] > 0){
-				//Sets the summons terms equal to the array value
-				actor.summonTurns = array[2];
-				//Sets the "mulligan" turn on if allowed
-				if (Frashaw.Param.GraceTurn){
-					actor.summonBool = true;
-				}
-				//Adds turns text if allowed
-				if (Frashaw.Param.displayTurns){
-				summonsText += " for " + array[2] + " turns";
-				}
-			}
-			//Runs the evaluation of the code if the actor has summon eval
-			if (actor.summonEval != null){
-				this.subject().evaluateSummon(actor);
-			}
-			//If allowed, displays the exclaimnation mark at the of the battle log message
-			if (Frashaw.Param.displayExclaim){
-				summonsText += "!";
-			}
-			//A script call that shows the text on screen after the use message
-			SceneManager._scene._logWindow.push('addText', summonsText);
-		} else {
-			//Shows an error if array[0] conditions are not met
-			console.error("Summons Id's must be higher then 0");
-		}
-	}
-	if (thing.meta.massSummon != null){
-		//Gets an array for the summon tag
-		var array = arrayinator(thing.meta.massSummon);
-		//Checks if there's 3 or more then 3 values
-		if (array.length >= 3){
-		//Sets up the level
-		if (array[0] != null && array[0] > 0){
-			var level = array[0];
-		} else {
-			var level = 0;
-		}
-		//Sets up the turns
-		if (array[1] != null && array[1] > 0){
-			var turns = array[1];
-		} else {
-			var turns = 0;
-		}
-		//
-		for (var loop = 2; loop != array.length; loop++){
-			//Ease of access of the actor id
-			var actorid = array[loop];
-			//Checks to see if the actor is already in the party and if it's allowed to add another
-			if ((!$gameParty.members().includes($gameActors.actor(actorid)) || Frashaw.Param.SameSummon) && (summonArray.length != Frashaw.Param.maxSumms || Frashaw.Param.maxSumms == 0)){ 
-			//Checks to see if the actor is valid
-			if (actorid != null && actorid > 0){
-				var actor = $gameActors.actor(actorid);
-				//adds actor to the party
-				$gameParty.addSummon(actor);
-				//Checks to see if actor has a unique summon message
-				if (actor.summonEnter != null){
-					var summonsText = actor.summonEnter;
-					summonsText = actor.name() + summonsText;
-				} else {
-				//Uses default otherwise
-					var summonsText = Frashaw.Param.defaultSummText;
-					//Splits array to check to where to put the name
-					var textArray = summonsText.split("%");
-					//A check to see if the name goes at the end or the middle
-					if (textArray.length > 1){
-						//Puts it into the middle if yes
-						summonsText = textArray[0] + actor.name() + textArray[1];
-					} else {
-						//Puts it at the end if not
-						summonsText =  textArray[0] + actor.name();
-					}
-						//Puts name of the summoner to the front of the message
-						summonsText = this.subject().name() + " " + summonsText;
-					}
-					//Standardizes the actor
-					actor.setup(actorid);
-					//Checks to see if the level portion is equal to 0
-					if (level != 0){
-						//Uses the specified number as the level if not
-						actor.level = level;
-					} else {
-						//Uses the summoners level as the level if it is
-						actor.level = this.subject().level;
-					}
-					//Gives the summons turns it can remain for
-					if (turns != 0){
-						//Sets the summons terms equal to the array value
-						actor.summonTurns = turns;
-						//Sets the "mulligan" turn on if allowed
-						if (Frashaw.Param.GraceTurn){
-							actor.summonBool = true;
-						}
-						//Adds turns text if allowed
-						if (Frashaw.Param.displayTurns){
-							summonsText += " for " + turns + " turns";
-						}
-					}
-					//Runs the evaluation of the code if the actor has summon eval
-					if (actor.summonEval != null){
-						this.subject().evaluateSummon(actor);
-					}
-					//If allowed, displays the exclaimnation mark at the of the battle log message
-					if (Frashaw.Param.displayExclaim){
-						summonsText += "!";
-					}
-					//A script call that shows the text on screen after the use message
-					SceneManager._scene._logWindow.push('addText', summonsText);
-					} else {
-						//Error message if Id is wrong
-						console.error(actorid + " isn't a valid actor summon id.");
-					}
-				}
-				}
-		} else {
-			//Error message if you don't have the needed values
-			console.error("Mass Summon Requires atleast 3 values. If you only want 1 summons with less set up, choose the other method.");
+			//Adds to the summoner's array of summons to remove when they die
+			this.subject().summons.push(actor);
+			//Sets who summoned the summon on the summon themselves
+			actor.summoner = this.subject();
+			//Adds the name to the array of those to be brought up when the messages of who was summoned is shown
+			summonEntered.push($gameActors.actor(this.item().summon[loop][0]));
 		}
 	}
 }
 
-
 //Checks to see if the summons can be summoned
-frsh_summonCost = Game_BattlerBase.prototype.canPaySkillCost;
+frsh_summons_skill_allow = Game_BattlerBase.prototype.canPaySkillCost;
 Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
-	//Gets skill id
-	var id = skill.id;
-	//Checks to see if if has the summon tag
-	if ($dataSkills[id].meta.Summon != null){
-		//Checks to see if summon capacity is at max
-		if (summonArray.length == Frashaw.Param.maxSumms && Frashaw.Param.maxSumms != 0){
-			//Denies use if it is
-			return false;
-		}
-		//If it does it pulls it and puts it into an array
-		var array = arrayinator($dataSkills[id].meta.Summon);
-		//Checks to see if id is both above 0 and not undefined
-		if (array[0] != null && array[0] > 0){
-			//Checks to see if the party includes the summoned actor
-			if ($gameParty.members().includes($gameActors.actor(array[0])) && !Frashaw.Param.SameSummon){
-				//Denies skill use if they are
-				return false;
-			}
+	if (skill.summon.length > 0){
+		//Checks to see if the summon is already summoned, if a big summon is present, or the summon max has 
+		//been reached
+		for (var loop = 0; loop != skill.summon.length; loop++){
+			if (summonOverride != null || summonList.length == $gameParty.maxSummons() || summonList.contains($gameActors.actor(skill.summon[loop][0]))) return false;
 		}
 	}
-	if ($dataSkills[id].meta.massSummon != null){
-		//Checks to see if summon capacity is at max
-		if (summonArray.length == Frashaw.Param.maxSumms && Frashaw.Param.maxSumms != 0){
-			//Denies use if it is
-			return false;
-		}
-		//If it does it pulls it and puts it into an array
-		var array = arrayinator($dataSkills[id].meta.massSummon);
-		for (var loop = 2; loop != array.length; loop++){
-			var actid = array[loop];
-			//Checks to see if id is both above 0 and not undefined
-			if (actid != null && actid > 0){
-				//Checks to see if the party includes the summoned actor
-				if ($gameParty.members().includes($gameActors.actor(actid)) && !Frashaw.Param.SameSummon){
-					//Denies skill use if they are
-					return false;
-				}
-			}
-		}
-	}
-	//Return the normal/other cost evals if this one is true
-	return frsh_summonCost.call(this,skill);
+	return frsh_summons_skill_allow.call(this,skill);
 };
 
 //Literally the same as above but for items
-frsh_itemConditions = Game_BattlerBase.prototype.meetsItemConditions;
+frsh_summons_item_allow = Game_BattlerBase.prototype.meetsItemConditions;
 Game_BattlerBase.prototype.meetsItemConditions = function(item) {
-	var id = item.id;
-	if ($dataItems[id].meta.Summon != null){
-		if (summonArray.length == Frashaw.Param.maxSumms && Frashaw.Param.maxSumms != 0){
-			return false;
-		}
-		var array = arrayinator($dataItems[id].meta.Summon);
-		if (array[0] != null && array[0] > 0){
-			if ($gameParty.members().includes($gameActors.actor(array[0]))){
-				return false;
-			}
+	if (item.summon.length > 0){
+		for (var loop = 0; loop != item.summon.length; loop++){
+			if (summonOverride != null || summonList.length == $gameParty.maxSummons() || summonList.contains($gameActors.actor(item.summon[loop][0]))) return false;
 		}
 	}
-    return frsh_itemConditions.call(this,item);
+    return frsh_summons_item_allow.call(this,item);
 };
 
-//Literally the same as above but for items
-frsh_summons_actor_removal = Game_Battler.prototype.onAllActionsEnd;
-Game_Battler.prototype.onAllActionsEnd = function() {
-    frsh_summons_actor_removal.call(this);
-	for (var loop = $gameParty.members().length-1; loop != 0; loop--){
-		if ($gameParty.members()[loop].summon != null && $gameParty.members()[loop].isDead()){
-			$gameParty.removeSummon($gameParty.members()[loop]);
-		} 
-	}
-	$gameParty.refreshMembers()
-};
-
-//A function to remove a summoned actor upon their death
-frsh_summonDeath = Game_BattlerBase.prototype.die;
-Game_BattlerBase.prototype.die = function() {
-	//Normal Die stuff
-	frsh_summonDeath.call(this);
-	//Checks if target is both an actor and has the summon tag
-    if (this.isActor() && this.summon != null){
-		//Sets the globalDeath to them
-		deathGlobal = this;
-		//Calls the removeSumm function
-		setTimeout(removeSummon, 1000);
-	}
-};
 
 //A function to run at the end of turns
-frsh_summonTurnEnd = Game_Battler.prototype.onTurnEnd;
+frsh_summons_summon_removes = Game_Battler.prototype.onTurnEnd;
 Game_Battler.prototype.onTurnEnd = function() {
-	//Checks to see if target is actor and they have summon turns
-	if (this.isActor() && this.summonTurns != null){
-		//Checks to see if they have their grace turn
-		if (this.summonBool != null){
-			//Sets grace turn to null and does nothing else if they do 
-			this.summonBool = undefined;
-		} else {
-			//Decreases their summon turns by 1 if they don't
-			this.summonTurns--;
-		}
-		//Checks to see if their summon turns has reached 0
-		if (this.summonTurns == 0){
-			//Makes their summon turns undefined
-			this.summonTurns = undefined;
-			if (summonOverride){
-				//If summon override is active, remove a big summon
-				$gameParty.removeBigSummon(this);
+	//Checks to see if target is a summon
+	if (this.summoned){
+		//Runs if the summon is dead
+		if (this.isDead()){
+			//Runs their leave eval
+			if (this.leaveEval != null) this.evaluateLeave();
+			//Removes the summon from the memebr list
+			if (this.actorId() == summonOverride) summonOverride = undefined;
+			$gameParty.removeSummon(this.actorId());
+		} else if (this.summonTurns != null){
+			//Checks to see if they have their grace turn
+			if (this.summonBool != null){
+				//Sets grace turn to null and does nothing else if they do 
+				this.summonBool = undefined;
 			} else {
-				//Otherwise remove a normal summon
-				$gameParty.removeSummon(this);
+				//Decreases their summon turns by 1 if they don't
+				this.summonTurns--;
 			}
-			//Checks to see if the actor has a custom leave message
-			if (this.summonLeave != null){
-				//Uses it if they do
-				var text = this.summonLeave;
-			} else {
-				//Uses default if they don't
-				var text = Frashaw.Param.defaultSummLeaveText;
-				//Splits array to check to where to put the name
-				var textArray = text.split("%");
-				//A check to see if the name goes at start end or the middle
-				if (textArray.length > 1){
-					//Puts it into the middle if yes
-					text = textArray[0] + this.name() + textArray[1];
-				} else {
-					//Puts it at the start if not
-					text =  this.name() + textArray[0];
-				}
+			//Checks to see if their summon turns has reached 0
+			if (this.summonTurns == 0){
+				//Makes their summon turns undefined
+				this.summonTurns = undefined;
+				//Removes the override if applicable
+				if (summonOverride != null && this.actorId() == summonOverride) summonOverride = undefined;
+				//Runs their leave eval
+				if (this.leaveEval != null) this.evaluateLeave();
+				//Removes the summon
+				$gameParty.removeSummon(this.actorId());
+				//Shows text in battle log
+				SceneManager._scene._logWindow.addText(this.summonLeave);
+				//Adds a wait to read
+				SceneManager._scene._logWindow.waitt();
+				//Adds a timeout for the clear command
+				setTimeout(clear, 1000);
 			}
-			//Shows text in battle log
-			SceneManager._scene._logWindow.addText(text);
-			//Adds a wait to read
-			SceneManager._scene._logWindow.waitt();
-			//Adds a timeout for the clear command
-			setTimeout(clear, 1000);
 		}
 	}
 	//Normal turn end things
-	frsh_summonTurnEnd.call(this);
+	frsh_summons_summon_removes.call(this);
 };
-
 
 //Function to run at the end of battle
-frsh_battleEnd = Game_Battler.prototype.onBattleEnd;
+frsh_summons_battleEnd = Game_Battler.prototype.onBattleEnd;
 Game_Battler.prototype.onBattleEnd = function() {
 	//Normal Battle End things
-	frsh_battleEnd.call(this);
-	//If the bigSummonArray has any values in it, this runs
-	if (bigSummonArray.length > 0){
-		//Goes through each summon in that array, removing them in reverse order
-		for(var pool = bigSummonArray.length; pool != 0; pool--){
-			//Removes them proper
-			$gameParty.removeBigSummon(bigSummonArray[pool-1]);
+	frsh_summons_battleEnd.call(this);
+	//Removes big summons
+	summonOverride = undefined;
+	//Clears all summons
+	summonList = [];
+	//Clears the summoner of all their previously associated summons
+	if (this.isActor()) this.summoned = [];
+};
+
+//An extendion that checks if the desceased is summoned/has summoned and acts accordingly
+frsh_summons_summon_death = Game_BattlerBase.prototype.die
+Game_BattlerBase.prototype.die = function() {
+    frsh_summons_summon_death.call(this);
+	//Runs if the user has summoned
+	if (this.summons.length != 0){
+		//Goes through each summon and sets their Hp to 0, killing them
+		for (var loop = this.summons.length; loop != 0; loop--){
+			var summon = this.summons[loop-1];
+			summon.setHp(0);
 		}
-		summonOverride = false;
 	}
-	//If the summonArray has any values in it, this runs 
-	if (summonArray.length > 0){
-		//Goes through each summon in that array, removing them in reverse order
-		for(var loop = summonArray.length; loop != 0; loop--){
-			$gameParty.removeSummon(summonArray[loop-1]);
-		} 
+	//Runs if the desceased was a big summon
+	if (this.summoned && summonOverride != null){
+		//Gets rid of the big summon
+		summonOverride = undefined;
+		if (this.leaveEval != null) this.evaluateLeave();
+		$gameParty.removeSummon(this.actorId());
 	}
 };
+
+//A function to add summons to the summon list
+Game_Party.prototype.addSummon = function(actorId) {
+    if (!this._actors.contains(actorId)) {
+        summonList.push($gameActors.actor(actorId));
+    }
+};
+
+//A function that removes summons from the summon list and the summoner's summon list
+Game_Party.prototype.removeSummon = function(actorId) {
+    if (!this._actors.contains(actorId)) {
+        summonList.splice(summonList.indexOf($gameActors.actor(actorId)), 1);
+		$gameActors.actor(actorId).summoner.summons.splice($gameActors.actor(actorId).summoner.summons.indexOf($gameActors.actor(actorId)), 1);
+    }
+};
+
+//Calculates the total number of summons allowed
+Game_Party.prototype.maxSummons = function() {
+	//Checks if the "infinite" summon option is selected or not
+	if (Frashaw.Param.maxSumms != 0) {
+		return Frashaw.Param.maxSumms;
+    } else {
+		return 20000000000000;
+	}
+};
+
 
 //==========================================================================================
 //Doesn't overwrite if ColoredNames is in the game
@@ -1021,27 +646,20 @@ if (!Imported.CName){
 	};
 }
 
-//A function overwritten to include the summons death message; doesn't run if FRSH_AntiMessage is in
-if (!Imported.AMessage){
+//A function overwritten to include the summons death message
 Window_BattleLog.prototype.displayAddedStates = function(target) {
-    target.result().addedStateObjects().forEach(function(state) {
-        var stateMsg = target.isActor() ? state.message1 : state.message2;
-        if (state.id === target.deathStateId()) {
-            this.push('performCollapse', target);
-        }
-        if (stateMsg) {
-            this.push('popBaseLine');
-            this.push('pushBaseLine');
-			//resets the for each different state/buff message, if wanted
-			if (Parameters.resetOther){
-				otherText = [];
-			}
-			//Adds text to saved battlelog lines
-			otherText.push(target.name() + stateMsg);
+	target.result().addedStateObjects().forEach(function(state) {
+		var stateMsg = target.isActor() ? state.message1 : state.message2;
+		if (state.id === target.deathStateId()) {
+			this.push('performCollapse', target);
+		}
+		if (stateMsg) {
+			this.push('popBaseLine');
+			this.push('pushBaseLine');
 			//Checks to see if the current applying state is death
 			if (state.id === target.deathStateId()){
 				//Checks to see if target has the summon tag
-				if (target.summon){
+				if (target.summoned){
 					//Checks to see if the actor has a custom death message
 					if (target.summonDeath != null || target.summonDeath == ''){
 						//Uses it if they do
@@ -1049,16 +667,7 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
 					} else {
 						//Uses default if they don't
 						var text = Frashaw.Param.defaultSummDeathText;
-						//Splits array to check to where to put the name
-						var textArray = text.split("%");
-						//A check to see if the name goes at start end or the middle
-						if (textArray.length > 1){
-							//Puts it into the middle if yes
-							text = textArray[0] + target.name() + textArray[1];
-						} else {
-							//Puts it at the start if not
-							text =  target.name() + textArray[0];
-						}
+						text = text.replace("%", target.name());
 						this.push('addText', text);
 					}
 				} else {
@@ -1069,11 +678,38 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
 				//Does normal message if not death
 				this.push('addText', target.name() + stateMsg);	
 			}
-            this.push('waitForEffect');
-        }
-    }, this);
+			this.push('waitForEffect');
+		}
+	}, this);
 };
-}
+
+//A function dedicated specifically to calling the summon messages after actions
+frsh_summons_display_summon = Window_BattleLog.prototype.displayActionResults
+Window_BattleLog.prototype.displayActionResults = function(subject, target) {
+	frsh_summons_display_summon.call(this, subject, target);
+    if (target.result().used) {
+        this.displaySummon(target);
+    }
+};
+
+//A function that goes through summonEntered to give each summon entered message
+Window_BattleLog.prototype.displaySummon = function(target) {
+	var thing = BattleManager._action.item();
+	if (summonEntered.length != 0){
+		for (var loop = 0; loop != summonEntered.length; loop++){
+			this.push('addText', BattleManager._action.subject().name() + " " + summonEntered[loop].summonEnter);
+		}
+		summonEntered = [];
+	}
+};
+
+//A message to cause a slight amount of wait in the battle log, specifically a second
+Window_BattleLog.prototype.waitt = function() {
+	this._waitCount = 60;
+};
+
+})();
+
 //=============================================================================
 // End of File
 //=============================================================================
