@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -146,6 +146,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.1 (12/18/23):
+* -Added a function to call the number of summons in the party
+*
 * Version 1.2.0 (12/17/23):
 * -Rewritten the code significantly
 * -Removed "option" for multiple of the same actor due to no longer working
@@ -613,6 +616,11 @@ Game_Party.prototype.removeSummon = function(actorId) {
         summonList.splice(summonList.indexOf($gameActors.actor(actorId)), 1);
 		$gameActors.actor(actorId).summoner.summons.splice($gameActors.actor(actorId).summoner.summons.indexOf($gameActors.actor(actorId)), 1);
     }
+};
+
+//A function that returns the number of summons
+Game_Party.prototype.numSummons = function() {
+    return summonList.length;
 };
 
 //Calculates the total number of summons allowed
