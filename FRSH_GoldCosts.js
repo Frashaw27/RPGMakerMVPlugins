@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_GoldCosts
 // FRSH_GoldCosts.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -90,6 +90,9 @@ Frashaw.GCosts = Frashaw.GCosts || {};
 * can also add in things that mess with the gold cost with gold cost rate,
 * but that is unnesscary. 
 * ===Change Log===============================================================
+* Version 1.0.1 (12/19/23):
+* -Added a fix to not show if the cost is not defined
+*
 * Version 1.0 (11/29/23):
 * -Finished Base Plugin
 * ============================================================================
@@ -268,7 +271,7 @@ Window_SkillList.prototype.drawSkillCost = function(skill, wx, wy, dw) {
 	}
 	dw = frsh_gold_costs_draw_cost.call(this, skill, wx, wy, dw);
 	if (Frashaw.Param.GoldCostAlignment == 'Left'){
-		if (this._actor.goldCost(skill) != 0){
+		if (this._actor.goldCost(skill) > 0){
 			dw = this.drawGoldCost(skill, wx, wy, dw);
 		}
 	}
@@ -277,6 +280,7 @@ Window_SkillList.prototype.drawSkillCost = function(skill, wx, wy, dw) {
 
 //Draws the gold skill cost
 Window_SkillList.prototype.drawGoldCost = function(skill, wx, wy, dw) {
+	if (this._actor.goldCost(skill) < 0) return dw; 
 	this.contents.fontSize = Frashaw.Param.GoldCostSize;
 	if (Frashaw.Param.GoldCostColorHex == ''){
 		this.changeTextColor(this.textColor(Frashaw.Param.GoldCostColor));
