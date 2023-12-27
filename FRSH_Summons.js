@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.1
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -100,6 +100,8 @@ Frashaw.Summons = Frashaw.Summons || {};
 * multiple time in a single skill/item to summon multiple things.
 * <Big Summon|bigSummon> - Makes the summon (singular) overtake the entire
 * party for their duration.
+* ===Script Calls=============================================================
+* $gameParty.numSummons() - Calls the number of summons current in the party.
 * ===Introduction=============================================================
 * In RPG Maker, there is no innate way to summon actor fluidly for a certin
 * amount of turns without some extensive eventing/scripting. This plugin
@@ -146,6 +148,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.2 (12/27/23):
+* -Made summons actually able to call their summon evals
+* -Made big summons now ignore summon party size filter
+*
 * Version 1.2.1 (12/18/23):
 * -Added a function to call the number of summons in the party
 *
@@ -459,7 +465,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 	//Checks to see if the used skill/item has summon potential
 	if (this.item().summon.length != 0){
 		//Loops through all the summons until either all the summons are summoned or the cap is reached
-		for (var loop = 0; loop != this.item().summon.length && summonList.length < $gameParty.maxSummons(); loop++){
+		for (var loop = 0; loop != this.item().summon.length && (summonList.length < $gameParty.maxSummons() || this.item().bigSummon); loop++){
 			//Adds all the summon to the party
 			$gameParty.addSummon(this.item().summon[loop][0]);
 			//Sets the actor for ease of use
@@ -496,6 +502,8 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			actor.summoner = this.subject();
 			//Adds the name to the array of those to be brought up when the messages of who was summoned is shown
 			summonEntered.push($gameActors.actor(this.item().summon[loop][0]));
+			//Runs the Summon's Eval
+			this.subject().evaluateSummon(actor);
 		}
 	}
 }
@@ -507,7 +515,7 @@ Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
 		//Checks to see if the summon is already summoned, if a big summon is present, or the summon max has 
 		//been reached
 		for (var loop = 0; loop != skill.summon.length; loop++){
-			if (summonOverride != null || summonList.length == $gameParty.maxSummons() || summonList.contains($gameActors.actor(skill.summon[loop][0]))) return false;
+			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !skill.bigSummon) || summonList.contains($gameActors.actor(skill.summon[loop][0]))) return false;
 		}
 	}
 	return frsh_summons_skill_allow.call(this,skill);
@@ -518,7 +526,7 @@ frsh_summons_item_allow = Game_BattlerBase.prototype.meetsItemConditions;
 Game_BattlerBase.prototype.meetsItemConditions = function(item) {
 	if (item.summon.length > 0){
 		for (var loop = 0; loop != item.summon.length; loop++){
-			if (summonOverride != null || summonList.length == $gameParty.maxSummons() || summonList.contains($gameActors.actor(item.summon[loop][0]))) return false;
+			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !item.bigSummon) || summonList.contains($gameActors.actor(item.summon[loop][0]))) return false;
 		}
 	}
     return frsh_summons_item_allow.call(this,item);
