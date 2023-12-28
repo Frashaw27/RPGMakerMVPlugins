@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.2
+// Version: 1.2.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -84,10 +84,19 @@ Frashaw.Summons = Frashaw.Summons || {};
 * <Summon Enter Message|summonEnter: ...>- Shows a different enter message 
 * from other summons. Use % to indicate the summon's name. Summoner's name 
 * will always appear at the front. Ex: "summoned % to the field!"
+* <Summon Enter Message Eval|summonEnterEval></Summon Enter Message Eval|
+* summonEnterEval> - Same as above, but you use "message" to determine the
+* used message. Use a, summonee, and user to refer to the message's user.
 * <Summon Death Message|summonDeath: ...>- Shows a different death message 
 * from other summons. Use % to indicate the summon's name. Ex: "% perished!"
+* <Summon Death Message Eval|summonDeathEval></Summon Death Message Eval|
+* summonDeathEval> - Same as above, but you use "message" to determine the
+* used message. Use a, summonee, and user to refer to the message's user.
 * <Summon Leave Message|summonLeave: ...>- Shows a different leave message 
 * from other summons. Use % to indicate the summon's name. Ex: "% left!"
+* <Summon Leave Message Eval|summonLeaveEval></Summon Leave Message Eval|
+* summonLeaveEval> - Same as above, but you use "message" to determine the
+* used message. Use a, summonee, and user to refer to the message's user.
 * <Summon Eval|summonEval></Summon Eval|summonEval> - Put code between these 
 * to run when actor is summoned.
 * <Summon Leave Eval|summonLeaveEval></Summon Leave Eval|summonLeaveEval> - 
@@ -148,6 +157,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.3 (12/28/23):
+* -Added evals for the summon messages
+*
 * Version 1.2.2 (12/27/23):
 * -Made summons actually able to call their summon evals
 * -Made big summons now ignore summon party size filter
@@ -270,8 +282,14 @@ DataManager.processSummonee = function(group) {
 	var note1c = /<(?:SUMMON LEAVE EVAL|summonLeaveEval)>/i;
 	var note1d = /<\/(?:SUMMON LEAVE EVAL|summonLeaveEval)>/i;
 	var note2 = /<(?:SUMMON DEATH MESSAGE|summonDeath):[ ](.*)>/i;
+	var note2a = /<(?:SUMMON DEATH MESSAGE Eval|summonDeathEval)>/i;
+	var note2b = /<\/(?:SUMMON DEATH MESSAGE EVAL|summonDeathEval)>/i;
 	var note3 = /<(?:SUMMON LEAVE MESSAGE|summonLeave):[ ](.*)>/i;
+	var note3a = /<(?:SUMMON LEAVE MESSAGE EVAL|summonLeaveEval)>/i;
+	var note3b = /<\/(?:SUMMON LEAVE MESSAGE EVAL|summonLeaveEval)>/i;
 	var note4 = /<(?:SUMMON ENTER MESSAGE|summonEnter):[ ](.*)>/i;
+	var note4a = /<(?:SUMMON ENTER MESSAGE EVAL|summonEnterEval)>/i;
+	var note4b = /<\/(?:SUMMON ENTER MESSAGE EVAL|summonEnterEval)>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
@@ -281,9 +299,11 @@ DataManager.processSummonee = function(group) {
 		obj.summonEval = '';
 		obj.leaveEval = '';
 		obj.summonDeath = '';
+		obj.summonDeathEval = '';
 		obj.summonLeave = '';
+		obj.summonLeaveEval = '';
 		obj.summonEnter = '';
-		obj.uniqueSummon = false;
+		obj.summonEnterEval = '';
 
 		for (var i = 0; i < notedata.length; i++) {
 			var line = notedata[i];
@@ -302,17 +322,45 @@ DataManager.processSummonee = function(group) {
 			//For the summon death message
 			} else if (line.match(note2)){
 				obj.summonDeath = String(RegExp.$1);
+			//For starting the summon death message eval
+			} else if (line.match(note2a)){
+				customMode = 'deathMsg';
+			//For ending the summon death message eval
+			} else if (line.match(note2b)){
+				customMode = 'none';
 			//For the summon leave message
 			} else if (line.match(note3)){
 				obj.summonLeave = String(RegExp.$1);
-			//For the summon leave message
+			//For starting the summon leave message eval
+			} else if (line.match(note3a)){
+				customMode = 'leaveMsg';
+			//For ending the summon leave message eval
+			} else if (line.match(note3b)){
+				customMode = 'none';
+			//For the summon enter message
 			} else if (line.match(note4)){
 				obj.summonEnter = String(RegExp.$1);
-			//For the summon enter message
+			//For starting the summon enter message eval
+			} else if (line.match(note4a)){
+				customMode = 'enterMsg';
+			//For ending the summon enter message eval
+			} else if (line.match(note4b)){
+				customMode = 'none';
+			//For the summon enter eval
 			} else if (customMode === 'summon') {
-				obj.summonEval = obj.summonEval + line + '\n';
+				obj.summonEval += line + '\n';
+			//For the summon death eval
 			} else if (customMode === 'death') {
-				obj.leaveEval = obj.leaveEval + line + '\n';
+				obj.leaveEval += line + '\n';
+			//For the summon death message eval
+			} else if (customMode === 'deathMsg') {
+				obj.summonDeathEval += line + '\n';
+			//For the summon leave message eval
+			} else if (customMode === 'leaveMsg') {
+				obj.summonLeaveEval += line + '\n';
+			//For the summon death message eval
+			} else if (customMode === 'enterMsg') {
+				obj.summonEnterEval += line + '\n';
 			}
 		}
   }
@@ -370,18 +418,21 @@ Game_Actor.prototype.summonAttributesGet = function() {
 		var text = Frashaw.Param.defaultSummDeathText.replace("%", this.name());
 	}
 	this.summonDeath = text;
+	this.summonDeathEval = $dataActors[id].summonDeathEval;
 	if ($dataActors[id].summonLeave != ''){
 		var text = $dataActors[id].summonLeave.replace("%", this.name());
 	} else {
 		var text = Frashaw.Param.defaultSummLeaveText.replace("%", this.name());
 	}
 	this.summonLeave = text;
+	this.summonLeaveEval = $dataActors[id].summonLeaveEval;
 	if ($dataActors[id].summonEnter != ''){
 		var text = $dataActors[id].summonEnter.replace("%", this.name());
 	} else {
 		var text = Frashaw.Param.defaultSummEnterText.replace("%", this.name());
 	}
 	this.summonEnter = text;
+	this.summonEnterEval = $dataActors[id].summonEnterEval;
 	this.summons = [];
 };
 
@@ -457,6 +508,28 @@ Game_Battler.prototype.evaluateLeave = function(){
 	}
 }
 
+//A function made to evaluate the summon messages
+Game_Battler.prototype.evaluateSummonMessage = function(code){
+	var a = this;
+	var user = this;
+	var summon = this;
+	var message = "";
+	//Sees if code will produce an error
+	try {
+		eval(code);
+	} catch (e) {
+		var text = this._name + " Message Eval Error!!!!!"
+		console.log(text);
+		console.log(code || 'No Code');
+		console.error(e);
+		if (Utils.isOptionValid('test')){
+			//Force opens the console log if it is
+			require('nw.gui').Window.get().showDevTools();
+		}
+	}
+	return message;
+}
+
 //Where the actual summoning happens
 frsh_summons_summoning = Game_Action.prototype.applyItemUserEffect ;
 Game_Action.prototype.applyItemUserEffect = function(target) {
@@ -484,6 +557,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			//A simple thing to make sure that the leveled up actor doesn't have missing Hp/Mp
 			actor.setHp(actor.mhp);
 			actor.setMp(actor.mmp);
+			actor.initTp();
 			//Sets the turns if applicable
 			if (this.item().summon[loop][2] != 0){
 				actor.summonTurns = this.item().summon[loop][2];
@@ -565,7 +639,11 @@ Game_Battler.prototype.onTurnEnd = function() {
 				//Removes the summon
 				$gameParty.removeSummon(this.actorId());
 				//Shows text in battle log
-				SceneManager._scene._logWindow.addText(this.summonLeave);
+				if (this.summonLeaveEval != null){
+					SceneManager._scene._logWindow.addText(this.evaluateSummonMessage(this.summonLeaveEval));
+				} else {
+					SceneManager._scene._logWindow.addText(this.summonLeave);
+				}
 				//Adds a wait to read
 				SceneManager._scene._logWindow.waitt();
 				//Adds a timeout for the clear command
@@ -677,9 +755,13 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
 				//Checks to see if target has the summon tag
 				if (target.summoned){
 					//Checks to see if the actor has a custom death message
-					if (target.summonDeath != null || target.summonDeath == ''){
+					if ((target.summonDeath != null || target.summonDeathEval != "") || target.summonDeath == ''){
 						//Uses it if they do
-						this.push('addText', target.summonDeath);
+						if (this.summonDeathEval != ""){
+							this.push('addText', target.evaluateSummonMessage(target.summonDeathEval));
+						} else {
+							this.push('addText', target.summonDeath);
+						}
 					} else {
 						//Uses default if they don't
 						var text = Frashaw.Param.defaultSummDeathText;
@@ -713,7 +795,11 @@ Window_BattleLog.prototype.displaySummon = function(target) {
 	var thing = BattleManager._action.item();
 	if (summonEntered.length != 0){
 		for (var loop = 0; loop != summonEntered.length; loop++){
-			this.push('addText', BattleManager._action.subject().name() + " " + summonEntered[loop].summonEnter);
+			if (summonEntered[loop].summonEnterEval != ""){
+				this.push('addText', BattleManager._action.subject().name() + " " + summonEntered[loop].evaluateSummonMessage(summonEntered[loop].summonEnterEval));
+			} else {
+				this.push('addText', BattleManager._action.subject().name() + " " + summonEntered[loop].summonEnter);
+			}
 		}
 		summonEntered = [];
 	}
