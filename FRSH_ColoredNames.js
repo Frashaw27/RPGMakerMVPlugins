@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.2.2
+// Version: 1.2.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -29,7 +29,8 @@ Frashaw.CName = Frashaw.CName || {};
 * Name Outline Color Eval: <outColorEval|Outline Color Eval></outColorEval|
 * Outline Color Eval> *put the code between these the /-less and the / versions, 
 * use winColor for window colors and red, green, and blue if you want to make a
-* special color. red, green, and blue override window color return.
+* special color. red, green, and blue override window color return. You can
+* use hex to return a hexadecimal code.
 *
 * Name Icon: <iconNum|Icon Number: iconId>
 * Name Icon Eval: <iconNumEval|Icon Number Eval></iconNumEval|Icon Number 
@@ -85,6 +86,10 @@ Frashaw.CName = Frashaw.CName || {};
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log===============================================================
+* Version 1.2.2 (12/28/23):
+* -Fixed name color eval
+* -Added a option to give a hex code directly
+*
 * Version 1.2.2 (09/25/23):
 * -Fixed bug where shop would display nickname
 * -Added a check to stop crashing when plugins removed the enemy select box
@@ -359,12 +364,21 @@ Window_Base.prototype.obtainEscapeParamHex = function(textState) {
     }
 };
 
+//Gets a color hexadeciaml code
+function getTextColor(n) {
+    var px = 96 + (n % 8) * 12 + 6;
+    var py = 144 + Math.floor(n / 8) * 12 + 6;
+    return ImageManager.loadSystem('Window').getPixel(px, py);
+};
+
+
 //Evaluates the code of any color eval that goes in
 function colorEvaluate(code){
 	var red = 0;
 	var green = 0;
 	var blue = 0;
 	var winColor = 0;
+	var hex = "";
 	try {
 		eval(code);
 	} catch (e) {
@@ -386,8 +400,10 @@ function colorEvaluate(code){
 		var color = "rgba(" + red + ", " + green + ", " + blue + ")";
 		var rgba = color.replace(/^rgba?\(|\s+|\)$/g, '').split(',');
 		return `#${((1 << 24) + (parseInt(rgba[0]) << 16) + (parseInt(rgba[1]) << 8) + parseInt(rgba[2])).toString(16).slice(1)}`;
+	} else if (hex != ""){
+		return hex;
 	} else {
-		return windowColorGetter(winColor);
+		return getTextColor(winColor);
 	}
 }
 
