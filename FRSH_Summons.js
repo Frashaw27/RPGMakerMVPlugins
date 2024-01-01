@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.3
+// Version: 1.2.4
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,11 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.4 (01/01/24):
+* -Made it so that skills/items with multiple summons can be used if at least
+* 1 summon was able to be summoned.
+* -Summons now don't occur if the summon is already summoned
+*
 * Version 1.2.3 (12/28/23):
 * -Added evals for the summon messages
 *
@@ -539,6 +544,7 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 	if (this.item().summon.length != 0){
 		//Loops through all the summons until either all the summons are summoned or the cap is reached
 		for (var loop = 0; loop != this.item().summon.length && (summonList.length < $gameParty.maxSummons() || this.item().bigSummon); loop++){
+			if (summonList.contains($gameActors.actor(this.item().summon[loop][0]))) continue;
 			//Adds all the summon to the party
 			$gameParty.addSummon(this.item().summon[loop][0]);
 			//Sets the actor for ease of use
@@ -589,7 +595,11 @@ Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
 		//Checks to see if the summon is already summoned, if a big summon is present, or the summon max has 
 		//been reached
 		for (var loop = 0; loop != skill.summon.length; loop++){
-			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !skill.bigSummon) || summonList.contains($gameActors.actor(skill.summon[loop][0]))) return false;
+			var listCheck = false;
+			for (var pool = 0; pool != skill.summon.length; pool++){
+				if (!summonList.contains($gameActors.actor(skill.summon[pool][0]))) listCheck = true;
+			}
+			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !skill.bigSummon) || !listCheck) return false;
 		}
 	}
 	return frsh_summons_skill_allow.call(this,skill);
@@ -600,7 +610,11 @@ frsh_summons_item_allow = Game_BattlerBase.prototype.meetsItemConditions;
 Game_BattlerBase.prototype.meetsItemConditions = function(item) {
 	if (item.summon.length > 0){
 		for (var loop = 0; loop != item.summon.length; loop++){
-			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !item.bigSummon) || summonList.contains($gameActors.actor(item.summon[loop][0]))) return false;
+			var listCheck = false;
+			for (var pool = 0; pool != item.summon.length; pool++){
+				if (!summonList.contains($gameActors.actor(item.summon[pool][0]))) listCheck = true;
+			}
+			if (summonOverride != null || (summonList.length == $gameParty.maxSummons() && !item.bigSummon) || !listCheck) return false;
 		}
 	}
     return frsh_summons_item_allow.call(this,item);
