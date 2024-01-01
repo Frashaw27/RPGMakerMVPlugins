@@ -161,6 +161,7 @@ Frashaw.Summons = Frashaw.Summons || {};
 * -Made it so that skills/items with multiple summons can be used if at least
 * 1 summon was able to be summoned.
 * -Summons now don't occur if the summon is already summoned
+* -Fixed a bug where the wrong death message would show if you didn't use the eval
 *
 * Version 1.2.3 (12/28/23):
 * -Added evals for the summon messages
@@ -771,7 +772,7 @@ Window_BattleLog.prototype.displayAddedStates = function(target) {
 					//Checks to see if the actor has a custom death message
 					if ((target.summonDeath != null || target.summonDeathEval != "") || target.summonDeath == ''){
 						//Uses it if they do
-						if (this.summonDeathEval != ""){
+						if (target.summonDeathEval != ""){
 							this.push('addText', target.evaluateSummonMessage(target.summonDeathEval));
 						} else {
 							this.push('addText', target.summonDeath);
