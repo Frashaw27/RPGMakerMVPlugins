@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.4
+// Version: 1.2.5
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.5 (01/20/24):
+* -Changed method of how levels get added, so that skills gotten from level 
+* ups can be gotten properly.
+*
 * Version 1.2.4 (01/01/24):
 * -Made it so that skills/items with multiple summons can be used if at least
 * 1 summon was able to be summoned.
@@ -555,11 +559,17 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			//Checks to see if the summon has a specified set level, is going to copy the 
 			//summoner's level, or is going to be the default summon level 
 			if (this.item().summon[loop][1] > 0){
-				actor._level = this.item().summon[loop][1];
+				while (actor._level != this.item().summon[loop][1]){
+					actor.levelUp();
+				}
 			} else if (this.item().summon[loop][1] == -1){
-				actor._level = Frashaw.Param.defaultSummLevel;
+				while (actor._level != Frashaw.Param.defaultSummLevel){
+					actor.levelUp();
+				}
 			} else {
-				actor._level = this.subject()._level;
+				while (actor._level != this.subject()._level){
+					actor.levelUp();
+				}
 			}
 			//A simple thing to make sure that the leveled up actor doesn't have missing Hp/Mp
 			actor.setHp(actor.mhp);
