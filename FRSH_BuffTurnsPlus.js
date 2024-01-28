@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffTurnsPlus
 // FRSH_BuffTurnsPlus.js
-// Version: 1.0.1
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -17,11 +17,16 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 *
 * @help
 * ==Notetags==================================================================
+* <either of these|syntaxesWorks>, Non-case Sensitive
 * Actors, Enemies, Classes, Weapons, Armors, State:
-* Giving Buff Turns: <giveBuffBonus: (interger you want to use)>
-* Recieving Buff Turns: <takeBuffBonus: (interger you want to use)>
-* Giving Debuff Turns: <giveDebuffBonus: (interger you want to use)>
-* Recieving Debuff Turns: <takeDebuffBonus: (interger you want to use)>
+* Giving Buff Turns: <Applying Buff Bonus|Giving Buff Bonus|applyBuffBonus|
+* giveBuffBonus: (interger you want to use)>
+* Recieving Buff Turns: <Recieving Buff Bonus|Taking Buff Bonus|
+* recieveBuffBonus|takeBuffBonus: (interger you want to use)>
+* Giving Debuff Turns: <Applying Debuff Bonus|Giving Debuff Bonus|
+* applyDebuffBonus|giveDebuffBonus: (interger you want to use)>
+* Recieving Debuff Turns: <Recieving Debuff Bonus|Taking Debuff Bonus|
+* recieveDebuffBonus|takeDebuffBonus: (interger you want to use)>
 * ===Introduction=============================================================
 * Base RPG Maker has Buffs and Debuffs, however there's no way to influence 
 * how many turns an actor/enemy can get beyond the set amount. This plugin
@@ -29,21 +34,25 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * etc. to influence how long either of these last, both when applying as well
 * as getting said BUffs and Debuffs. 
 * ===How to Use===============================================================
-* !!! Put this on top/ahead of any other script that affects Buff/Debuff
-* application as this plugin rewrites those, meaning all addons won't work!!!
-*
 * For the desired effect, use the above note tags in the Actors, Weapons,
 * Armors, and/or Enemies notetags as desired. Giving Turns influences how
 * many turns the Buff/Debuff lasts when the user gives them to a target.
 * Recieving alters how many Turns the Buff/Debuff lasts when the target 
 * recieves said Buff/Debuff.
-*
-* NOTICE:
-* If you use a script call of addBuff or addDebuff, neither will intially 
-* use a "giver" bonus so you need to specify the giver if you desire to use
-* that. Ex: addBuff/Debuff(5, 3, $gameActors.actor(1)(or whatever you want
-* /need))
 * ===Change Log===============================================================
+* Version 1.1.0 (01/28/24):
+* -Rewrite basically all of the code
+* -Added alt ways to call the various modifiers
+* -Made said modifier calls be non-case Sensitive
+* -Changed the method of how the modifiers are set, allowing them to be
+* placed into the object without calling meta values
+* -The original sets of the modifiers is now 0 instead undefined
+* -Changed the way the turn modifiers are added to the buff/debuff, using
+* an extension to add the turns instead of an overwrite, allowing this to
+* wherever and work just as good
+* -Made into a function so things don't leak into/out of the code during 
+* gameplay
+*
 * Version 1.0.1 (07/14/23) :
 * -Removed a method that crashed Yanfly_PartySystem
 *
@@ -52,42 +61,83 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * ============================================================================
 */
 //============================================================================
+(function() {
+//==============================================================================
+//Setup
+//==============================================================================
+//Variable to make sure shit loads correctly
+FrshTurnBuffLoaded = false;
 
-//Grabs the Buff Bonus for Givers
-Game_Actor.prototype.getGiveBuffBonus = function() {
-	var id = this.actorId();
-	if ($dataActors[id].meta.giveBuffBonus != null){
-		this.giveBuffBonus = Number($dataActors[id].meta.giveBuffBonus);
+//Starts the function to intialize all the timer increase notetags
+FrshTurnsPlus_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	//The normal database initalization
+	if (!FrshTurnsPlus_database.call(this)) return false; 
+	//Runs if the above variable is false
+	if (FrshTurnBuffLoaded == false) {
+		//Processes the notetags
+		this.processTurnBuffNotetags($dataActors);
+		this.processTurnBuffNotetags($dataClasses);
+		this.processTurnBuffNotetags($dataWeapons);
+		this.processTurnBuffNotetags($dataArmors);
+		this.processTurnBuffNotetags($dataEnemies);
+		this.processTurnBuffNotetags($dataStates);
+		//Make sure it doesn't run twice
+		FrshTurnBuffLoaded = true;
 	}
-	var id = this._classId;
-	if ($dataClasses[id].meta.giveBuffBonus != null){
-		if (this.giveBuffBonus != null){
-			this.giveBuffBonus += Number($dataClasses[id].meta.giveBuffBonus);
-		} else {
-			this.giveBuffBonus = Number($dataClasses[id].meta.giveBuffBonus);
+	return true;
+};
+
+//Does the processing for the respective objects
+DataManager.processTurnBuffNotetags = function(group) {
+	//Loads up various strings to check for
+	var note1 = /<(?:APPLYING BUFF BONUS|GIVING BUFF BONUS|applyBuffBonus|giveBuffBonus):[ ](.*)>/i;
+	var note2 = /<(?:RECIEVING BUFF BONUS|TAKING BUFF BONUS|recieveBuffBonus|takeBuffBonus):[ ](.*)>/i;
+	var note3 = /<(?:APPLYING DEBUFF BONUS|GIVING DEBUFF BONUS|applyDebuffBonus|giveDebuffBonus):[ ](.*)>/i;
+	var note4 = /<(?:RECIEVING DEBUFF BONUS|TAKING DEBUFF BONUS|recieveDebuffBonus|takeDebuffBonus):[ ](.*)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		obj.giveBuffBonus = 0;
+		obj.takeBuffBonus = 0;
+		obj.giveDebuffBonus = 0;
+		obj.takeDebuffBonus = 0;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note1)) {
+				obj.giveBuffBonus += Number(RegExp.$1);
+			} else if (line.match(note2)) {
+				obj.takeBuffBonus += Number(RegExp.$1);
+			} else if (line.match(note3)) {
+				obj.giveDebuffBonus += Number(RegExp.$1);
+			} else if (line.match(note4)) {
+				obj.takeDebuffBonus += Number(RegExp.$1);
+			}
 		}
 	}
+}
+
+//Grabs the Buff Bonuses for Actors
+Game_Actor.prototype.getBuffBonuses = function() {
+	var id = this.actorId();
+	this.giveBuffBonus += $dataActors[id].giveBuffBonus;
+	this.takeBuffBonus += $dataActors[id].takeBuffBonus;
+	this.giveDebuffBonus += $dataActors[id].giveDebuffBonus;
+	this.takeDebuffBonus += $dataActors[id].takeDebuffBonus;
+	var id = this._classId;
+	this.giveBuffBonus += $dataClasses[id].giveBuffBonus;
+	this.takeBuffBonus += $dataClasses[id].takeBuffBonus;
+	this.giveDebuffBonus += $dataClasses[id].giveDebuffBonus;
+	this.takeDebuffBonus += $dataClasses[id].takeDebuffBonus;
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
 		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			if ($dataWeapons[id].meta.giveBuffBonus != null){
-				if (this.giveBuffBonus != null){
-					this.giveBuffBonus += Number($dataWeapons[id].meta.giveBuffBonus);
-				} else {
-					this.giveBuffBonus = Number($dataWeapons[id].meta.giveBuffBonus);
-				}
-			}
-		} else {
-			if ($dataArmors[id].meta.giveBuffBonus != null){
-				if (this.giveBuffBonus != null){
-					this.giveBuffBonus += Number($dataArmors[id].meta.giveBuffBonus);
-				} else {
-					this.giveBuffBonus = Number($dataArmors[id].meta.giveBuffBonus);
-				}
-			}
-		}
+		this.giveBuffBonus += equip.giveBuffBonus;
+		this.takeBuffBonus += equip.takeBuffBonus;
+		this.giveDebuffBonus += equip.giveDebuffBonus;
+		this.takeDebuffBonus += equip.takeDebuffBonus;
 	}
 	var stateList = this.states();
 	if (this._passiveStatesRaw != null){
@@ -95,330 +145,60 @@ Game_Actor.prototype.getGiveBuffBonus = function() {
 	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		if ($dataStates[id].meta.giveBuffBonus != null){
-			if (this.giveBuffBonus != null){
-				this.giveBuffBonus += Number($dataStates[id].meta.giveBuffBonus);
-			} else {
-				this.giveBuffBonus = Number($dataStates[id].meta.giveBuffBonus);
-			}
-		}
+		this.giveBuffBonus += $dataStates[id].giveBuffBonus;
+		this.takeBuffBonus += $dataStates[id].takeBuffBonus;
+		this.giveDebuffBonus += $dataStates[id].giveDebuffBonus;
+		this.takeDebuffBonus += $dataStates[id].takeDebuffBonus;
 	}
 };
 
-//Grabs the Buff Bonus for Receivers
-Game_Actor.prototype.getTakeBuffBonus = function() {
-	var id = this.actorId();
-	if ($dataActors[id].meta.takeBuffBonus != null){
-		this.takeBuffBonus = Number($dataActors[id].meta.takeBuffBonus);
-	}
-	var id = this._classId;
-	if ($dataClasses[id].meta.takeBuffBonus != null){
-		if (this.takeBuffBonus != null){
-			this.takeBuffBonus += Number($dataClasses[id].meta.takeBuffBonus);
-		} else {
-			this.takeBuffBonus = Number($dataClasses[id].meta.takeBuffBonus);
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
-		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			if ($dataWeapons[id].meta.takeBuffBonus != null){
-				if (this.takeBuffBonus != null){
-					this.takeBuffBonus += Number($dataWeapons[id].meta.takeBuffBonus);
-				} else {
-					this.takeBuffBonus = Number($dataWeapons[id].meta.takeBuffBonus);
-				}
-			}
-		} else {
-			if ($dataArmors[id].meta.takeBuffBonus != null){
-				if (this.takeBuffBonus != null){
-					this.takeBuffBonus += Number($dataArmors[id].meta.takeBuffBonus);
-				} else {
-					this.takeBuffBonus = Number($dataArmors[id].meta.takeBuffBonus);
-				}
-			}
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.takeBuffBonus != null){
-			if (this.takeBuffBonus != null){
-				this.takeBuffBonus += Number($dataStates[id].meta.takeBuffBonus);
-			} else {
-				this.takeBuffBonus = Number($dataStates[id].meta.takeBuffBonus);
-			}
-		}
-	}
-};
-
-//Grabs the Debuff Bonus for Givers
-Game_Actor.prototype.getGiveDebuffBonus = function() {
-	var id = this.actorId();
-	if ($dataActors[id].meta.giveDebuffBonus != null){
-		this.giveDebuffBonus = Number($dataActors[id].meta.giveDebuffBonus);
-	}
-	var id = this._classId;
-	if ($dataClasses[id].meta.giveDebuffBonus != null){
-		if (this.giveDebuffBonus != null){
-			this.giveDebuffBonus += Number($dataClasses[id].meta.giveDebuffBonus);
-		} else {
-			this.giveDebuffBonus = Number($dataClasses[id].meta.giveDebuffBonus);
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
-		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			if ($dataWeapons[id].meta.giveDebuffBonus != null){
-				if (this.giveDebuffBonus != null){
-					this.giveDebuffBonus += Number($dataWeapons[id].meta.giveDebuffBonus);
-				} else {
-					this.giveDebuffBonus = Number($dataWeapons[id].meta.giveDebuffBonus);
-				}
-			}
-		} else {
-			if ($dataArmors[id].meta.giveDebuffBonus != null){
-				if (this.giveDebuffBonus != null){
-					this.giveDebuffBonus += Number($dataArmors[id].meta.giveDebuffBonus);
-				} else {
-					this.giveDebuffBonus = Number($dataArmors[id].meta.giveDebuffBonus);
-				}
-			}
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.giveDebuffBonus != null){
-			if (this.giveDebuffBonus != null){
-				this.giveDebuffBonus += Number($dataStates[id].meta.giveDebuffBonus);
-			} else {
-				this.giveDebuffBonus = Number($dataStates[id].meta.giveDebuffBonus);
-			}
-		}
-	}
-};
-
-//Grabs the Debuff Bonus for Receivers
-Game_Actor.prototype.getTakeDebuffBonus = function() {
-	var id = this.actorId();
-	if ($dataActors[id].meta.takeDebuffBonus != null){
-		this.takeDebuffBonus = Number($dataActors[id].meta.takeDebuffBonus);
-	}
-	var id = this._classId;
-	if ($dataClasses[id].meta.takeDebuffBonus != null){
-		if (this.takeDebuffBonus != null){
-			this.takeDebuffBonus += Number($dataClasses[id].meta.takeDebuffBonus);
-		} else {
-			this.takeDebuffBonus = Number($dataClasses[id].meta.takeDebuffBonus);
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
-		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			if ($dataWeapons[id].meta.takeDebuffBonus != null){
-				if (this.takeDebuffBonus != null){
-					this.takeDebuffBonus += Number($dataWeapons[id].meta.takeDebuffBonus);
-				} else {
-					this.takeDebuffBonus = Number($dataWeapons[id].meta.takeDebuffBonus);
-				}
-			}
-		} else {
-			if ($dataArmors[id].meta.takeDebuffBonus != null){
-				if (this.takeDebuffBonus != null){
-					this.takeDebuffBonus += Number($dataArmors[id].meta.takeDebuffBonus);
-				} else {
-					this.takeDebuffBonus = Number($dataArmors[id].meta.takeDebuffBonus);
-				}
-			}
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.takeDebuffBonus != null){
-			if (this.takeDebuffBonus != null){
-				this.takeDebuffBonus += Number($dataStates[id].meta.takeDebuffBonus);
-			} else {
-				this.takeDebuffBonus = Number($dataStates[id].meta.takeDebuffBonus);
-			}
-		}
-	}
-};
-
-
-//Grabs the Buff Bonus for Givers
-Game_Enemy.prototype.getGiveBuffBonus = function() {
+//Grabs the Buff Bonuses for Enemies
+Game_Enemy.prototype.getBuffBonuses = function() {
 	var id = this.enemyId();
-	if ($dataEnemies[id].meta.giveBuffBonus != null){
-		this.giveBuffBonus = Number($dataEnemies[id].meta.giveBuffBonus);
-	}
+	this.giveBuffBonus += $dataEnemies[id].giveBuffBonus;
+	this.takeBuffBonus += $dataEnemies[id].takeBuffBonus;
+	this.giveDebuffBonus += $dataEnemies[id].giveDebuffBonus;
+	this.takeDebuffBonus += $dataEnemies[id].takeDebuffBonus;
 	var stateList = this.states();
 	if (this._passiveStatesRaw != null){
 		stateList =  stateList.concat(this.passiveStates());
 	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		if ($dataStates[id].meta.giveBuffBonus != null){
-			if (this.giveBuffBonus != null){
-				this.giveBuffBonus += Number($dataStates[id].meta.giveBuffBonus);
-			} else {
-				this.giveBuffBonus = Number($dataStates[id].meta.giveBuffBonus);
-			}
-		}
-	}
-};
-
-//Grabs the Buff Bonus for Receivers
-Game_Enemy.prototype.getTakeBuffBonus = function() {
-	var id = this.enemyId();
-	if ($dataEnemies[id].meta.takeBuffBonus != null){
-		this.takeBuffBonus = Number($dataEnemies[id].meta.takeBuffBonus);
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.takeBuffBonus != null){
-			if (this.takeBuffBonus != null){
-				this.takeBuffBonus += Number($dataStates[id].meta.takeBuffBonus);
-			} else {
-				this.takeBuffBonus = Number($dataStates[id].meta.takeBuffBonus);
-			}
-		}
-	}
-};
-
-//Grabs the Debuff Bonus for Givers
-Game_Enemy.prototype.getGiveDebuffBonus = function() {
-	var id = this.enemyId();
-	if ($dataEnemies[id].meta.giveDebuffBonus != null){
-		this.giveDebuffBonus = Number($dataEnemies[id].meta.giveDebuffBonus);
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.giveDebuffBonus != null){
-			if (this.giveDebuffBonus != null){
-				this.giveDebuffBonus += Number($dataStates[id].meta.giveDebuffBonus);
-			} else {
-				this.giveDebuffBonus = Number($dataStates[id].meta.giveDebuffBonus);
-			}
-		}
-	}
-};
-
-//Grabs the Debuff Bonus for Receivers
-Game_Enemy.prototype.getTakeDebuffBonus = function() {
-	var id = this.enemyId();
-	if ($dataEnemies[id].meta.takeDebuffBonus != null){
-		this.takeDebuffBonus = Number($dataEnemies[id].meta.takeDebuffBonus);
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
-	for (var i = 0; i != stateList.length; i++){
-		var id = stateList[i].id;
-		if ($dataStates[id].meta.takeDebuffBonus != null){
-			if (this.takeDebuffBonus != null){
-				this.takeDebuffBonus += Number($dataStates[id].meta.takeDebuffBonus);
-			} else {
-				this.takeDebuffBonus = Number($dataStates[id].meta.takeDebuffBonus);
-			}
-		}
+		this.giveBuffBonus += $dataStates[id].giveBuffBonus;
+		this.takeBuffBonus += $dataStates[id].takeBuffBonus;
+		this.giveDebuffBonus += $dataStates[id].giveDebuffBonus;
+		this.takeDebuffBonus += $dataStates[id].takeDebuffBonus;
 	}
 };
 
 //Initaizes and resets the Buff and Debuff Bonuses
-frsh_bbase_refresh_bturns = Game_BattlerBase.prototype.refresh
+frsh_turnsplus_bonus_turns = Game_BattlerBase.prototype.refresh
 Game_BattlerBase.prototype.refresh = function(){
-	frsh_bbase_refresh_bturns.call(this);
-	this.giveBuffBonus = undefined;
-	this.takeBuffBonus = undefined;
-	this.giveDebuffBonus = undefined;
-	this.takeDebuffBonus = undefined;
-	this.getGiveBuffBonus();
-	this.getTakeBuffBonus();
-	this.getGiveDebuffBonus();
-	this.getTakeDebuffBonus();
+	frsh_turnsplus_bonus_turns.call(this);
+	this.giveBuffBonus = 0;
+	this.takeBuffBonus = 0;
+	this.giveDebuffBonus = 0;
+	this.takeDebuffBonus = 0;
+	this.getBuffBonuses();
 }
 
-//An addendum to the normal overwrite buff turns function that sets the proper amount of turns
-frsh_bbase_overwritebuffturns_bturns = Game_BattlerBase.prototype.overwriteBuffTurns
-Game_BattlerBase.prototype.overwriteBuffTurns = function(paramId, turns, actor) {
-	if (actor != null && actor.giveBuffBonus != null) turns += actor.giveBuffBonus;
-	if (this.takeBuffBonus != null) turns += this.takeBuffBonus;
-	if (turns < 0) turns = 0;
-    frsh_bbase_overwritebuffturns_bturns.call(this,paramId,turns);
-};
-
-//A new function specifcally for overwriting debuffs turns, mostly to use a seperate set of buff modifiers 
-Game_BattlerBase.prototype.overwriteDebuffTurns = function(paramId, turns, actor) {
-	if (actor != null && actor.giveDebuffBonus != null) turns += actor.giveDebuffBonus;
-	if (this.takeDebuffBonus != null) turns += this.takeDebuffBonus;
-    if (this._buffTurns[paramId] < turns && turns >= 0) {
-        this._buffTurns[paramId] = turns;
-    }
-};
-
-//A rewrite of the item effect to include the user 
-Game_Action.prototype.itemEffectAddBuff = function(target, effect) {
-	target.addBuff(effect.dataId, effect.value1, this.subject());
-    this.makeSuccess(target);
-};
-
-//Ditto as above but with Debuffs
-Game_Action.prototype.itemEffectAddDebuff = function(target, effect) {
-    target.addDebuff(effect.dataId, effect.value1, this.subject());
-    this.makeSuccess(target);
-};
-
 //A rewrite to make the overwriteBuffTurns function also use the "giver" modifiers
-Game_Battler.prototype.addBuff = function(paramId, turns, actor) {
-    if (this.isAlive()){
-        this.increaseBuff(paramId);
-        if (this.isBuffAffected(paramId)) {
-            this.overwriteBuffTurns(paramId, turns, actor);
-        }
-        this._result.pushAddedBuff(paramId);
-        this.refresh();
-    }
+frsh_turnsplus_buff_bonus = Game_Battler.prototype.addBuff;
+Game_Battler.prototype.addBuff = function(paramId, turns) {
+	if (BattleManager._action != null && BattleManager._action.subject().isActing()) turns += BattleManager._action.subject().giveBuffBonus;
+	turns += this.takeBuffBonus;
+	frsh_turnsplus_buff_bonus.call(this, paramId, turns);
 };
 
 //A rewrite to use the overwriteDebuffTurns function
-Game_Battler.prototype.addDebuff = function(paramId, turns, actor) {
-    if (this.isAlive()) {
-        this.decreaseBuff(paramId);
-        if (this.isDebuffAffected(paramId)) {
-            this.overwriteDebuffTurns(paramId, turns, actor);
-        }
-        this._result.pushAddedDebuff(paramId);
-        this.refresh();
-    }
+frsh_turnsplus_debuff_bonus = Game_Battler.prototype.addDebuff;
+Game_Battler.prototype.addDebuff = function(paramId, turns) {
+	if (BattleManager._action != null && BattleManager._action.subject().isActing()) turns += BattleManager._action.subject().giveDebuffBonus;
+	turns += this.takeDebuffBonus;
+    frsh_turnsplus_debuff_bonus.call(this, paramId, turns);
 };
-
-
+})();
 //=============================================================================
 // End of File
 //=============================================================================
