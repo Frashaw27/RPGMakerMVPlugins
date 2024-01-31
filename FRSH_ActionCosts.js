@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ActionCosts
 // FRSH_ActionCosts.js
-// Version: 1.1.1
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -50,8 +50,10 @@ Frashaw.ACosts = Frashaw.ACosts || {};
 *
 * @help
 * ==Notetags==================================================================
-* Use all actions: <actionCost: all>
-* Use a select # of actions: <actions: (number of actions here)>
+* Case Insensitive
+* <either of these|syntaxesWorks>
+* Use a select # of actions: <actionCost: insert number here>
+* Use all actions: <Action Cost All|Action All|All Action|allAction|actionAll>
 * ===Introduction=============================================================
 * RPG Maker has the ability to add actions to your enemies and actors for
 * each turn in combat. However, the amount of work that gets used by these
@@ -64,6 +66,14 @@ Frashaw.ACosts = Frashaw.ACosts || {};
 * the actions needed, can't overflow it to use multi action skills after
 * all other actions.
 * ===Change Log===============================================================
+* Version 1.2.0 (01/29/23):
+* -Rewrote the plugin
+* -Added multple ways to call the action cost modifier
+* -Added a new way to have all actions to be called
+* -You can't use action that sot multiple actions if you don't have said 
+* actions
+* -Action Costs are now displayed on items 
+*
 * Version 1.1.1 (04/13/23):
 * -Updated how the action cost is required
 *
@@ -75,6 +85,7 @@ Frashaw.ACosts = Frashaw.ACosts || {};
 * ============================================================================
 */
 //============================================================================
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_ActionCosts');
 Frashaw.Param = Frashaw.Param || {};
@@ -88,233 +99,249 @@ Frashaw.Param.allText = Parameters.allText;
 Frashaw.Param.fontSize = Number(Parameters.fontSize);
 Frashaw.Param.fontColor = Number(Parameters.fontColor);
 
-(function() {
-	//Overwrite of the make actions function
-	Game_Battler.prototype.makeActions = function() {
-			this.clearActions();
-			if (this.canMove()) {
-				var actionTimes = this.makeActionTimes();
-				this._actions = [];
-				//Sets up the action list for later
-				this.actionList = [];
-				for (var i = 0; i < actionTimes; i++) {
-					this._actions.push(new Game_Action(this));
-				}
-			}
-	};
-	
-	//The meat
-	Game_Actor.prototype.selectNextCommand = function() {
-		//If the actor in question  an't select actions, it skips them
-        if (this.isDead() || !this.canMove() || this.isAutoBattle() || this.isConfused()) return false;
-		//Gets the id of the currently used skill
-		var id = this.action(this._actionInputIndex)._item.itemId();
-		//Puts the id into an array so that it can be called later
-		this.actionList.push(id);
-		if (this._actionInputIndex < this.numActions() - 1) {
-			//Runs if the action cost exists
-			if ($dataSkills[id].meta.actionCost != null){
-				//Checks to see if the skill in question demands all actions
-				if ($dataSkills[id].meta.actionCost.toLowerCase().includes('all')){
-					//Immediatly breaks the loop
-					this._actionInputIndex = this.numActions() - 1;
-					return false;
-				} else {
-					//Gets the number to reduce that # of actions the actor has
-					var reduce = Number($dataSkills[id].meta.actionCost);
-					//Failsafe
-					if (reduce == NaN) reduce = 0;
-					//Reduces the number of actions, proper
-					this._actionInputIndex += reduce;
-					//Checks to see if the max # of actions has been elasped to proceed to the next character
-					//It's a different check from the one up top because, idk it didn't want to work with it being 1 lower
-					if (this._actionInputIndex < this.numActions()){
-						return true;
-					} else {
-						return false;
-					}
-				}
-			} else {
-				//standard next command code
-				this._actionInputIndex++;
-				return true;
-			}
-		} else {
-			this._actionInputIndex++;
-			return false;
-		}
-	};
-	
-	//The Potatoes
-	Game_Actor.prototype.selectPreviousCommand = function() {
-		//If actor can't select options, skips them
-		if (this.isDead() || !this.canMove() || this.isAutoBattle() || this.isConfused()) return false;
-		//Failsafe
-		if (this._actionInputIndex < 0) return false;
-		//Checks to see if there is a) actions for the system to recall and b) to see if there is any other party members behind them
-		if (this.actionList.length > 0 || BattleManager._actorIndex == 0){
-			var user = this;
-		} else {
-			//Alternate if either of the above checks failed
-			//Gets the actorId that needs to be checked next
-			var actorId = BattleManager._actorIndex-1;
-			//Just something to keep it looping
-            var stop = 0;
-			while (stop != 1){
-				//Gets the data of the selected actor
-				var user = $gameParty.members()[actorId];
-				//Checks if actor is suitable or is the last one in line
-				if (actorId-1 > 0 && (user.isDead() || !user.canMove() || user.isAutoBattle() || user.isConfused())){
-					//Reduces the actor id to check anotehr person behind them
-					actorId--;
-				} else {
-					//Breaks the loop if either of the above conditions are met
-					break;
-				}
-			}
-		}
-		//A variable to decrease the list length to the current action variable
-		var down = user._actionInputIndex;
-		//Checks to see if it needs adjusting to something bigger
-		if (user.actionList.length != user._actionInputIndex+1){
-			//Assigns the difference between the two plus 1
-			down =  user._actionInputIndex - user.actionList.length + 1;
-		} else {
-			//Default of 1
-			down = 1;
-		}
-		//Gets the current action that needs to be recovered
-		var id = user.actionList[user._actionInputIndex-down];
-		//Removes id from the list
-		user.actionList.pop();
-		//Chcks to see if the actor has any actions left
-		if (user._actionInputIndex > 0) {
-			if ($dataSkills[id].meta.actionCost != null){
-				if ($dataSkills[id].meta.actionCost.toLowerCase().includes('all')){
-					//Auto drops the actions they used to 0 due to the previous action taking all of them
-					user._actionInputIndex = 0;
-					return false;
-				} else {
-					//Gives back the actions that were stolen
-					var reduce = Number($dataSkills[id].meta.actionCost);
-					user._actionInputIndex -= reduce;
-					if (user._actionInputIndex > 0){
-						return true;
-					} else {
-						user._actionInputIndex = 0;
-						return false;
-					}
-				}
-			} else {
-				//Standard action return stuff
-				user._actionInputIndex--;
-				if (user._actionInputIndex > 0){
-					return true;
-				} else {
-					user._actionInputIndex = 0;
-					return false;
-				}
-			}
-		} else {
-			user._actionInputIndex = 0;
-			return false;
-		}
-	};
-	
-	//The command for going back through commands
-	BattleManager.selectPreviousCommand = function() {
-		do {
-			//Added an additional check to see if the used had any actions in their list, making them go to the 
-			//next if they don't
-			if (!this.actor() || !this.actor().selectPreviousCommand() || this.actor().actionList.length <= 0) {
-				this.changeActor(this._actorIndex - 1, 'undecided');
-				if (this._actorIndex < 0) {
-					return;
-				}
-			}
-		} while (!this.actor().canInput());
-	};
-	
-	//Determines the requirements for using the actions
-	_frsh_action_cost = Game_BattlerBase.prototype.canPaySkillCost;
-	Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
-		//Actually checks the # of actions v the # you have
-		var bool = true;
-		if ($dataSkills[skill.id].meta.actionCost != null){
-			//Allows the skills to be used after selecting them
-			if (this._actionState == 'inputting'){
-				//Checks to see if the actor is on their first action for skills hat use all actions
-				if ($dataSkills[skill.id].meta.actionCost.toLowerCase().includes('all')){
-					bool2 = eval("this._actionInputIndex == 0");
-				} else {
-				//Checks the number of actions needed to use skills
-					var actionNeed = Number($dataSkills[skill.id].meta.actionCost);
-					bool = eval("this._actionInputIndex+actionNeed <= this.numActions()");
-				}
-			} else {
-				bool = true;
-			}
-		} 
-		if (bool == false) return false;
-		return _frsh_action_cost.call(this,skill);
-	};
-	
-	//Tacks on the action cost display
-	_frsh_draw_actions = Window_SkillList.prototype.drawSkillCost;
-	Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
-		//Checks to see if the actions cost is in there
-		if ($dataSkills[skill.id].meta.actionCost != null){
-			//Draws the display
-			width = this.drawActions(skill, x, y, width);
-		}
-		//Does the rest of the cost displays
-		return _frsh_draw_actions.call(this,skill, x, y, width);
-	};
-	
-	//Draws the actions proper
-	Window_SkillList.prototype.drawActions = function(skill, wx, wy, dw) {
-		//returns if action cost doesn't exist
-		if ($dataSkills[skill.id].meta.actionCost == null) return dw;
-		//checks if the font size is going to be use the system default or not
-		if (Frashaw.Param.fontSize != 0){
-			//sets the text size to the parameter
-			this.contents.fontSize = Frashaw.Param.fontSize	
-		} else { 
-			//sets the text size to the system normal
-			this.contents.fontSize = this.standardFontSize();
-		}
-		//changes the text color to the parameter
-		this.changeTextColor(this.textColor(Frashaw.Param.fontColor));
-		//checks if the proper text should use an all or a number attach
-		if ($dataSkills[skill.id].meta.actionCost.toLowerCase().includes('all')){
-			//attaches the all text
-			var text = Frashaw.Param.allText + "";
-		} else {
-			//attaches the number text
-			var text = Number($dataSkills[skill.id].meta.actionCost) + "";
-		}
-		//gets the proper name of the actions display
-		var useText = Frashaw.Param.fontText.split("%");
-		//adds the text
-		text += useText[1];
-		//draws the text proper
-		this.drawText(text, wx, wy, dw, 'right');
-		//checks if skill core is imported
-		if (Imported.YEP_SkillCore) {
-			//uses yanfly skill core's cost padding
-			var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
-		} else {
-			//uses normal cost padding
-			var returnWidth = dw - this.textWidth(text) - this.textPadding();
-		}
-		this.resetTextColor();
-		this.resetFontSettings();
-		//returns the width for proper texr shifting
-		return returnWidth;
-	};
+//Variables set up to make things run smoothly
+var FrshActionCostsLoaded = false;
+var returnal = false;
+var itemCheck = true;
 
+//Starts the function to intialize all the notetags
+FrshActionCosts_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	//The normal database initalization
+	if (!FrshActionCosts_database.call(this)) return false; 
+	//Runs if the above variable is false
+	if (FrshActionCostsLoaded == false) {
+		//Processes the notetags of items and skills
+		this.processActionNotetags($dataItems);
+		this.processActionNotetags($dataSkills);
+		//Make sure it doesn't run twice
+		FrshActionCostsLoaded = true;
+	}
+	return true;
+};
+
+//Does the processing for the skills and items
+DataManager.processActionNotetags = function(group) {
+	//Loads up various strings to check for
+	var note = /<(?:ACTION COST|actionCost):[ ](.*)>/i;
+	var note2 = /<(?:ACTION COST ALL|ACTION ALL|ALL ACTION|allAction|actionAll)>/i;
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		obj.actionCost = 1;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note)) {
+				obj.actionCost += (Number(RegExp.$1)-1);
+			} else if (line.match(note2)){
+				obj.actionCost = -1;
+			}
+		}
+	}
+}
+
+//Extention that sets a list of actions the user will use on their turn for reference
+frsh_actioncost_action_set = Game_Battler.prototype.makeActions;
+Game_Battler.prototype.makeActions = function() {
+	frsh_actioncost_action_set.call(this);
+	this.actionList = [];
+};
+
+//The Meat
+Game_Actor.prototype.selectNextCommand = function() {
+	//Checks to see if the action beign inputted is an item or skill, and then adds them to the action list
+	if (this.action(this._actionInputIndex)._item._dataClass == "skill"){
+		this.actionList.push($dataSkills[this.action(this._actionInputIndex)._item._itemId]);
+	} else {
+		this.actionList.push($dataItems[this.action(this._actionInputIndex)._item._itemId]);
+	}
+	//Counter to get how many "actions" the user has taken
+	var counter = 0;
+	//Goes through each action to accumalate the number of actions they have taken
+	for (var loop = 0; loop != this.actionList.length; loop++){
+		if (this.actionList[loop].actionCost != -1){
+			counter += this.actionList[loop].actionCost;
+		} else {
+			//Special out for when the action is one that takes all actions, setting it to 
+			//the max and immedatly breaking the loop
+			counter = this.numActions();
+			break;
+		}
+	}
+	//Sets the input index to what the counter got, for plugins/things that call it
+	this._actionInputIndex = counter;
+	//Checks to see if the number of actions counted surpasses the number actions can take,
+	//Going to the next member/actual turn if it has
+	if (counter < this.numActions()) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+//The Potatoes
+Game_Actor.prototype.selectPreviousCommand = function() {
+	//Removes the last action on the user's action list
+	this.actionList.pop()
+	var counter = 0;
+	//A bool to see if it's their 1st action, so it doesn't immedatly go to the previous
+	//thing if you went back to your first
+	var maybe = false;
+	//Same thing as the fucntion above, but for counting the remaining actions instead
+	for (var loop = 0; loop != this.actionList.length; loop++){
+		if (this.actionList[loop].actionCost != -1){
+			counter += this.actionList[loop].actionCost;
+		} else {
+			counter = 0;
+			break;
+		}
+	}
+	//The check for the first action
+	if (this._actionInputIndex != 0) maybe = true;
+	this._actionInputIndex = counter;
+	//Checks to see if there is no more action and the bool are false so that it can back to the
+	//previous member
+	if (counter > 0 || maybe) {
+        return true;
+    } else {
+		//Special variable to call to reduce the things of the person behind the current user
+		returnal = true;
+        return false;
+    }
+};
+
+//An extention to remove the things the previous member had on them so that it can work properly 
+frsh_actioncost_remove_previous_shit = Scene_Battle.prototype.changeInputWindow;
+Scene_Battle.prototype.changeInputWindow = function() {
+    if (BattleManager.isInputting()) {
+        if (BattleManager.actor()) {
+			//Checks to see if the switch to remove the last actors shit is active
+			if (returnal){
+				//Checks to see if the last action was an all actions action or a numerical one, setting the
+				//actions to 0 if the former is true
+				if (BattleManager.actor().actionList[BattleManager.actor().actionList.length-1].actionCost != -1){
+					BattleManager.actor()._actionInputIndex--;
+				} else {
+					BattleManager.actor()._actionInputIndex = 0;
+				}
+				BattleManager.actor().actionList.pop();
+				returnal = false;
+			}
+            this.startActorCommandSelection();
+        } else {
+			returnal = false;
+            this.startPartyCommandSelection();
+        }
+    }
+	frsh_actioncost_remove_previous_shit.call(this);
+};
+
+//An extention to make the action costed items to actually restrict when selecting them
+frsh_actioncost_item_stop_a = Scene_Battle.prototype.startPartyCommandSelection;
+Scene_Battle.prototype.startPartyCommandSelection = function() {
+    frsh_actioncost_item_stop_a.call(this);
+	itemCheck = true;
+};
+
+//An extention to make the action costed items to actually work when not selecting them
+frsh_actioncost_item_stop_b = Scene_Battle.prototype.endCommandSelection;
+Scene_Battle.prototype.endCommandSelection = function() {
+    frsh_actioncost_item_stop_b.call(this);
+	itemCheck = false;
+};
+
+//An extention that allows/disallows the use to use skills if the actor has the required amount of actions
+frsh_actioncost_no_use_skill = Game_BattlerBase.prototype.canPaySkillCost;
+Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
+	if (this.isInputting() && $gameParty.inBattle()){
+		//Checks to see if the item is an all action cost or not
+		if (skill.actionCost != -1){
+			//Checks to see if the actions required is below/surpasses the actions the user
+			//has available
+			if (this._actionInputIndex + skill.actionCost > this.numActions()) return false;
+		} else {
+			//Checks if the user has inputted any action
+			if (this._actionInputIndex != 0) return false;
+		}
+	}
+	return frsh_actioncost_no_use_skill.call(this, skill);
+};
+
+//Saem as above but for items
+frsh_actioncost_no_use_item = Game_BattlerBase.prototype.meetsItemConditions;
+Game_BattlerBase.prototype.meetsItemConditions = function(item) {
+	if ($gameParty.inBattle() && itemCheck){
+		if (item.actionCost != -1){
+			if (this._actionInputIndex + item.actionCost > this.numActions()) return false;
+		} else {
+			if (this._actionInputIndex != 0) return false;
+		}
+	}
+    return frsh_actioncost_no_use_item.call(this, item);
+};
+
+//Tacks on the action cost display
+frsh_actioncost_draw_skill = Window_SkillList.prototype.drawSkillCost;
+Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
+	//Checks to see if the actions cost is in there
+	if (skill.actionCost != 1){
+		//Draws the display
+		width = this.drawActions(skill, x, y, width);
+	}
+	//Does the rest of the cost displays
+	return frsh_actioncost_draw_skill.call(this,skill, x, y, width);
+};
+
+//Same as above but for items and their quanities
+frsh_actioncost_draw_item = Window_ItemList.prototype.drawItemNumber;
+Window_ItemList.prototype.drawItemNumber = function(item, x, y, width) {
+	if (item.actionCost != 1){
+		width = this.drawActions(item, x, y, width);
+	}
+	frsh_actioncost_draw_item.call(this, item, x, y, width);
+};
+
+//Draws the actions proper
+Window_Base.prototype.drawActions = function(skill, wx, wy, dw) {
+	//returns if action cost doesn't exist
+	if (skill.actionCost == 1) return dw;
+	//checks if the font size is going to be use the system default or not
+	if (Frashaw.Param.fontSize != 0){
+		//sets the text size to the parameter
+		this.contents.fontSize = Frashaw.Param.fontSize;	
+	} else { 
+		//sets the text size to the system normal
+		this.contents.fontSize = this.standardFontSize();
+	}
+	//changes the text color to the parameter
+	this.changeTextColor(this.textColor(Frashaw.Param.fontColor));
+	var text = Frashaw.Param.fontText;
+	//checks if the proper text should use an all or a number attach
+	if (skill.actionCost > -1){
+		//attaches the number text
+		text = text.replace("%", skill.actionCost);
+	} else {
+		//attaches the all text
+		text = text.replace("%", Frashaw.Param.allText);
+	}
+	//draws the text proper
+	this.drawText(text, wx, wy, dw, 'right');
+	//checks if skill core is imported
+	if (Imported.YEP_SkillCore) {
+		//uses yanfly skill core's cost padding
+		var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+	} else {
+		//uses normal cost padding
+		var returnWidth = dw - this.textWidth(text) - this.textPadding();
+	}
+	this.resetTextColor();
+	this.resetFontSettings();
+	//returns the width for proper texr shifting
+	return returnWidth;
+};
 })();
-	
 //=============================================================================
 // End of File
 //=============================================================================
