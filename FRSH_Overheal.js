@@ -180,6 +180,8 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * plugin was made to smooth that process out significantly.
 * ===How to Use===============================================================
 * !-Make sure to put this beneath any Battlelog Plugins & Yanfly Skill Core~!
+* !~Also has incompatability with Mog Battle Hud, what you can do is 
+* comment it out in the plugin itself, the method gainHp~!
 * How this plugin works:
 * This plugin makes it so that anytime an item with the overheal tag or a user
 * has the tag from various sources, it will overheal the target's stat that 
