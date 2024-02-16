@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_GoldCosts
 // FRSH_GoldCosts.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -90,6 +90,9 @@ Frashaw.GCosts = Frashaw.GCosts || {};
 * can also add in things that mess with the gold cost with gold cost rate,
 * but that is unnesscary. 
 * ===Change Log===============================================================
+* Version 1.0.2 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.0.1 (12/19/23):
 * -Added a fix to not show if the cost is not defined
 *
@@ -223,9 +226,6 @@ Game_Actor.prototype.getGoldRate = function() {
 		this.goldRate *= equip.goldRate;
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.goldRate *= $dataStates[id].goldRate;
