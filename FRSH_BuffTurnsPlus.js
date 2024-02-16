@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffTurnsPlus
 // FRSH_BuffTurnsPlus.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -40,6 +40,9 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * Recieving alters how many Turns the Buff/Debuff lasts when the target 
 * recieves said Buff/Debuff.
 * ===Change Log===============================================================
+* Version 1.1.1 (02/16/34) :
+* -Removed method that caused buff/debuff bonuses to double up on calls
+*
 * Version 1.1.0 (01/28/24):
 * -Rewrite basically all of the code
 * -Added alt ways to call the various modifiers
@@ -140,9 +143,6 @@ Game_Actor.prototype.getBuffBonuses = function() {
 		this.takeDebuffBonus += equip.takeDebuffBonus;
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.giveBuffBonus += $dataStates[id].giveBuffBonus;
@@ -160,9 +160,6 @@ Game_Enemy.prototype.getBuffBonuses = function() {
 	this.giveDebuffBonus += $dataEnemies[id].giveDebuffBonus;
 	this.takeDebuffBonus += $dataEnemies[id].takeDebuffBonus;
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.giveBuffBonus += $dataStates[id].giveBuffBonus;
