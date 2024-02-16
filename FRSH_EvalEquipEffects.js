@@ -339,8 +339,8 @@ BattleManager.endBattle = function(result) {
     }
 	for (var pool = 0; pool != $gameParty.members().length; pool++){
 		var user = $gameParty.members()[pool];
-		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval[term]);
-		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval[term]);
+		user.noTargetEval(user, $dataActors[user._actorId].equipEffectEval[term]);
+		user.noTargetEval(user, $dataClasses[user._classId].equipEffectEval[term]);
 		for (var loop = 0; loop != user.equips().length; loop++){
 			var equip = user.equips()[loop];
 			if (equip == null) continue;
