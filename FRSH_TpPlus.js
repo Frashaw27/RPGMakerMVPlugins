@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TpPlus
 // FRSH_TpPlus.js
-// Version: 1.3.0
+// Version: 1.4.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -165,6 +165,9 @@ Frashaw.TpPlus = Frashaw.TpPlus || {};
 * preserved Tp or the Tp they would've normally gotten at the start of battle
 * is higher, and subsequently choose the higher one.
 * ===Change Log===============================================================
+* Version 1.4.1 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.4.0 (12/17/23) :
 * -Changed a lot of code to be more efficent and/or coherent
 * -Fixed a bug where the various elements would not stack correctly with each 
@@ -346,9 +349,6 @@ Game_Actor.prototype.getTpStuff = function() {
 		if (equip.fixedTpStart) this.fixedTpStart = true;
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.tpBonus += $dataStates[id].tpBonus;
@@ -374,9 +374,6 @@ Game_Enemy.prototype.getTpStuff = function() {
 	if ($dataEnemies[id].randTpStart) this.randTpStart = true;
 	if ($dataEnemies[id].fixedTpStart) this.fixedTpStart = true;
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.tpBonus += $dataStates[id].tpBonus;
