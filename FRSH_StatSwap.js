@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_StatSwap
 // FRSH_StatSwap.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -36,7 +36,10 @@ Frashaw.SSwap = Frashaw.SSwap || {};
 * Plug and play: just insert the above notetags where needed and it should 
 * work.
 * ===Change Log===============================================================
-* Version 1.0 (12/06/23):
+* Version 1.0.1 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
+* Version 1.0.0 (12/06/23):
 * -Finished Base Plugin
 * ============================================================================
 */
@@ -280,9 +283,6 @@ Game_Actor.prototype.getSwaps = function() {
 		}
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		for (var pool = 0; pool != 8; pool++){
@@ -295,9 +295,6 @@ Game_Actor.prototype.getSwaps = function() {
 //Same as above, but for enemies
 Game_Enemy.prototype.getSwaps = function() {
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		for (var pool = 0; pool != 8; pool++){
