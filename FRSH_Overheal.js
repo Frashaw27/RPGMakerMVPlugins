@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -205,6 +205,9 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
 * ===Change Log===============================================================
+* Version 1.1.1 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.1.0 (01/31/23):
 * -Fixed bug where mixed overheal and not would not pay the proper costs
 * -Added feature to allow individual targets to get overhealed
@@ -434,10 +437,6 @@ Game_Actor.prototype.getOverhealStuff = function() {
 	}
 	//Gets actor's states
 	var stateList = this.states();
-	//Tacks on passive stats as well, if applicable
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	//Gets the modifiers from the base actor's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
@@ -463,10 +462,6 @@ Game_Enemy.prototype.getOverhealStuff = function() {
 	this.tpOverhealSelf = $dataEnemies[this.enemyId()].tpOverhealSelf;
 	//Gets enemy's states
 	var stateList = this.states();
-	//Tacks on passive stats as well, if applicable
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	//Gets the modifiers from the base enemy's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
