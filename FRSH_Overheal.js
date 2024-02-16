@@ -212,6 +212,7 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * Version 1.2.0 (02/16/34) :
 * -Removed method that caused passive states to double up on calls
 * -Added calls to make specifically skills or items give overheal
+* -Fixed bug that made overheals not interact properly
 *
 * Version 1.1.0 (01/31/23):
 * -Fixed bug where mixed overheal and not would not pay the proper costs
@@ -825,7 +826,7 @@ Game_Battler.prototype.gainHp = function(value) {
     this._result.hpDamage = -value;
     this._result.hpAffected = true;
 	if (value < 0 && this.overheal > 0){
-		if (this.overheal > value){
+		if (this.overheal > Math.abs(value)){
 			this.overheal += value;
 		} else {
 			value += this.overheal;
@@ -849,7 +850,7 @@ Game_Battler.prototype.gainHp = function(value) {
 Game_Battler.prototype.gainMp = function(value) {
     this._result.mpDamage = -value;
 	if (value < 0 && this.mpOverheal > 0){
-		if (this.mpOverheal > value){
+		if (this.mpOverheal > Math.abs(value)){
 			this.mpOverheal += value;
 		} else {
 			value += this.mpOverheal;
@@ -873,7 +874,7 @@ Game_Battler.prototype.gainMp = function(value) {
 Game_Battler.prototype.gainTp = function(value) {
     this._result.tpDamage = -value;
 	if (value < 0 && this.tpOverheal > 0){
-		if (this.tpOverheal > value){
+		if (this.tpOverheal > Math.abs(value)){
 			this.tpOverheal += value;
 		} else {
 			value += this.tpOverheal;
