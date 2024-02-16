@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_EvalEquipEffects
 // FRSH_EvalEquipEffects.js
-// Version: 1.0.1
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -17,7 +17,7 @@ Frashaw.EEEffects = Frashaw.EEEffects || {};
 *
 * @help
 * ==Notetages=================================================================
-* Weapons, Armors:
+* Weapons, Armors, Actors, Enemies:
 * <Custom Turn Start Effect></Custom Turn Start Effect> - Put code inbetween
 * these to run at the start of all turns. Requires Yanfly Battle Core.
 * <Custom Turn End Effect></Custom Turn End Effect> - Put code inbetween
@@ -33,11 +33,11 @@ Frashaw.EEEffects = Frashaw.EEEffects || {};
 * <Custom End Effect></Custom End Effect> - Put code inbetween
 * these to run when the battle ends.
 * <Custom Victory Effect></Custom Victory Effect> - Put code inbetween
-* these to run when the battle is won.
+* these to run when the battle is won. Enemies can't use these.
 * <Custom Defeat Effect></Custom Defeat Effect> - Put code inbetween
-* these to run when the battle is lost.
+* these to run when the battle is lost. Enemies can't use these.
 * <Custom Escape Effect></Custom Escape Effect> - Put code inbetween
-* these to run when the battle is escaped from.
+* these to run when the battle is escaped from. Enemies can't use these.
 *
 * Reference Effect Order:
 * Initiate (User) -> Select (Target) -> Confirm (User) -> React (Target) ->
@@ -71,6 +71,9 @@ Frashaw.EEEffects = Frashaw.EEEffects || {};
 * Just put whatever you'd place in the states for the respective thing and
 * it shouldn't work.
 * ===Change Log===============================================================
+* Version 1.1.0 (02/16/24) :
+* -Added functionality for Enemies and Actors to have innate evals
+*
 * Version 1.0.1 (12/04/23) :
 * -Removed apart of when you mess up code so it doesn't display the wrong thing
 *
@@ -89,8 +92,11 @@ FrshEEffects_database = DataManager.isDatabaseLoaded;
 DataManager.isDatabaseLoaded = function() {
 	if (!FrshEEffects_database.call(this)) return false; 
 	if (FrshEEEffectsLoaded == false) {
+		this.processEvalEquips($dataActors);
+		this.processEvalEquips($dataClasses);
 		this.processEvalEquips($dataWeapons);
 		this.processEvalEquips($dataArmors);
+		this.processEvalEquips($dataEnemies);
 		FrshEEEffectsLoaded = true;
 	}
 	return true;
@@ -206,11 +212,15 @@ Frsh_EEEffects_onTurnStartStateEffects = Game_Battler.prototype.onTurnStartState
 Game_Battler.prototype.onTurnStartStateEffects = function() {
     Frsh_EEEffects_onTurnStartStateEffects.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['turnStartState']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['turnStartState']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['turnStartState']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['turnStartState']);
 	}
 };
 
@@ -219,11 +229,15 @@ Frsh_EEEffects_onTurnEndStateEffects = Game_Battler.prototype.onTurnEndStateEffe
 Game_Battler.prototype.onTurnEndStateEffects = function() {
     Frsh_EEEffects_onTurnEndStateEffects.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['turnEndState']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['turnEndState']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['turnEndState']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['turnEndState']);
 	}
 };
 
@@ -232,11 +246,15 @@ Frsh_EEEffects_onRegenerateStateEffects = Game_Battler.prototype.onRegenerateSta
 Game_Battler.prototype.onRegenerateStateEffects = function() {
     Frsh_EEEffects_onRegenerateStateEffects.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['regenerateState']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['regenerateState']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['regenerateState']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['regenerateState']);
 	}
 };
 
@@ -245,11 +263,15 @@ Frsh_EEEffects_onActionStartStateEffects = Game_Battler.prototype.onActionStartS
 Game_Battler.prototype.onActionStartStateEffects = function() {
     Frsh_EEEffects_onActionStartStateEffects.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['actionStartState']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['actionStartState']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['actionStartState']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['actionStartState']);
 	}
 };
 
@@ -258,11 +280,15 @@ Frsh_EEEffects_onActionEndStateEffects = Game_Battler.prototype.onActionEndState
 Game_Battler.prototype.onActionEndStateEffects = function() {
     Frsh_EEEffects_onActionEndStateEffects.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['actionEndState']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['actionEndState']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['actionEndState']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['actionEndState']);
 	}
 };
 
@@ -271,11 +297,15 @@ Frsh_EEEffects_onBattleStart = Game_Battler.prototype.onBattleStart;
 Game_Battler.prototype.onBattleStart = function() {
     Frsh_EEEffects_onBattleStart.call(this);
     if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['battle']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['battle']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['battle']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['battle']);
 	}
 };
 
@@ -284,11 +314,15 @@ Frsh_EEEffects_onBattleEnd = Game_Battler.prototype.onBattleEnd;
 Game_Battler.prototype.onBattleEnd = function() {
     Frsh_EEEffects_onBattleEnd.call(this);
 	if (this.isActor()){
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval['end']);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval['end']);
 		for (var loop = 0; loop != this.equips().length; loop++){
 			var equip = this.equips()[loop];
 			if (equip == null) continue;
 			this.noTargetEval(this, equip.equipEffectEval['end']);
 		}
+	} else if (this.isEnemy()){
+		this.noTargetEval(this, $dataEnemies[this._enemyId].equipEffectEval['end']);
 	}
 };
 
@@ -305,6 +339,8 @@ BattleManager.endBattle = function(result) {
     }
 	for (var pool = 0; pool != $gameParty.members().length; pool++){
 		var user = $gameParty.members()[pool];
+		this.noTargetEval(this, $dataActors[this._actorId].equipEffectEval[term]);
+		this.noTargetEval(this, $dataClasses[this._classId].equipEffectEval[term]);
 		for (var loop = 0; loop != user.equips().length; loop++){
 			var equip = user.equips()[loop];
 			if (equip == null) continue;
@@ -336,11 +372,15 @@ Game_Battler.prototype.targetEval = function(target, value, code) {
 //Runs the initiate evals
 Game_Action.prototype.onApplyStateEffects = function(target) {
 	if (this.subject().isActor()){
+		this.subject().noTargetEval(target, $dataActors[this.subject()._actorId].equipEffectEval['initiateState']);
+		this.subject().noTargetEval(target, $dataClasses[this.subject()._classId].equipEffectEval['initiateState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
 			this.subject().noTargetEval(target, equip.equipEffectEval['initiateState']);
 		}
+	} else if (this.subject().isEnemy()){
+		this.subject().noTargetEval(target, $dataEnemies[this.subject()._enemyId].equipEffectEval['initiateState']);
 	}
     var states = this.subject().states();
     var length = this.subject().states().length;
@@ -354,11 +394,15 @@ Game_Action.prototype.onApplyStateEffects = function(target) {
 //Runs the on select evals
 Game_Action.prototype.onSelectStateEffects = function(target) {
 	if (target.isActor()){
+		this.subject().noTargetEval(target, $dataActors[target._actorId].equipEffectEval['selectState']);
+		this.subject().noTargetEval(target, $dataClasses[target._classId].equipEffectEval['selectState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
 			this.subject().noTargetEval(target, equip.equipEffectEval['selectState']);
 		}
+	} else if (target.isEnemy()){
+		this.subject().noTargetEval(target, $dataEnemies[target._enemyId].equipEffectEval['selectState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -372,11 +416,15 @@ Game_Action.prototype.onSelectStateEffects = function(target) {
 //Runs the deselect evals
 Game_Action.prototype.onDeselectStateEffects = function(target) {
 	if (target.isActor()){
+		this.subject().noTargetEval(target, $dataActors[target._actorId].equipEffectEval['deselectState']);
+		this.subject().noTargetEval(target, $dataClasses[target._classId].equipEffectEval['deselectState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
 			this.subject().noTargetEval(target, equip.equipEffectEval['deselectState']);
 		}
+	} else if (target.isEnemy()){
+		this.subject().noTargetEval(target, $dataEnemies[target._enemyId].equipEffectEval['deselectState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -390,11 +438,15 @@ Game_Action.prototype.onDeselectStateEffects = function(target) {
 //Runs the conclude evals
 Game_Action.prototype.offApplyStateEffects = function(target) {
 	if (this.subject().isActor()){
+		this.subject().noTargetEval(target, $dataActors[this.subject()._actorId].equipEffectEval['concludeState']);
+		this.subject().noTargetEval(target, $dataClasses[this.subject()._classId].equipEffectEval['concludeState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
 			this.subject().noTargetEval(target, equip.equipEffectEval['concludeState']);
 		}
+	} else if (this.subject().isEnemy()){
+		this.subject().noTargetEval(target, $dataEnemies[this.subject()._enemyId].equipEffectEval['concludeState']);
 	}
     var states = this.subject().states();
     var length = states.length;
@@ -408,11 +460,15 @@ Game_Action.prototype.offApplyStateEffects = function(target) {
 //Runs the confirm evals
 Game_Action.prototype.onPreDamageStateEffects = function(target, value) {
 	if (this.subject().isActor()){
+		value = this.subject().targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['confirmState']);
+		value = this.subject().targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['confirmState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
 			value = this.subject().targetEval(target, value, equip.equipEffectEval['confirmState']);
 		}
+	} else if (this.subject().isEnemy()){
+		value = this.subject().targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['confirmState']);
 	}
     var states = this.subject().states();
     var length = states.length;
@@ -427,11 +483,15 @@ Game_Action.prototype.onPreDamageStateEffects = function(target, value) {
 //Runs the react evals
 Game_Action.prototype.onReactStateEffects = function(target, value) {
 	if (target.isActor()){
+		value = this.subject().targetEval(target, value, $dataActors[target._actorId].equipEffectEval['reactState']);
+		value = this.subject().targetEval(target, value, $dataClasses[target._classId].equipEffectEval['reactState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
 			value = this.subject().targetEval(target, value, equip.equipEffectEval['reactState']);
 		}
+	} else if (target.isEnemy()){
+		value = this.subject().targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['reactState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -446,11 +506,15 @@ Game_Action.prototype.onReactStateEffects = function(target, value) {
 //Runs the respond evals
 Game_Action.prototype.onRespondStateEffects = function(target, value) {
 	if (target.isActor()){
+		value = this.subject().targetEval(target, value, $dataActors[target._actorId].equipEffectEval['respondState']);
+		value = this.subject().targetEval(target, value, $dataClasses[target._classId].equipEffectEval['respondState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
 			value = this.subject().targetEval(target, value, equip.equipEffectEval['respondState']);
 		}
+	} else if (target.isEnemy()){
+		value = this.subject().targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['respondState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -465,11 +529,15 @@ Game_Action.prototype.onRespondStateEffects = function(target, value) {
 //Runs the establish evals
 Game_Action.prototype.onPostDamageStateEffects = function(target, value) {
 	if (this.subject().isActor()){
+		value = this.subject().targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['establishState']);
+		value = this.subject().targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['establishState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
 			value = this.subject().targetEval(target, value, equip.equipEffectEval['establishState']);
 		}
+	} else if (this.subject().isEnemy()){
+		value = this.subject().targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['establishState']);
 	}
     var states = this.subject().states();
     var length = states.length;
