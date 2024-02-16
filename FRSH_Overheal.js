@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.1.1
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -172,10 +172,14 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * and items to give the target tp overheal (doesn't include tp gained from
 * damage and/or using skill Tp Gain).
 * <Overheal Self|overhealSelf> - Triggers all Hp heals to proc overheals.
-* <Mp Overheal Self|mpOverhealSelf>  - Triggers all Mp heals to proc 
+* <Mp Overheal Self|mpOverhealSelf> - Triggers all Mp heals to proc 
 * overheals.
-* <Tp Overheal Self|tpOverhealSelf>  - Triggers all Tp heals to proc 
+* <Tp Overheal Self|tpOverhealSelf> - Triggers all Tp heals to proc 
 * overheals.
+* <Overheal Skills|overhealSkills> - All Skills from the "holder" gives
+* overheal.
+* <Overheal Items|overhealItems> - All Items from the "holder" gives
+* overehal. Doesn't work on the enemies, for obvious reasons.
 * <overhealMult: x> - Same as the skill version, but for the actual entities.
 * ===Introduction=============================================================
 * When I was a wee child, I was obsessed with  the game Persona Q. In that 
@@ -205,8 +209,9 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
 * ===Change Log===============================================================
-* Version 1.1.1 (02/16/34) :
+* Version 1.2.0 (02/16/34) :
 * -Removed method that caused passive states to double up on calls
+* -Added calls to make specifically skills or items give overheal
 *
 * Version 1.1.0 (01/31/23):
 * -Fixed bug where mixed overheal and not would not pay the proper costs
@@ -325,6 +330,8 @@ DataManager.processOverhealNotetagsB = function(group) {
 	var note1a = /<(OVERHEAL SELF|overhealSelf)>/i;
 	var note2a = /<(?:MP OVERHEAL SELF|mpOverhealSelf)>/i;
 	var note3a = /<(?:TP OVERHEAL SELF|tpOverhealSelf)>/i;
+	var note4a = /<(?:OVERHEAL ITEMS|overhealItems)>/i;
+	var note4b = /<(?:OVERHEAL SKILLS|overhealSkills)>/i;
 	var noteA = /<(?:OVERHEAL MULTIPLIER|overMult):[ ](.*)>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
@@ -336,6 +343,8 @@ DataManager.processOverhealNotetagsB = function(group) {
 		obj.overhealSelf = false;
 		obj.mpOverhealSelf = false;
 		obj.tpOverhealSelf = false;
+		obj.overhealItems = false;
+		obj.overhealSkills = false;
 		obj.overhealMult = 1;
 
 		for (var i = 0; i < notedata.length; i++) {
@@ -352,6 +361,10 @@ DataManager.processOverhealNotetagsB = function(group) {
 				obj.mpOverhealSelf = true;
 			} else if (line.match(note3a)){
 				obj.tpOverhealSelf = true;
+			} else if (line.match(note4a)){
+				obj.overhealItems = true;
+			} else if (line.match(note4b)){
+				obj.overhealSkills = true;
 			} else if (line.match(noteA)){
 				obj.overhealMult = Number(RegExp.$1);
 			}
@@ -412,6 +425,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 	this.mpOverhealSelf = $dataActors[this.actorId()].mpOverhealSelf;
 	this.tpOverhealSelf = $dataActors[this.actorId()].tpOverhealSelf;
 	this.overhealMult *= $dataActors[this.actorId()].overhealMult;
+	this.overhealSkills = $dataActors[this.actorId()].overhealSkills;
+	this.overhealItems = $dataActors[this.actorId()].overhealItems;
 	//Gets the modifiers from the classe of the actor
 	var id = this._classId;
 	if (!this.overhealUse) this.overhealUse = $dataClasses[id].overhealUse;
@@ -421,6 +436,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 	if (!this.mpOverhealSelf) this.mpOverhealSelf = $dataClasses[id].mpOverhealSelf;
 	if (!this.tpOverhealSelf) this.tpOverhealSelf = $dataClasses[id].tpOverhealSelf;
 	this.overhealMult *= $dataClasses[id].overhealMult;
+	if (!this.overhealSkills) this.overhealSkills = $dataClasses[id].overhealSkills;
+	if (!this.overhealItems) this.overhealItems = $dataClasses[id].overhealItems;
 	//Checks each equip the actor has
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
@@ -434,6 +451,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 		if (!this.mpOverhealSelf) this.mpOverhealSelf = equip.mpOverhealSelf;
 		if (!this.tpOverhealSelf) this.tpOverhealSelf = equip.tpOverhealSelf;
 		this.overhealMult *= equip.overhealMult;
+		if (!this.overhealSkills) this.overhealSkills = equip.overhealSkills;
+		if (!this.overhealItems) this.overhealItems = equip.overhealItems;
 	}
 	//Gets actor's states
 	var stateList = this.states();
@@ -447,6 +466,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 		if (!this.mpOverhealSelf) this.mpOverhealSelf = $dataStates[id].mpOverhealSelf;
 		if (!this.tpOverhealSelf) this.tpOverhealSelf = $dataStates[id].tpOverhealSelf;
 		this.overhealMult *= $dataStates[id].overhealMult;
+		if (!this.overhealSkills) this.overhealSkills = $dataStates[id].overhealSkills;
+		if (!this.overhealItems) this.overhealItems = $dataStates[id].overhealItems;
 	}
 };
 
@@ -460,6 +481,7 @@ Game_Enemy.prototype.getOverhealStuff = function() {
 	this.overhealSelf = $dataEnemies[this.enemyId()].overhealSelf;
 	this.mpOverhealSelf = $dataEnemies[this.enemyId()].mpOverhealSelf;
 	this.tpOverhealSelf = $dataEnemies[this.enemyId()].tpOverhealSelf;
+	this.overhealSkills = $dataEnemies[this.enemyId()].overhealSkills;
 	//Gets enemy's states
 	var stateList = this.states();
 	//Gets the modifiers from the base enemy's states
@@ -472,6 +494,7 @@ Game_Enemy.prototype.getOverhealStuff = function() {
 		if (!this.mpOverhealSelf) this.mpOverhealSelf = $dataStates[id].mpOverhealSelf;
 		if (!this.tpOverhealSelf) this.tpOverhealSelf = $dataStates[id].tpOverhealSelf;
 		this.overhealMult *= $dataStates[id].overhealMult;
+		if (!this.overhealSkills) this.overhealSkills = $dataStates[id].overhealSkills;
 	}
 }
 
@@ -809,7 +832,7 @@ Game_Battler.prototype.gainHp = function(value) {
 			this.overheal = 0;
 			this.setHp(this.hp + value);
 		}
-	} else if (value > 0 && (this.hp + value) > this.mhp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || this.overhealSelf))){
+	} else if (value > 0 && (this.hp + value) > this.mhp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || this.overhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.mhp - this.hp;
 		this.setHp(this.mhp);
 		value *= this.overhealMult;
@@ -833,7 +856,7 @@ Game_Battler.prototype.gainMp = function(value) {
 			this.mpOverheal = 0;
 			this.setMp(this.mp + value);
 		}
-	} else if (value > 0 && (this.mp + value) > this.mmp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || this.mpOverhealSelf))){
+	} else if (value > 0 && (this.mp + value) > this.mmp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || this.mpOverhealSelf  || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.mmp - this.mp;
 		this.setMp(this.mmp);
 		value *= this.overhealMult;
@@ -857,7 +880,7 @@ Game_Battler.prototype.gainTp = function(value) {
 			this.tpOverheal = 0;
 			this.setTp(this.mp + value);
 		}
-	} else if (value > 0 && (this.tp + value) > this.maxTp() && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || this.tpOverhealSelf))){
+	} else if (value > 0 && (this.tp + value) > this.maxTp() && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || this.tpOverhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.maxTp() - this.tp;
 		this.setTp(this.maxTp());
 		value *= this.overhealMult;
@@ -889,7 +912,7 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
 	var text = frsh_overheal_hp_text.call(this, target);
 	var damage = target.result().hpDamage * -1;
 	//Checks to see if overheal is applicable and if the party is in battle
-	if (damage > 0 && damage > (target.mhp-target.hp) && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse)) {
+	if (damage > 0 && damage > (target.mhp-target.hp) && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
 		//adds the normal text
 		this.push('addText', text);
 		//Removes the actual heal to get the amount of overheal
@@ -915,7 +938,7 @@ frsh_overheal_mp_text = Window_BattleLog.prototype.makeMpDamageText;
 Window_BattleLog.prototype.makeMpDamageText = function(target) {
 	var text = frsh_overheal_mp_text.call(this, target);
 	var damage = target.result().mpDamage * -1;
-	if (damage > 0 && damage > (target.mmp-target.mp) && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse)) {
+	if (damage > 0 && damage > (target.mmp-target.mp) && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
 		this.push('addText', text);
 		damage -= (target.mmp-target.mp);
 		damage *= target.overhealMult;
@@ -934,7 +957,7 @@ frsh_overheal_tp_text = Window_BattleLog.prototype.makeTpDamageText;
 Window_BattleLog.prototype.makeTpDamageText = function(target) {
 	var text = frsh_overheal_tp_text.call(this, target);
 	var damage = target.result().tpDamage * -1;
-	if (damage > 0 && damage > (target.maxTp()-target.tp) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse)) {
+	if (damage > 0 && damage > (target.maxTp()-target.tp) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
 		this.push('addText', text);
 		damage -= (target.maxTp()-target.tp);
 		damage *= target.overhealMult;
