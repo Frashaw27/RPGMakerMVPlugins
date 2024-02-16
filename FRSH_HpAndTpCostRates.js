@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_HpTpCostRate
 // FRSH_HpTpCostRate.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -31,6 +31,9 @@ Frashaw.HpTpCostRate = Frashaw.HpTpCostRate || {};
 * Insert the above notetags into the respective places and it should work. 
 * You need Yanfly skill core to do the hp costs though.
 * ===Change Log===============================================================
+* Version 1.0.1 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.0 (12/03/23):
 * -Finished Base Plugin
 * ============================================================================
@@ -109,9 +112,6 @@ Game_Actor.prototype.getHpTpCostRate = function() {
 		this.tpCostRate *= equip.tpCostRate;
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.hpCostRate *= $dataStates[id].hpCostRate;
@@ -125,9 +125,6 @@ Game_Enemy.prototype.getHpTpCostRate = function() {
 	this.hpCostRate *= $dataEnemies[id].hpCostRate;
 	this.tpCostRate *= $dataEnemies[id].tpCostRate;
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		this.hpCostRate *= $dataStates[id].hpCostRate;
