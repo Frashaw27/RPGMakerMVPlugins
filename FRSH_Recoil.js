@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.3.1
+// Version: 1.3.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -177,6 +177,9 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
+* Version 1.3.2 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.3.1 (11/03/23):
 * -Fixed a buf with recoil hp healing
 *
@@ -560,10 +563,6 @@ Game_Actor.prototype.getRecoilStuff = function() {
 	}
 	//Gets actor's states
 	var stateList = this.states();
-	//Tacks on passive stats as well, if applicable
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	//Gets the modifiers from the base actor's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
@@ -596,10 +595,6 @@ Game_Enemy.prototype.getRecoilStuff = function() {
 	this.healRecoilNull = $dataEnemies[this.enemyId()].healRecoilNull; 
 	//Gets enemy's states
 	var stateList = this.states();
-	//Tacks on passive stats as well, if applicable
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	} 
 	//Gets the modifiers from the base enemy's states
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
