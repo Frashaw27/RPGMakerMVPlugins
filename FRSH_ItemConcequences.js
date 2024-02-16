@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConcequences
 // FRSH_ItemConcequences.js
-// Version: 1.2.6
+// Version: 1.2.7
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1151,9 +1151,11 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * target and not any enemies, so that's a short coming that might be
 * fixed later.
 * ===Change Log===============================================================
+* Version 1.2.7 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
 * Version 1.2.6 (07/14/23) :
 * -Removed a method that crashed Yanfly_PartySystem
-* -Fixed a bug that only caused certain value to drain each turn
 *
 * Version 1.2.5 (07/10/23) :
 * -Changed the way text is shown to be WAY less jank
@@ -1193,6 +1195,7 @@ Frashaw.IConcequence = Frashaw.IConcequence || {};
 * ============================================================================
 */
 //============================================================================
+var currentWindow = 1;
 (function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_ItemConcequences');
@@ -1523,9 +1526,6 @@ Game_Actor.prototype.getConcequenceModifiers = function(name) {
 		}
 	}
 	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-			stateList =  stateList.concat(this.passiveStates());
-	}
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
 		for (var loop = 0; loop != loong; loop++){
@@ -1717,8 +1717,8 @@ Game_Battler.prototype.onTurnEnd = function() {
 	var bool = switchAllowel();
 	while(loop != length && bool){
 		//Adds check to see if the consequence if above 0
-		var bool2 = eval("actor." + Frashaw.Param.Concequence[loop] + " > 0");
-		if (bool2){
+		var bool = eval("actor." + Frashaw.Param.Concequence[loop] + " > 0");
+		if (bool){
 			//Reduces consequence by the desired amount
 			var text = "actor." + Frashaw.Param.Concequence[loop] + "+= drainModifier(this, Frashaw.Param.Concequence[loop], Number(" + Frashaw.Param.Concequence[loop] +  "array[6]));";
 			eval(text);
