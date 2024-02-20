@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.5
+// Version: 1.2.6
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,11 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.6 (02/20/24):
+* -Added things to be removed from summons when they are removed from the 
+* party. Includes: Buffs, Debuffs, States, and Cooldown and Limited Uses from
+* the respective Yanfly Plugins, if applicable 
+*
 * Version 1.2.5 (01/20/24):
 * -Changed method of how levels get added, so that skills gotten from level 
 * ups can be gotten properly.
@@ -726,6 +731,17 @@ Game_Party.prototype.removeSummon = function(actorId) {
     if (!this._actors.contains(actorId)) {
         summonList.splice(summonList.indexOf($gameActors.actor(actorId)), 1);
 		$gameActors.actor(actorId).summoner.summons.splice($gameActors.actor(actorId).summoner.summons.indexOf($gameActors.actor(actorId)), 1);
+		if (Imported.YEP_X_LimitedSkillUses){
+			$gameActors.actor(actorId)._skillLimitedUses = [{}];
+		}
+		if (Imported.YEP_X_SkillCooldowns){
+			var cdArray = Object.keys($gameActors.actor(actorId)._cooldownTurns);
+			for (var loop = 0; loop != cdArray.length; loop++){
+				$gameActors.actor(actorId)._cooldownTurns[cdArray[loop]] = 0;
+			}
+		}
+		$gameActors.actor(actorId).clearStates();
+		$gameActors.actor(actorId).clearBuffs();
     }
 };
 
