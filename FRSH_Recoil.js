@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Recoil
 // FRSH_Recoil.js
-// Version: 1.3.2
+// Version: 1.3.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -108,6 +108,12 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * @desc Click True or False if you want to enable Custom Recoil Messages to play even when there is no Recoil.
 * @default false
 *
+* @param recoilMsgWait
+* @text Enable Recoil Wait?
+* @type boolean
+* @desc Click True or False if you want to enable recoil messages lagging the time to the Battlelog's next hit.
+* @default false
+*
 * @help
 * ==Notetags==================================================================
 * <either of these|syntaxesWorks>
@@ -177,6 +183,11 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
+* Version 1.3.2 (02/20/34) :
+* -Added an option to allow Recoil Texts to not have the Battlelog wait/do make
+* it wait.
+* -Removed some redundent lines
+*
 * Version 1.3.2 (02/16/34) :
 * -Removed method that caused passive states to double up on calls
 *
@@ -223,46 +234,15 @@ Frashaw.Param.MpRecoilMessage = Parameters.recMpMsg;
 Frashaw.Param.MpHealRecoilMessage = Parameters.recMpHealMsg;
 Frashaw.Param.TpRecoilMessage = Parameters.recTpMsg;
 Frashaw.Param.TpHealRecoilMessage = Parameters.recTpHealMsg;
-if (Parameters.perRecoilMod === "true"){
-	Frashaw.Param.PersonalRecoilMods = true;
-} else {
-	Frashaw.Param.PersonalRecoilMods = false;
-}
-if (Parameters.recPhys === "true"){
-	Frashaw.Param.PersonalRecoilPhysical = true;
-} else {
-	Frashaw.Param.PersonalRecoilPhysical = false;
-}
-if (Parameters.recMag === "true"){
-	Frashaw.Param.PersonalRecoilMagical = true;
-} else {
-	Frashaw.Param.PersonalRecoilMagical = false;
-}
-if (Parameters.recCert === "true"){
-	Frashaw.Param.PersonalRecoilCertain = true;
-} else {
-	Frashaw.Param.PersonalRecoilCertain = false;
-}
-if (Parameters.recAlly === "true"){
-	Frashaw.Param.PersonalRecoilAlly = true;
-} else {
-	Frashaw.Param.PersonalRecoilAlly = false;
-}
-if (Parameters.recDAlly === "true"){
-	Frashaw.Param.PersonalRecoilDeadAlly = true;
-} else {
-	Frashaw.Param.PersonalRecoilDeadAlly = false;
-}
-if (Parameters.recSelf === "true"){
-	Frashaw.Param.PersonalRecoilUser = true;
-} else {
-	Frashaw.Param.PersonalRecoilUser = false;
-}
-if (Parameters.recoilessMsg === "true"){
-	Frashaw.Param.RecoillessMessage = true;
-} else {
-	Frashaw.Param.RecoillessMessage = false;
-}
+Frashaw.Param.PersonalRecoilMods = Parameters.perRecoilMod === "true";
+Frashaw.Param.PersonalRecoilPhysical = Parameters.recPhys === "true";
+Frashaw.Param.PersonalRecoilMagical = Parameters.recMag === "true";
+Frashaw.Param.PersonalRecoilCertain = Parameters.recCert === "true";
+Frashaw.Param.PersonalRecoilAlly = Parameters.recAlly === "true";
+Frashaw.Param.PersonalRecoilDeadAlly = Parameters.recDAlly === "true";
+Frashaw.Param.PersonalRecoilUser = Parameters.recSelf === "true";
+Frashaw.Param.RecoillessMessage = Parameters.recoilessMsg === "true";
+Frashaw.Param.RecoilWait = Parameters.recoilMsgWait === "true";
 
 //Some variable setting
 var recoilMsg = Frashaw.Param.RecoilMessage;
@@ -806,13 +786,20 @@ function customTpMessage(target){
 //Shows the recoil post damage
 Window_BattleLog.prototype.displayRecoil = function(target) {
 	if (recoilBool || BattleManager._action.item().alwaysRecoilMsg){
-		this.push('addText', customItemMessage(target));
+		this.push('addTextRecoil', customItemMessage(target));
 	}
 	if (personalRecoilBool){
-		if (BattleManager._action.subject().personalRecoilValues[0] != 0) this.push('addText', customHpMessage(target));
-		if (BattleManager._action.subject().personalRecoilValues[1] != 0) this.push('addText', customMpMessage(target));
-		if (BattleManager._action.subject().personalRecoilValues[2] != 0) this.push('addText', customTpMessage(target));
+		if (BattleManager._action.subject().personalRecoilValues[0] != 0) this.push('addTextRecoil', customHpMessage(target));
+		if (BattleManager._action.subject().personalRecoilValues[1] != 0) this.push('addTextRecoil', customMpMessage(target));
+		if (BattleManager._action.subject().personalRecoilValues[2] != 0) this.push('addTextRecoil', customTpMessage(target));
 	}
+};
+
+//A special variation of addText so that the user can decide if they want recoils to "lag" the battle log
+Window_BattleLog.prototype.addTextRecoil = function(text) {
+    this._lines.push(text);
+    this.refresh();
+	if (Frashaw.Param.RecoilWait) this.wait();
 };
 
 //Gets the recoil result of recoil eval
