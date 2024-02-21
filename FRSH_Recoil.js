@@ -123,14 +123,14 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * <Recoil Eval|recoilEval></Recoil Eval|recoilEval>: Put code inbetween
 * these to run when using recoil. Use "recoil" as the variable to return
 * the amount of recoil that'll end up with. Useable Terms: User - user, a
-* Target: target, b
+* Target: target, b, value
 * <Recoil Message|recoilMsg: insert message here>: Replaces the standard 
 * recoil message with a different one.
 * <Recoil Message Eval|recoilMsgEval></Recoil Message Eval|recoilMsgEval>:
 * Put code in-between these two to evaluate the message you want. Use 'message'
 * as the variable to return the message you want to use. Follows the same 
 * rules as normal messages. Useable Terms: User - user, a
-* Target: target, b
+* Target: target, b, value
 * <Mp Recoil|mpRecoil>: Makes the skill's recoil affect Mp instead of Hp.
 * <Tp Recoil|tpRecoil>: Makes the skill's recoil affect Tp instead of Hp.
 * <Healing Recoil|healRecoil>: Makes the skill's recoil give the stat instead
@@ -183,7 +183,10 @@ Frashaw.Recoil = Frashaw.Recoil || {};
 * which activates the recoils on every skill use. This can be tweened with
 * the options to the right, for when they activate instead of always.
 * ===Change Log===============================================================
-* Version 1.3.2 (02/20/34) :
+* Version 1.3.4 (02/21/34) :
+* -Added value to recoil eval and message recoil eval
+*
+* Version 1.3.3 (02/20/34) :
 * -Added an option to allow Recoil Texts to not have the Battlelog wait/do make
 * it wait.
 * -Removed some redundent lines
@@ -646,6 +649,7 @@ function getMessageEval(evaluate, target){
 	var a = BattleManager._action.subject();
 	var b = target;
 	var message = '';
+	var value = dmgValue;
 	try {
 		eval(evaluate)
 	} catch (e) {
@@ -808,6 +812,7 @@ Game_Action.prototype.processRecoilEval = function(evaluate, target){
 	var user = BattleManager._action.subject();
 	var a = BattleManager._action.subject();
 	var b = target;
+	var value = dmgValue;
 	var recoil = '';
 	try {
 		eval(evaluate)
