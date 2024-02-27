@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CallMetaValues
 // FRSH_CallMetaValues.js
-// Version: 1.0.2
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -39,47 +39,6 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * @desc Put the name(s) of the labels that you want to collect a string of, seperated by a ",". Ex: (yes,no,maybe).
 * @default
 *
-* @param 
-* @desc divider.
-*
-* @param numbBool
-* @text Number False
-* @type boolean
-* @desc Click True or False if you want to enable setting the ungotten values to 0.
-* @default false
-* @default
-*
-* @param percBool
-* @text Percent False
-* @type boolean
-* @desc Click True or False if you want to enable setting the ungotten values to 1.
-* @default false
-* @default
-*
-* @param boolBool
-* @text Boolean False
-* @type boolean
-* @desc Click True or False if you want to enable setting the ungotten values to false.
-* @default false
-* @default
-*
-* @param textBool
-* @text Text False
-* @type boolean
-* @desc Click True or False if you want to enable setting the ungotten values to ''/blank.
-* @default false
-* @default
-*
-* @param 
-* @desc divider.
-*
-* @param percBool2
-* @text Percent False
-* @type boolean
-* @desc Click True if you want the percent given to be added to 1; False if not.
-* @default true
-* @default
-*
 * @help
 * ==Notetags==================================================================
 * Actor, Enemy, Class, Weapons, Armors, States:
@@ -98,7 +57,22 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * labels and data value into the notetags, at which point the plugin will
 * auto compile them for your use.
 * ===Change Log===============================================================
-* Version 1.0.1 (07/14/23) :
+* Version 1.1.0 (02/26/34) :
+* -Rewrote plugin to be more efficent and remove bugs
+* -All base value calls now result in:
+*  -0 for number values
+*  -1 for percentile values
+*  -false for bool values
+*  -"" for text values
+* -Removed the option to make thse bases be undefined as it would've been more
+* trouble then it was worth
+* -Removed a potential bug where the code may not work if there was a space 
+* starting out a meta label
+*
+* Version 1.0.3 (02/16/34) :
+* -Removed method that caused passive states to double up on calls
+*
+* Version 1.0.2 (07/14/23) :
 * -Removed a method that crashed Yanfly_PartySystem
 *
 * Version 1.0.1 (07/13/23) :
@@ -110,58 +84,22 @@ Frashaw.CMValues = Frashaw.CMValues || {};
 * ============================================================================
 */
 //============================================================================
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_CallMetaValues');
 Frashaw.Param = Frashaw.Param || {};
-if (Parameters.numbLabels != ''){
-	Frashaw.Param.numbLabels = labelMaker(Parameters.numbLabels);
-} else {
-	Frashaw.Param.numbLabels = [];
-}
-if (Parameters.percLabels != ''){
-	Frashaw.Param.percLabels = labelMaker(Parameters.percLabels);
-} else {
-	Frashaw.Param.percLabels = [];
-}
-if (Parameters.boolLabels != ''){
-	Frashaw.Param.boolLabels = labelMaker(Parameters.boolLabels);
-} else {
-	Frashaw.Param.boolLabels = [];
-}
-if (Parameters.textLabels != ''){
-	Frashaw.Param.textLabels = labelMaker(Parameters.textLabels);
-} else {
-	Frashaw.Param.textLabels = [];
-}
-if (Parameters.numbBool === "true"){
-	Frashaw.Param.numbBool = true;
-} else {
-	Frashaw.Param.numbBool = false;
-}
-if (Parameters.percBool === "true"){
-	Frashaw.Param.percBool = true;
-} else {
-	Frashaw.Param.percBool = false;
-}
-if (Parameters.boolBool === "true"){
-	Frashaw.Param.boolBool = true;
-} else {
-	Frashaw.Param.boolBool = false;
-}
-if (Parameters.textBool === "true"){
-	Frashaw.Param.textBool = true;
-} else {
-	Frashaw.Param.textBool = false;
-}
-if (Parameters.percBool2 === "true"){
-	Frashaw.Param.percBool2 = true;
-} else {
-	Frashaw.Param.percBool2 = false;
-}
-
+Frashaw.Param.numbLabels = (Parameters.numbLabels != '') ? labelMaker(Parameters.numbLabels) : [];
+Frashaw.Param.percLabels = (Parameters.percLabels != '') ? labelMaker(Parameters.percLabels) : [];
+Frashaw.Param.boolLabels = (Parameters.boolLabels != '') ? labelMaker(Parameters.boolLabels) : [];
+Frashaw.Param.textLabels = (Parameters.textLabels != '') ? labelMaker(Parameters.textLabels) : [];
 
 function labelMaker(string){
 	array = string.split(",");
+	array.forEach(function(x, i){ 
+		if (x[0] == " "){ 
+			array[i] = x.replace(" ","");
+		}
+	});
 	return array;
 }
 
@@ -170,481 +108,201 @@ var percLabels = Frashaw.Param.percLabels;
 var boolLabels = Frashaw.Param.boolLabels;
 var textLabels = Frashaw.Param.textLabels;
 
-//Gets the various number values
+//A section of code designed to go through each weapon, armor, actor, enemy, and state and get their respective
+//values
+var FrshCMValuesLoaded = false;
+FrshCMValuesLoaded_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	if (!FrshCMValuesLoaded_database.call(this)) return false; 
+	if (FrshCMValuesLoaded == false) {
+		this.processMetaThings($dataActors);
+		this.processMetaThings($dataClasses);
+		this.processMetaThings($dataWeapons);
+		this.processMetaThings($dataArmors);
+		this.processMetaThings($dataStates);
+		FrshCMValuesLoaded = true;
+	}
+	return true;
+};
+
+//A function to sets the vaious custom meta values for call
+DataManager.processMetaThings = function(group) {
+	var noteNumb = [];
+	var notePerc = [];
+	var noteBool = [];
+	var noteText = [];
+	if (numbLabels.length != 0) numbLabels.forEach(function(i){ eval("noteNumb.push(new RegExp(`<${i}:[ ](.*)>`, 'i'))") });
+	if (percLabels.length != 0) percLabels.forEach(function(i){ eval("notePerc.push(new RegExp(`<${i}:[ ](.*)>`, 'i'))") });
+	if (boolLabels.length != 0) boolLabels.forEach(function(i){ eval("noteBool.push(new RegExp(`<${i}>`, 'i'))") });
+	if (textLabels.length != 0) textLabels.forEach(function(i){ eval("noteText.push(new RegExp(`<${i}:[ ](.*)>`, 'i'))") });
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		//Initalizes the shit for these various conditions
+		var mode = 'none';
+		if (numbLabels.length != 0){
+			numbLabels.forEach(function(i){ eval("obj." + i + " = 0") })
+		}
+		if (percLabels.length != 0){
+			percLabels.forEach(function(i){ eval("obj." + i + " = 1") })
+		}
+		if (boolLabels.length != 0){
+			boolLabels.forEach(function(i){ eval("obj." + i + " = false") })
+		}
+		if (textLabels.length != 0){
+			textLabels.forEach(function(i){ eval("obj." + i + ' = ""') });
+		}
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (noteNumb.length != 0){
+				for(var loop = 0; loop != noteNumb.length; loop++){
+					if (line.match(noteNumb[loop])) eval("obj." + numbLabels[loop] + ' += Number(RegExp.$1)');
+				}
+			}
+			if (notePerc.length != 0){
+				for(var loop = 0; loop != notePerc.length; loop++){
+					if (line.match(notePerc[loop])) eval("obj." + percLabels[loop] + ' *= Number(RegExp.$1)');
+				}
+			}
+			if (noteBool.length != 0){
+				for(var loop = 0; loop != noteBool.length; loop++){
+					if (line.match(noteBool[loop])) eval("obj." + boolLabels[loop] + ' = true');
+				}
+			}
+			if (noteText.length != 0){
+				for(var loop = 0; loop != noteText.length; loop++){
+					if (line.match(noteText[loop])) eval("obj." + textLabels[loop] + ' += RegExp.$1');
+				}
+			}
+		}
+	}
+};
+
+//Gets the number values for Actors
 Game_Actor.prototype.getNumStuff = function() {
-	var id = this.actorId();
-	var labels = numbLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataActors[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = Number($dataActors[id].meta." + labels[loop] + ")");
-		}
-	}
-	var id = this._classId;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataClasses[id].meta." + labels[loop] + " != null");
-		if (bool){
-			var bool2 = eval("this." + labels[loop] + " != null");
-			if (bool2){
-				eval("this." + labels[loop] + " += Number($dataClasses[id].meta." + labels[loop] + ")");
-			} else {
-				eval("this." + labels[loop] + " = Number($dataClasses[id].meta." + labels[loop] + ")");
-			}
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
+	var user = this;
+	var id = user.actorId();
+	numbLabels.forEach(function(i){ eval("user." + i + " += $dataActors[id]." + i) });
+	var id = user._classId;
+	numbLabels.forEach(function(i){ eval("user." + i + " += $dataClasses[id]." + i) });
+	for (var i = 0; i != user.equips().length; i++){
+		var equip = user.equips()[i];
 		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataWeapons[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += Number($dataWeapons[id].meta." + labels[loop] + ")");
-					} else {
-						eval("this." + labels[loop] + " = Number($dataWeapons[id].meta." + labels[loop] + ")");
-					}
-				}
-			}
-		} else {
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataArmors[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += Number($dataArmors[id].meta." + labels[loop] + ")");
-					} else {
-						eval("this." + labels[loop] + " = Number($dataArmors[id].meta." + labels[loop] + ")");
-					}
-				}
-			}
-		}
+		numbLabels.forEach(function(x){ eval("user." + x + " += equip." + x) });
 	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")");
-				} else {
-					eval("this." + labels[loop] + " = Number($dataStates[id].meta." + labels[loop] + ")");
-				}
-			}
-		}
-	}
-	if (Frashaw.Param.numbBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = 0");
-			}
-		}
+		numbLabels.forEach(function(x){ eval("user." + x + " += $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various percent values
+//Gets the percentive values for Actors
 Game_Actor.prototype.getPercStuff = function() {
-	var id = this.actorId();
-	var labels = percLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataActors[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = Number($dataActors[id].meta." + labels[loop] + ")");
-		}
-	}
-	var id = this._classId;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataClasses[id].meta." + labels[loop] + " != null");
-		if (bool){
-			var bool2 = eval("this." + labels[loop] + " != null");
-			if (bool2){
-				eval("this." + labels[loop] + " += Number($dataClasses[id].meta." + labels[loop] + ")");
-			} else {
-				eval("this." + labels[loop] + " = Number($dataClasses[id].meta." + labels[loop] + ")");
-			}
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
+	var user = this;
+	var id = user.actorId();
+	percLabels.forEach(function(i){ eval("user." + i + " *= $dataActors[id]." + i) });
+	var id = user._classId;
+	percLabels.forEach(function(i){ eval("user." + i + " *= $dataClasses[id]." + i) });
+	for (var i = 0; i != user.equips().length; i++){
+		var equip = user.equips()[i];
 		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataWeapons[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += Number($dataWeapons[id].meta." + labels[loop] + ")");
-					} else {
-						eval("this." + labels[loop] + " = Number($dataWeapons[id].meta." + labels[loop] + ")");
-					}
-				}
-			}
-		} else {
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataArmors[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += Number($dataArmors[id].meta." + labels[loop] + ")");
-					} else {
-						eval("this." + labels[loop] + " = Number($dataArmors[id].meta." + labels[loop] + ")");
-					}
-				}
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " *= equip." + x) });
 	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")");
-				} else {
-					eval("this." + labels[loop] + " = Number($dataStates[id].meta." + labels[loop] + ")");
-				}
-			}
-		}
-	}
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("this." + labels[loop] + " != null");
-		if (bool){
-			if (Frashaw.Param.percBool2){
-				eval("this." + labels[loop] + " = 1 + (this." + labels[loop] + "/100)");
-			} else {
-				eval("this." + labels[loop] + " = this." + labels[loop] + "/100");	
-			}
-		}
-	}
-	if (Frashaw.Param.percBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = 1");
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " *= $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various bool values
+//Gets the bool values for Actors
 Game_Actor.prototype.getBoolStuff = function() {
-	var id = this.actorId();
-	var labels = boolLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataActors[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + "= true");
-		}
-	}
-	var id = this._classId;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataClasses[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + "= true");
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
+	var user = this;
+	var id = user.actorId();
+	boolLabels.forEach(function(i){ eval("user." + i + " = $dataActors[id]." + i) });
+	var id = user._classId;
+	boolLabels.forEach(function(i){ eval("if (!user." + i + ") user." + i + " = $dataClasses[id]." + i) });
+	for (var i = 0; i != user.equips().length; i++){
+		var equip = user.equips()[i];
 		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataWeapons[id].meta." + labels[loop] + " != null");
-				if (bool){
-					eval("this." + labels[loop] + "= true");
-				}
-			}
-		} else {
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataArmors[id].meta." + labels[loop] + " != null");
-				if (bool){
-					eval("this." + labels[loop] + "= true");
-				}
-			}
-		}
+		boolLabels.forEach(function(x){ eval("if (!user." + x + ") user." + x + " = equip." + x) });
 	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				eval("this." + labels[loop] + "= true");
-			}
-		}
-	}
-	if (Frashaw.Param.boolBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = false");
-			}
-		}
+		boolLabels.forEach(function(x){ eval("if (!user." + x + ") user." + x + " = $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various text values
+//Gets the text values for Actors
 Game_Actor.prototype.getTextStuff = function() {
-	var id = this.actorId();
-	var labels = textLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataActors[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = $dataActors[id].meta." + labels[loop]);
-		}
-	}
-	var id = this._classId;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataClasses[id].meta." + labels[loop] + " != null");
-		if (bool){
-			var bool2 = eval("this." + labels[loop] + " != null");
-			if (bool2){
-				eval("this." + labels[loop] + " += $dataClasses[id].meta." + labels[loop]);
-			} else {
-				eval("this." + labels[loop] + " = $dataClasses[id].meta." + labels[loop]);
-			}
-		}
-	}
-	for (var i = 0; i != this.equips().length; i++){
-		var equip = this.equips()[i];
+	var user = this;
+	var id = user.actorId();
+	percLabels.forEach(function(i){ eval("user." + i + " += $dataActors[id]." + i) });
+	var id = user._classId;
+	percLabels.forEach(function(i){ eval("user." + i + " += $dataClasses[id]." + i) });
+	for (var i = 0; i != user.equips().length; i++){
+		var equip = user.equips()[i];
 		if (equip == null) continue;
-		var id = equip.id;
-		if (DataManager.isWeapon(equip)){
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataWeapons[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += $dataWeapons[id].meta." + labels[loop]);
-					} else {
-						eval("this." + labels[loop] + " = $dataWeapons[id].meta." + labels[loop]);
-					}
-				}
-			}
-		} else {
-			for (var loop = 0; loop != length; loop++){
-				var bool = eval("$dataArmors[id].meta." + labels[loop] + " != null");
-				if (bool){
-					var bool2 = eval("this." + labels[loop] + " != null");
-					if (bool2){
-						eval("this." + labels[loop] + " += $dataArmors[id].meta." + labels[loop]);
-					} else {
-						eval("this." + labels[loop] + " = $dataArmors[id].meta." + labels[loop]);
-					}
-				}
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " += equip." + x) });
 	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += $dataStates[id].meta." + labels[loop]);
-				} else {
-					eval("this." + labels[loop] + " = $dataStates[id].meta." + labels[loop]);
-				}
-			}
-		}
-	}
-	if (Frashaw.Param.textBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = ''");
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " += $dataStates[id]." + x) });
 	}
 };
 
 //===========================================================================================
 
-//Gets the various number values
+//Gets the number values for Enemies
 Game_Enemy.prototype.getNumStuff = function() {
-	var id = this.enemyId();
-	var labels = percLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataEnemies[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = Number($dataEnemies[id].meta." + labels[loop] + ")");
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var user = this;
+	var id = user.enemyId();
+	numbLabels.forEach(function(i){ eval("user." + i + " += $dataEnemies[id]." + i) });
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")");
-				} else {
-					eval("this." + labels[loop] + " = Number($dataStates[id].meta." + labels[loop] + ")");
-				}
-			}
-		}
-	}
-	if (Frashaw.Param.numbBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = 0");
-			}
-		}
+		numbLabels.forEach(function(x){ eval("user." + x + " += $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various percent values
+//Gets the percentive values for Enemies
 Game_Enemy.prototype.getPercStuff = function() {
-	var id = this.enemyId();
-	var labels = percLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataEnemies[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = Number($dataEnemies[id].meta." + labels[loop] + ")");
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var user = this;
+	var id = user.enemyId();
+	percLabels.forEach(function(i){ eval("user." + i + " *= $dataEnemies[id]." + i) });
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += Number($dataStates[id].meta." + labels[loop] + ")");
-				} else {
-					eval("this." + labels[loop] + " = Number($dataStates[id].meta." + labels[loop] + ")");
-				}
-			}
-		}
-	}
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("this." + labels[loop] + " != null");
-		if (bool){
-			if (Frashaw.Param.percBool2){
-				eval("this." + labels[loop] + " = 1 + (this." + labels[loop] + "/100)");
-			} else {
-				eval("this." + labels[loop] + " = this." + labels[loop] + "/100");	
-			}
-		}
-	}
-	if (Frashaw.Param.percBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = 0");
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " *= $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various bool values
+//Gets the bool values for Enemies
 Game_Enemy.prototype.getBoolStuff = function() {
-	var id = this.enemyId();
-	var labels = boolLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataEnemies[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + "= true");
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var user = this;
+	var id = user.enemyId();
+	boolLabels.forEach(function(i){ eval("user." + i + " = $dataEnemies[id]." + i) });
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				eval("this." + labels[loop] + "= true");
-			}
-		}
-	}
-	if (Frashaw.Param.boolBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = false");
-			}
-		}
+		boolLabels.forEach(function(x){ eval("if (!user." + x + ") user." + x + " = $dataStates[id]." + x) });
 	}
 };
 
-//Gets the various text values
+//Gets the text values for Enemies
 Game_Enemy.prototype.getTextStuff = function() {
-	console.log("bee");
-	var id = this.enemyId();
-	var labels = textLabels;
-	var length = labels.length;
-	for (var loop = 0; loop != length; loop++){
-		var bool = eval("$dataEnemies[id].meta." + labels[loop] + " != null");
-		if (bool){
-			eval("this." + labels[loop] + " = $dataEnemies[id].meta." + labels[loop]);
-		}
-	}
-	var stateList = this.states();
-	if (this._passiveStatesRaw != null){
-		stateList =  stateList.concat(this.passiveStates());
-	}
+	var user = this;
+	var id = user.enemyId();
+	percLabels.forEach(function(i){ eval("user." + i + " += $dataEnemies[id]." + i) });
+	var stateList = user.states();
 	for (var i = 0; i != stateList.length; i++){
 		var id = stateList[i].id;
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("$dataStates[id].meta." + labels[loop] + " != null");
-			if (bool){
-				var bool2 = eval("this." + labels[loop] + " != null");
-				if (bool2){
-					eval("this." + labels[loop] + " += $dataStates[id].meta." + labels[loop]);
-				} else {
-					eval("this." + labels[loop] + " = $dataStates[id].meta." + labels[loop]);
-				}
-			}
-		}
-	}
-	if (Frashaw.Param.textBool){
-		for (var loop = 0; loop != length; loop++){
-			var bool = eval("this." + labels[loop] + " == null");
-			if (bool){
-				eval("this." + labels[loop] + " = ''");
-			}
-		}
+		percLabels.forEach(function(x){ eval("user." + x + " += $dataStates[id]." + x) });
 	}
 };
 
@@ -653,16 +311,11 @@ Game_Enemy.prototype.getTextStuff = function() {
 //Resets the values back to undefined so that a continuous build up doesn't happen and things
 //don't linger after they're removed 
 Game_BattlerBase.prototype.removeStuff = function(){
-	var array = [];
-	if (numbLabels.length != 0) array = array.concat(numbLabels);
-	if (percLabels.length != 0) array = array.concat(percLabels);
-	if (boolLabels.length != 0) array = array.concat(boolLabels);
-	if (textLabels.length != 0) array = array.concat(textLabels);
-	if (array.length != 0){
-		for (var loop = 0; loop != array.length; loop++){
-			eval("this." + array[loop] + " = undefined");
-		}
-	}
+	var user = this;
+	numbLabels.forEach(function(i){ eval("user." + i + " = 0") });
+	percLabels.forEach(function(i){ eval("user." + i + " = 1") });
+	boolLabels.forEach(function(i){ eval("user." + i + " = false") });
+	textLabels.forEach(function(i){ eval("user." + i + " = ''") });
 }
 
 //Calls all the the gets stuffs and the remove stuffs
@@ -676,7 +329,7 @@ Game_BattlerBase.prototype.refresh = function(){
 	if (boolLabels.length != 0) this.getBoolStuff();
 	if (textLabels.length != 0) this.getTextStuff();
 }
-
+})();
 //=============================================================================
 // End of File
 //=============================================================================
