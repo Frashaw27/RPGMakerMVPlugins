@@ -27,6 +27,11 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * applyDebuffBonus|giveDebuffBonus: (interger you want to use)>
 * Recieving Debuff Turns: <Recieving Debuff Bonus|Taking Debuff Bonus|
 * recieveDebuffBonus|takeDebuffBonus: (interger you want to use)>
+* ==Script Calls==============================================================
+* (target).addBuffSpecific(buffId, turns, user) - Calls a specific user for
+* thier bonuses on the buff.
+* (target).addDebuffSpecific(buffId, turns, user) - Calls a specific user for
+* thier bonuses on the debuff.
 * ===Introduction=============================================================
 * Base RPG Maker has Buffs and Debuffs, however there's no way to influence 
 * how many turns an actor/enemy can get beyond the set amount. This plugin
@@ -40,6 +45,9 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * Recieving alters how many Turns the Buff/Debuff lasts when the target 
 * recieves said Buff/Debuff.
 * ===Change Log===============================================================
+* Version 1.1.2 (02/28/34) :
+* -Add methods to call specific users that apply the buffs for the bonuses
+*
 * Version 1.1.1 (02/16/34) :
 * -Removed method that caused buff/debuff bonuses to double up on calls
 *
@@ -192,6 +200,20 @@ Game_Battler.prototype.addBuff = function(paramId, turns) {
 frsh_turnsplus_debuff_bonus = Game_Battler.prototype.addDebuff;
 Game_Battler.prototype.addDebuff = function(paramId, turns) {
 	if (BattleManager._action != null && BattleManager._action.subject().isActing()) turns += BattleManager._action.subject().giveDebuffBonus;
+	turns += this.takeDebuffBonus;
+    frsh_turnsplus_debuff_bonus.call(this, paramId, turns);
+};
+
+//A function where you can specifiy the user that is using the buff action
+Game_Battler.prototype.addBuffSpecific = function(paramId, turns, user) {
+	if (user != null) turns += user.giveBuffBonus;
+	turns += this.takeBuffBonus;
+	frsh_turnsplus_buff_bonus.call(this, paramId, turns);
+};
+
+//A function where you can specifiy the user that is using the debuff action
+Game_Battler.prototype.addDebuffSpecific = function(paramId, turns, user) {
+	if (user != null) turns += user.giveDebuffBonus;
 	turns += this.takeDebuffBonus;
     frsh_turnsplus_debuff_bonus.call(this, paramId, turns);
 };
