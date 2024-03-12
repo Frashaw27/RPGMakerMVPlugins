@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.6
+// Version: 1.2.7
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.7 (03/12/2024):
+* -Fixed an oversight so that now summons are removed from the end of battle
+* properly
+*
 * Version 1.2.6 (02/20/24):
 * -Added things to be removed from summons when they are removed from the 
 * party. Includes: Buffs, Debuffs, States, and Cooldown and Limited Uses from
@@ -693,7 +697,7 @@ Game_Battler.prototype.onBattleEnd = function() {
 	//Removes big summons
 	summonOverride = undefined;
 	//Clears all summons
-	summonList = [];
+	summonList.forEach(function(i){ $gameParty.removeSummon(i.actorId()) });
 	//Clears the summoner of all their previously associated summons
 	if (this.isActor()) this.summoned = [];
 };
