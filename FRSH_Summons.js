@@ -159,6 +159,8 @@ Frashaw.Summons = Frashaw.Summons || {};
 * ===Change Log===============================================================
 * Version 1.2.8 (03/14/2024):
 * -Fixed Summons not going away when killed via Damage Over Time
+* -made Summons Not be able to "free act" sometimes if their summoner is 
+* faster then them
 *
 * Version 1.2.7 (03/12/2024):
 * -Fixed an oversight so that now summons are removed from the end of battle
@@ -235,34 +237,14 @@ Parameters = PluginManager.parameters('FRSH_Summons');
 Frashaw.Param = Frashaw.Param || {};
 Frashaw.Param.maxSumms = Number(Parameters.summMax);
 Frashaw.Param.defaultSummLevel = Number(Parameters.defSummLvl);
-if (Parameters.graceTurn === "true"){
-	Frashaw.Param.GraceTurn = true;
-} else {
-	Frashaw.Param.GraceTurn = false;
-}
-if (Parameters.displayTurns === "true"){
-	Frashaw.Param.displayTurns = true;
-} else {
-	Frashaw.Param.displayTurns = false;
-}
-if (Parameters.displayExclaim === "true"){
-	Frashaw.Param.displayExclaim = true;
-} else {
-	Frashaw.Param.displayExclaim = false;
-}
+Frashaw.Param.GraceTurn = Parameters.graceTurn === "true";
+Frashaw.Param.displayTurns = Parameters.displayTurns === "true";
+Frashaw.Param.displayExclaim = Parameters.displayExclaim === "true";
 Frashaw.Param.defaultSummDeathText = Parameters.defSumDeathText;
 Frashaw.Param.defaultSummLeaveText = Parameters.defSumLeaveText;
 Frashaw.Param.defaultSummEnterText = Parameters.defSumText;
-if (Parameters.displayExclaim === "true"){
-	Frashaw.Param.displayExclaim = true;
-} else {
-	Frashaw.Param.displayExclaim = false;
-}
-if (Parameters.showTurnsActor === "true"){
-	Frashaw.Param.showTurnsActor = true;
-} else {
-	Frashaw.Param.showTurnsActor = false;
-}
+Frashaw.Param.displayExclaim = Parameters.displayExclaim === "true";
+Frashaw.Param.showTurnsActor = Parameters.showTurnsActor === "true";
 Frashaw.Param.ConnectSymbol = Parameters.connector;
 
 //Sets up various variables for use
@@ -688,6 +670,7 @@ Game_Battler.prototype.onTurnEnd = function() {
 			}
 		}
 	}
+	this.noMove = undefined;
 	//Normal turn end things
 	frsh_summons_summon_removes.call(this);
 };
@@ -730,6 +713,7 @@ Game_BattlerBase.prototype.die = function() {
 Game_Party.prototype.addSummon = function(actorId) {
     if (!this._actors.contains(actorId)) {
         summonList.push($gameActors.actor(actorId));
+		this.noMove = true;
     }
 };
 
@@ -739,13 +723,13 @@ Game_Party.prototype.removeSummon = function(actorId) {
         summonList.splice(summonList.indexOf($gameActors.actor(actorId)), 1);
 		$gameActors.actor(actorId).summoner.summons.splice($gameActors.actor(actorId).summoner.summons.indexOf($gameActors.actor(actorId)), 1);
 		if (Imported.YEP_X_LimitedSkillUses){
-			$gameActors.actor(actorId)._skillLimitedUses = [{}];
+			//$gameActors.actor(actorId)._skillLimitedUses = [{}];
 		}
 		if (Imported.YEP_X_SkillCooldowns){
-			var cdArray = Object.keys($gameActors.actor(actorId)._cooldownTurns);
-			for (var loop = 0; loop != cdArray.length; loop++){
-				$gameActors.actor(actorId)._cooldownTurns[cdArray[loop]] = 0;
-			}
+			//var cdArray = Object.keys($gameActors.actor(actorId)._cooldownTurns);
+			//for (var loop = 0; loop != cdArray.length; loop++){
+				//$gameActors.actor(actorId)._cooldownTurns[cdArray[loop]] = 0;
+			//}
 		}
 		$gameActors.actor(actorId).clearStates();
 		$gameActors.actor(actorId).clearBuffs();
@@ -774,6 +758,13 @@ Game_Battler.prototype.regenerateAll = function() {
   if (this.isDead() && this.isActor() && summonList.contains(this)){
 	$gameParty.removeSummon(this.actorId());
   }
+};
+
+//An extention to make sure summons that are slower then the summoner don't randomly act
+frsh_summons_no_new_move = Game_BattlerBase.prototype.canMove
+Game_BattlerBase.prototype.canMove = function() {
+	if (this.noMove != null) return false; 
+    return frsh_summons_no_new_move.call(this);
 };
 
 //==========================================================================================
