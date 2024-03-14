@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.7
+// Version: 1.2.8
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.8 (03/14/2024):
+* -Fixed Summons not going away when killed via Damage Over Time
+*
 * Version 1.2.7 (03/12/2024):
 * -Fixed an oversight so that now summons are removed from the end of battle
 * properly
@@ -764,6 +767,14 @@ Game_Party.prototype.maxSummons = function() {
 	}
 };
 
+//Extention to properly remove summons if they die via poison/negative hgr
+frsh_summons_poison_remove = Game_Battler.prototype.regenerateAll;
+Game_Battler.prototype.regenerateAll = function() {
+  frsh_summons_poison_remove.call(this);
+  if (this.isDead() && this.isActor() && summonList.contains(this)){
+	$gameParty.removeSummon(this.actorId());
+  }
+};
 
 //==========================================================================================
 //Doesn't overwrite if ColoredNames is in the game
