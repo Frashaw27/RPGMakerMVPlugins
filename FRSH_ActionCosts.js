@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ActionCosts
 // FRSH_ActionCosts.js
-// Version: 1.2.0
+// Version: 1.2.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -66,7 +66,14 @@ Frashaw.ACosts = Frashaw.ACosts || {};
 * the actions needed, can't overflow it to use multi action skills after
 * all other actions.
 * ===Change Log===============================================================
-* Version 1.2.0 (01/29/23):
+* Version 1.2.2 (03/15/24):
+* -Added an exception so that actors that can't take actions don't crash the
+* game
+*
+* Version 1.2.1 (02/08/24):
+* -Fixed bug where the acton cost would show on the equipment
+*
+* Version 1.2.0 (01/29/24):
 * -Rewrote the plugin
 * -Added multple ways to call the action cost modifier
 * -Added a new way to have all actions to be called
@@ -152,23 +159,27 @@ Game_Battler.prototype.makeActions = function() {
 //The Meat
 Game_Actor.prototype.selectNextCommand = function() {
 	//Checks to see if the action beign inputted is an item or skill, and then adds them to the action list
-	if (this.action(this._actionInputIndex)._item._dataClass == "skill"){
-		this.actionList.push($dataSkills[this.action(this._actionInputIndex)._item._itemId]);
-	} else {
-		this.actionList.push($dataItems[this.action(this._actionInputIndex)._item._itemId]);
-	}
-	//Counter to get how many "actions" the user has taken
-	var counter = 0;
-	//Goes through each action to accumalate the number of actions they have taken
-	for (var loop = 0; loop != this.actionList.length; loop++){
-		if (this.actionList[loop].actionCost != -1){
-			counter += this.actionList[loop].actionCost;
+	if (this.canMove()){
+		if (this.action(this._actionInputIndex)._item._dataClass == "skill"){
+			this.actionList.push($dataSkills[this.action(this._actionInputIndex)._item._itemId]);
 		} else {
-			//Special out for when the action is one that takes all actions, setting it to 
-			//the max and immedatly breaking the loop
-			counter = this.numActions();
-			break;
+			this.actionList.push($dataItems[this.action(this._actionInputIndex)._item._itemId]);
 		}
+		//Counter to get how many "actions" the user has taken
+		var counter = 0;
+		//Goes through each action to accumalate the number of actions they have taken
+		for (var loop = 0; loop != this.actionList.length; loop++){
+			if (this.actionList[loop].actionCost != -1){
+				counter += this.actionList[loop].actionCost;
+			} else {
+				//Special out for when the action is one that takes all actions, setting it to 
+				//the max and immedatly breaking the loop
+				counter = this.numActions();
+				break;
+			}
+		}
+	} else {
+		counter = this.numActions() + 1;
 	}
 	//Sets the input index to what the counter got, for plugins/things that call it
 	this._actionInputIndex = counter;
@@ -297,7 +308,7 @@ Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
 //Same as above but for items and their quanities
 frsh_actioncost_draw_item = Window_ItemList.prototype.drawItemNumber;
 Window_ItemList.prototype.drawItemNumber = function(item, x, y, width) {
-	if (item.actionCost != 1){
+	if (DataManager.isItem(item) && item.actionCost != 1){
 		width = this.drawActions(item, x, y, width);
 	}
 	frsh_actioncost_draw_item.call(this, item, x, y, width);
