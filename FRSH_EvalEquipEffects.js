@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_EvalEquipEffects
 // FRSH_EvalEquipEffects.js
-// Version: 1.1.0
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -71,6 +71,11 @@ Frashaw.EEEffects = Frashaw.EEEffects || {};
 * Just put whatever you'd place in the states for the respective thing and
 * it shouldn't work.
 * ===Change Log===============================================================
+* Version 1.1.0 (02/16/24) :
+* -Swapped out the calls for the "action" effects (confirm, conclude, etc) to
+* to be Game_Action calls, meaning you can call "this" the same as in Yanfly
+* Buff and States Core
+*
 * Version 1.1.0 (02/16/24) :
 * -Added functionality for Enemies and Actors to have innate evals
 *
@@ -351,13 +356,13 @@ BattleManager.endBattle = function(result) {
 };
 
 //A variant of the eval runner that uses damage values
-Game_Battler.prototype.targetEval = function(target, value, code) {
+Game_Action.prototype.targetEval = function(target, value, code) {
     if (code == '') return value;
-    var attacker = this;
+	var a = this.subject();
+    var attacker = a;
+	var user = a;
     var defender = target;
-    var a = this;
     var b = target;
-    var user = this;
     var s = $gameSwitches._data;
     var v = $gameVariables._data;
     try {
@@ -460,15 +465,15 @@ Game_Action.prototype.offApplyStateEffects = function(target) {
 //Runs the confirm evals
 Game_Action.prototype.onPreDamageStateEffects = function(target, value) {
 	if (this.subject().isActor()){
-		value = this.subject().targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['confirmState']);
-		value = this.subject().targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['confirmState']);
+		value = this.targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['confirmState']);
+		value = this.targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['confirmState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
-			value = this.subject().targetEval(target, value, equip.equipEffectEval['confirmState']);
+			value = this.targetEval(target, value, equip.equipEffectEval['confirmState']);
 		}
 	} else if (this.subject().isEnemy()){
-		value = this.subject().targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['confirmState']);
+		value = this.targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['confirmState']);
 	}
     var states = this.subject().states();
     var length = states.length;
@@ -483,15 +488,15 @@ Game_Action.prototype.onPreDamageStateEffects = function(target, value) {
 //Runs the react evals
 Game_Action.prototype.onReactStateEffects = function(target, value) {
 	if (target.isActor()){
-		value = this.subject().targetEval(target, value, $dataActors[target._actorId].equipEffectEval['reactState']);
-		value = this.subject().targetEval(target, value, $dataClasses[target._classId].equipEffectEval['reactState']);
+		value = this.targetEval(target, value, $dataActors[target._actorId].equipEffectEval['reactState']);
+		value = this.targetEval(target, value, $dataClasses[target._classId].equipEffectEval['reactState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
-			value = this.subject().targetEval(target, value, equip.equipEffectEval['reactState']);
+			value = this.targetEval(target, value, equip.equipEffectEval['reactState']);
 		}
 	} else if (target.isEnemy()){
-		value = this.subject().targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['reactState']);
+		value = this.targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['reactState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -506,15 +511,15 @@ Game_Action.prototype.onReactStateEffects = function(target, value) {
 //Runs the respond evals
 Game_Action.prototype.onRespondStateEffects = function(target, value) {
 	if (target.isActor()){
-		value = this.subject().targetEval(target, value, $dataActors[target._actorId].equipEffectEval['respondState']);
-		value = this.subject().targetEval(target, value, $dataClasses[target._classId].equipEffectEval['respondState']);
+		value = this.targetEval(target, value, $dataActors[target._actorId].equipEffectEval['respondState']);
+		value = this.targetEval(target, value, $dataClasses[target._classId].equipEffectEval['respondState']);
 		for (var loop = 0; loop != target.equips().length; loop++){
 			var equip = target.equips()[loop];
 			if (equip == null) continue;
-			value = this.subject().targetEval(target, value, equip.equipEffectEval['respondState']);
+			value = this.targetEval(target, value, equip.equipEffectEval['respondState']);
 		}
 	} else if (target.isEnemy()){
-		value = this.subject().targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['respondState']);
+		value = this.targetEval(target, value, $dataEnemies[target._enemyId].equipEffectEval['respondState']);
 	}
     var states = target.states();
     var length = states.length;
@@ -529,15 +534,15 @@ Game_Action.prototype.onRespondStateEffects = function(target, value) {
 //Runs the establish evals
 Game_Action.prototype.onPostDamageStateEffects = function(target, value) {
 	if (this.subject().isActor()){
-		value = this.subject().targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['establishState']);
-		value = this.subject().targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['establishState']);
+		value = this.targetEval(target, value, $dataActors[this.subject()._actorId].equipEffectEval['establishState']);
+		value = this.targetEval(target, value, $dataClasses[this.subject()._classId].equipEffectEval['establishState']);
 		for (var loop = 0; loop != this.subject().equips().length; loop++){
 			var equip = this.subject().equips()[loop];
 			if (equip == null) continue;
-			value = this.subject().targetEval(target, value, equip.equipEffectEval['establishState']);
+			value = this.targetEval(target, value, equip.equipEffectEval['establishState']);
 		}
 	} else if (this.subject().isEnemy()){
-		value = this.subject().targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['establishState']);
+		value = this.targetEval(target, value, $dataEnemies[this.subject()._enemyId].equipEffectEval['establishState']);
 	}
     var states = this.subject().states();
     var length = states.length;
