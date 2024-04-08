@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_GoldCosts
 // FRSH_GoldCosts.js
-// Version: 1.0.2
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -48,6 +48,14 @@ Frashaw.GCosts = Frashaw.GCosts || {};
 * @min -1
 * @default -1
 *
+* @param goldIconAlignment
+* @text Gold Icon Alignment
+* @type select
+* @desc Put at which end the gold icon will go on the gold cost. 
+* @option Left
+* @option Right
+* @default Left
+*
 * @param goldAlignment
 * @text Gold Cost Alignment
 * @type select
@@ -90,7 +98,10 @@ Frashaw.GCosts = Frashaw.GCosts || {};
 * can also add in things that mess with the gold cost with gold cost rate,
 * but that is unnesscary. 
 * ===Change Log===============================================================
-* Version 1.0.2 (02/16/34) :
+* Version 1.1.0 (04/08/24) :
+* -Added a method to move icon to either the left or right side of the cost
+*
+* Version 1.0.2 (02/16/24) :
 * -Removed method that caused passive states to double up on calls
 *
 * Version 1.0.1 (12/19/23):
@@ -110,7 +121,8 @@ Frashaw.Param.GoldCostSize = Number(Parameters.goldSize);
 Frashaw.Param.GoldCostColor = Number(Parameters.goldColor);
 Frashaw.Param.GoldCostColorHex = Parameters.goldColorHex;
 Frashaw.Param.GoldCostIcon = Number(Parameters.goldIcon);
-Frashaw.Param.GoldCostAlignment = Parameters.goldAlignment
+Frashaw.Param.GoldIconAlignment = Parameters.goldIconAlignment;
+Frashaw.Param.GoldCostAlignment = Parameters.goldAlignment;
 Frashaw.Param.GoldCostPad = Number(Parameters.goldPadding);
 
 var FrshGCostsLoaded = false;
@@ -291,6 +303,7 @@ Window_SkillList.prototype.drawGoldCost = function(skill, wx, wy, dw) {
 		var text = Frashaw.Param.GoldCostShow;
 	} else {
 		var text = TextManager.currencyUnit;
+		text = text.replaceAll(" ", "");
 	}
 	var cost = this._actor.goldCost(skill).toString();
 	//A special method to add , to each number placement (like: 1,234)
@@ -306,13 +319,24 @@ Window_SkillList.prototype.drawGoldCost = function(skill, wx, wy, dw) {
 		}
 		cost = cost.reverse().join("");
 	}
-	if (Frashaw.Param.GoldCostIcon > -1) {
-		var iw = wx + dw - Window_Base._iconWidth;
-		this.drawIcon(Frashaw.Param.GoldCostIcon, iw, wy + 2);
-		dw -= Window_Base._iconWidth + 2;
+	if (Frashaw.Param.GoldIconAlignment == "Right"){
+		if (Frashaw.Param.GoldCostIcon > -1) {
+			var iw = wx + dw - Window_Base._iconWidth;
+			this.drawIcon(Frashaw.Param.GoldCostIcon, iw, wy + 2);
+			dw -= Window_Base._iconWidth + 2;
+		}
+		this.drawText(cost + text, wx, wy, dw, 'right');
+		var returnWidth = dw - this.textWidth(cost+text) - Frashaw.Param.GoldCostPad;
+	} else if (Frashaw.Param.GoldIconAlignment == "Left") {
+		this.drawText(text, wx, wy, dw, 'right');
+		if (Frashaw.Param.GoldCostIcon > -1) {
+			var iw = wx + dw - Window_Base._iconWidth - this.textWidth(text);
+			this.drawIcon(Frashaw.Param.GoldCostIcon, iw, wy + 2);
+			dw -= Window_Base._iconWidth + 2;
+		}
+		this.drawText(cost, wx-this.textWidth(text), wy, dw, 'right');
+		var returnWidth = dw - this.textWidth(cost+text) - Frashaw.Param.GoldCostPad;
 	}
-	this.drawText(cost + text, wx, wy, dw, 'right');
-	var returnWidth = dw - this.textWidth(cost+text) - Frashaw.Param.GoldCostPad;
 	this.resetTextColor();
 	this.resetFontSettings();
 	return returnWidth;
