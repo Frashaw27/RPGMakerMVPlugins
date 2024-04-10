@@ -62,7 +62,8 @@ Frashaw.WThings = Frashaw.WThings || {};
 Parameters = PluginManager.parameters('FRSH_WeaknessThings');
 Frashaw.Param = Frashaw.Param || {};
 Frashaw.Param.ElementNumber = Parameters.numElements;
-Frashaw.Param.ElementArray = arrayizer(Parameters.elmIconArray);
+Frashaw.Param.ElementArray = arrayizer(Parameters.elmIconArray); 
+Frashaw.Param.ElementArray.splice(0, 0, 0); 
 Frashaw.Param.UknownElementIcon = Number(Parameters.unknownElmIcon);
 Frashaw.Param.ElementYAdust = Number(Parameters.elmIconYAjdust);
 
