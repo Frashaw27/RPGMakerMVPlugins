@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_GoldCosts
 // FRSH_GoldCosts.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -98,6 +98,9 @@ Frashaw.GCosts = Frashaw.GCosts || {};
 * can also add in things that mess with the gold cost with gold cost rate,
 * but that is unnesscary. 
 * ===Change Log===============================================================
+* Version 1.1.1 (04/10/24) :
+* -Fixed a bug that caused the gold cost to go to NaN after an enemy attacks
+*
 * Version 1.1.0 (04/08/24) :
 * -Added a method to move icon to either the left or right side of the cost
 *
@@ -195,6 +198,7 @@ DataManager.processGoldRate = function(group) {
 
 //The function where the gold cost of the skill is calculated
 Game_BattlerBase.prototype.goldCost = function(skill) {
+	if (this.isEnemy()) return 0;
 	var cost = skill.goldCost;
 	var item = skill;
 	var a = this;
