@@ -215,7 +215,7 @@ Frashaw.TurnInd = Frashaw.TurnInd || {};
 * they're need to properly call the images, so make sure to get the numbers
 * exact or you might see the image jsut not showing up.
 * ===Change Log===============================================================
-* Version 1.0 (04/14/23):
+* Version 1.0 (04/14/24):
 * -Finished Base Plugin
 * ============================================================================
 */
