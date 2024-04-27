@@ -49,6 +49,8 @@ Frashaw.WThings = Frashaw.WThings || {};
 * ===How to Use===============================================================
 * !~~This Plugin requires Battle Engine Core from Yanfly to use~~!
 *       !~~~the Display. Make sure you have it before hand~~!
+* !!! ~~This plugin has been depreciated. It still works but won't get~~ !!!
+*               !!! ~~any more support and updates~~ !!!
 * Plugin and Play after setup. Remember to specify the number of elements
 * in your game so that nothing screws up.
 * ===Change Log===============================================================
