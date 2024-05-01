@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TurnIndicator
 // FRSH_TurnIndicator.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -215,6 +215,9 @@ Frashaw.TurnInd = Frashaw.TurnInd || {};
 * they're need to properly call the images, so make sure to get the numbers
 * exact or you might see the image jsut not showing up.
 * ===Change Log===============================================================
+* Version 1.0.1 (05/01/24):
+* -Added an extention so that YEP_InstantCast works properly
+*
 * Version 1.0 (04/14/24):
 * -Finished Base Plugin
 * ============================================================================
@@ -288,6 +291,30 @@ BattleManager.startInput = function() {
     frsh_turnind_turn_readd.call(this);
 	SceneManager._scene._turnWindow.updateTurn();
 	SceneManager._scene._turnWindow.open();
+};
+
+//An extention made for YEP_InstantCast to make it so that when using an instant skill, the battle log properly
+//goes away
+frsh_turnind_instant_stop = Window_BattleLog.prototype.startAction;
+Window_BattleLog.prototype.startAction = function(subject, action, targets) {
+    frsh_turnind_instant_stop.call(this, subject, action, targets);
+	if (Imported.YEP_InstantCast){
+		if (BattleManager._instantCasting != null){
+			SceneManager._scene._turnWindow.close();
+		}
+	}
+};
+
+//An extention made for YEP_InstantCast to make it so that when using an instant skill, the battle log properly
+//comes back
+frsh_turnind_instant_start = Window_BattleLog.prototype.endAction;
+Window_BattleLog.prototype.endAction = function(subject) {
+    frsh_turnind_instant_start.call(this, subject);
+	if (Imported.YEP_InstantCast){
+		if (BattleManager._instantCasting != null){
+			SceneManager._scene._turnWindow.open();
+		}
+	}
 };
 
 //==========================================================================
