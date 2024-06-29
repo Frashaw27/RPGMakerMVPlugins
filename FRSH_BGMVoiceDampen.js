@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -30,6 +30,9 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * Use the plugin commands to turn this plugin off if needed for a scene or 
 * something.
 * ===Change Log=================================================================
+* Version 1.0.1 (06/29/24):
+* -Fixed Bug that was the result of me calling a variable that didn't exist
+*
 * Version 1.0.0 (06/26/24):
 * -Finished Base Plugin
 * ==============================================================================
@@ -39,7 +42,7 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 //Variable setting
 var volumeAddInterval = undefined;
 var volume = undefined;
-var enabled = true;
+var enable = true;
 
 //A function that is to be called on to return the volume to it's original value
 function volumeAdd(){
