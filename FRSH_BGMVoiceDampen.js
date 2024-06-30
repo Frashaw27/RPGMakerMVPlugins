@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -30,6 +30,13 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * Use the plugin commands to turn this plugin off if needed for a scene or 
 * something.
 * ===Change Log=================================================================
+* Version 1.0.2 (06/29/24):
+* -Fixed Bug where the plugin would glitch out if you used a there wasn't a BGM
+* playing
+* -Turned an == to an >= to catch weird bugs that would cause the BGM to 
+* infinitely grow in colume
+* -Reduced the BGM volume to 1/4th of the original volume instead of 1/2th
+*
 * Version 1.0.1 (06/29/24):
 * -Fixed Bug that was the result of me calling a variable that didn't exist
 *
@@ -65,7 +72,7 @@ function volumeAdd(){
 		//Plays the volume adjusted audio
 		AudioManager.playBgm(info);
 		//Checks to see if the current volume is the same as the stored one
-		if (info.volume == volume){
+		if (info.volume >= volume){
 			//Makes the stored one null as to set it again
 			volume = undefined;
 			//Both stops this function from running
@@ -92,14 +99,14 @@ AudioManager.playEventSe = function(se) {
         this.updateSeParameters(buffer, se);
         buffer.play(false);
         this._seBuffers.push(buffer);
-		//Checks to see if the plugin is currently enabled
-		if (enable){
+		//Checks to see if the plugin is currently enabled and if the current BGM isn't actually nothing
+		if (enable && AudioManager.saveBgm().name != ""){
 			//Gets the info of the currently playing BGM to play the correct one
 			var info = AudioManager.saveBgm();
 			//If the volume variable isn't defined, it defines it as the current volume of the BGM
 			if (volume == null) volume = info.volume;
 			//Cuts the current volume in half
-			info.volume /= 2;
+			info.volume /= 4;
 			//Plays the modified BGM
 			AudioManager.playBgm(info);
 			//Sets up the Volume Increasing function to be triggered
