@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.8
+// Version: 1.2.9
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,9 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.9 (07/20/24):
+* -Changed the way summons level up so that a lag spike doesn't occur
+*
 * Version 1.2.8 (03/14/2024):
 * -Fixed Summons not going away when killed via Damage Over Time
 * -made Summons Not be able to "free act" sometimes if their summoner is 
@@ -553,18 +556,15 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 			//Checks to see if the summon has a specified set level, is going to copy the 
 			//summoner's level, or is going to be the default summon level 
 			if (this.item().summon[loop][1] > 0){
-				while (actor._level != this.item().summon[loop][1]){
-					actor.levelUp();
-				}
+				if (actor._level != this.item().summon[loop][1]) actor._level = this.item().summon[loop][1];
 			} else if (this.item().summon[loop][1] == -1){
-				while (actor._level != Frashaw.Param.defaultSummLevel){
-					actor.levelUp();
-				}
+				if (actor._level != Frashaw.Param.defaultSummLevel) actor._level = Frashaw.Param.defaultSummLevel;
 			} else {
-				while (actor._level != this.subject()._level){
-					actor.levelUp();
-				}
+				if (actor._level != this.subject()._level) actor._level = this.subject()._level;
 			}
+			actor.currentClass().learnings.forEach(function(i){
+				if (!actor.hasSkill(i.skillId) && actor._level >= i.level) actor.learnSkill(i.skillId);
+			});
 			//A simple thing to make sure that the leveled up actor doesn't have missing Hp/Mp
 			actor.setHp(actor.mhp);
 			actor.setMp(actor.mmp);
