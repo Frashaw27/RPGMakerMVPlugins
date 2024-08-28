@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.0.2
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -13,8 +13,30 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 /*:
 * @plugindesc Upon playing a Sound Effect from an Event, BGMs quiets while it plays.
 * @author Frashaw27
-* 
-* @help 
+*
+* @param useAnySoundEffect
+* @text Trigger On Any SE?
+* @type boolean
+* @on Any Sound Effect
+* @off Only Voices
+* @desc Select if you want to have all sound effects trigger the dampen or if just the voices that you list.
+* @default false
+*
+* @param voiceDampenNameList
+* @text Voice Name List
+* @type text[]
+* @desc Fill out with the various names that the voiceline in your game will use to reduce the BGM volume for. Ex: "Eric -".
+*
+* @param volumeMult
+* @text Reduced Volume Multiplier
+* @type number
+* @decimals 2
+* @min 0
+* @max 1
+* @desc Put the number you want the number to be multiplied by when a voice line is said.
+* @default 0.25
+*
+* @help
 * ===Plugin Commands============================================================
 * ! - Case Sensitive
 * dampenEnable enable - Turn on the plugin.
@@ -24,12 +46,19 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * to make them be heard over the BGM that is playing, so I made this plugin so
 * that I don't have the audio peak as much just in order to be heard.
 * ===How to Use=================================================================
-* Plug and play. Sound Effects will be played at half volume. Note that it only 
-* works on Sound Effects played with event commands as all over times it 
-* would've made battles sound terrible from how often the song would be reduced. 
-* Use the plugin commands to turn this plugin off if needed for a scene or 
+* Plug and play. Sound Effects will be played at quarter volume/whatever you set 
+* it to. Note that it only works on Sound Effects played with event commands as 
+* all over times it would've made battles sound terrible from how often the song 
+* would be reduced. Use the plugin commands to turn this plugin off if needed 
+* for a scene or 
 * something.
 * ===Change Log=================================================================
+* Version 1.1.0 (08/28/2024):
+* -Fixed a bug where several SE's being played in succession would rapidly 
+* decrease the BGM volume.
+* -Added options to make the dampen to only trigger when SEs only have a certain
+* specification about them and the multiplier for the volume reduction
+*
 * Version 1.0.2 (06/29/24):
 * -Fixed Bug where the plugin would glitch out if you used a there wasn't a BGM
 * playing
@@ -46,10 +75,23 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 */
 //==============================================================================
 (function() {
+//Sets up the information got from the plugin parameters
+Parameters = PluginManager.parameters('FRSH_BGMVoiceDampen');
+Frashaw.Param = Frashaw.Param || {};
+Frashaw.Param.DampenAnySound = Parameters.useAnySoundEffect == "true";
+if (Parameters.voiceDampenNameList != ''){
+	Frashaw.Param.VoiceNameList = JSON.parse(Parameters.voiceDampenNameList);
+} else {
+	Frashaw.Param.VoiceNameList = [];
+}
+Frashaw.Param.VoiceMultiplier = Number(Parameters.volumeMult);
+
 //Variable setting
 var volumeAddInterval = undefined;
 var volume = undefined;
 var enable = true;
+var reduced = false;
+var check = false;
 
 //A function that is to be called on to return the volume to it's original value
 function volumeAdd(){
@@ -66,6 +108,7 @@ function volumeAdd(){
 			volume = undefined;
 			clearInterval(volumeAddInterval);
 			volumeAddInterval = undefined;
+			reduced = false;
 		}
 		//Adds 1 to the current BGM's volume to increase it
 		info.volume = info.volume + 1;
@@ -78,6 +121,7 @@ function volumeAdd(){
 			//Both stops this function from running
 			clearInterval(volumeAddInterval);
 			volumeAddInterval = undefined;
+			reduced = false;
 		}
 	}
 }
@@ -101,16 +145,35 @@ AudioManager.playEventSe = function(se) {
         this._seBuffers.push(buffer);
 		//Checks to see if the plugin is currently enabled and if the current BGM isn't actually nothing
 		if (enable && AudioManager.saveBgm().name != ""){
-			//Gets the info of the currently playing BGM to play the correct one
-			var info = AudioManager.saveBgm();
-			//If the volume variable isn't defined, it defines it as the current volume of the BGM
-			if (volume == null) volume = info.volume;
-			//Cuts the current volume in half
-			info.volume /= 4;
-			//Plays the modified BGM
-			AudioManager.playBgm(info);
-			//Sets up the Volume Increasing function to be triggered
-			if (volumeAddInterval == null) volumeAddInterval = setInterval(volumeAdd,25);
+			check = false;
+			//Checks to see if the developer want to have any SE dampen the BGM
+			if (!Frashaw.Param.DapenAnySound){
+				//Goes through the list of deined voice names and checks then 
+				//against the current BGM being played
+				Frashaw.Param.VoiceNameList.forEach(function(i){
+					if (se.name.contains(i)) check = true;
+				})
+			} else {
+				check = true;
+			}
+			//If check is true, run the dampen
+			if (check){
+				//Gets the info of the currently playing BGM to play the correct one
+				var info = AudioManager.saveBgm();
+				//If the volume variable isn't defined, it defines it as the current volume of the BGM
+				if (volume == null) volume = info.volume;
+				//A fail safe to stop a sound effect from further reducting the volume when
+				//it already is
+				if (!reduced){
+					reduced = true;
+					//Cuts the current volume by the multiplier
+					info.volume *= Frashaw.Param.VoiceMultiplier;
+				}
+				//Plays the modified BGM
+				AudioManager.playBgm(info);
+				//Sets up the Volume Increasing function to be triggered
+				if (volumeAddInterval == null) volumeAddInterval = setInterval(volumeAdd,25);
+			}
 		}
 	}
 };
