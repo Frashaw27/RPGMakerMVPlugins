@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.3.0
+// Version: 1.3.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -103,6 +103,9 @@ nnameColorEval>
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log=================================================================
+* Version 1.3.1 (8/30/24):
+* -Fixed a bug with writing nick names
+*
 * Version 1.3.0 (06/22/24):
 * -Rewrote a majority of the code
 * -Fixed several bugs concerning evals
@@ -538,7 +541,7 @@ Window_Base.prototype.obtainEscapeParamHex = function(textState) {
     }
 };
 
-//Changes the Name for Skills, Items, Weapons, and Armors in the selection (doesn't show icons normally because of the nature of these things (it's not really needed here)).
+//Changes the Name for Items in the selection
 Window_Base.prototype.drawItemName = function(item, x, y, width) {
 	width = width || 312;
     if (item) {
@@ -711,10 +714,10 @@ Window_Base.prototype.drawActorNickname = function(actor, x, y, width) {
 		this.contents.outlineColor = normalOutlineColor;
 	}
 	if (icon != 0){
-		this.drawTextSpecial(actor._nickname, x+32, y, width, 'left', outline);
+		this.drawText(actor._nickname, x+32, y, width, 'left');
 		this.drawIcon(icon, x, y);
 	} else {
-		this.drawTextSpecial(actor._nickname, x, y, width, 'left', outline);
+		this.drawText(actor._nickname, x, y, width, 'left');
 	}
 	this.contents.outlineColor = normalOutlineColor;
 	this.resetTextColor();
