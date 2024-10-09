@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.1.0
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -53,6 +53,12 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * for a scene or 
 * something.
 * ===Change Log=================================================================
+* Version 1.2.0 (10/09/2024):
+* -Change the way that the music reduction is triggered, now it specifically
+* waiting until the end of the specified sound effects to activate.
+* -Removed the ability to stack audios to create a horrid freedback loop
+* over ever increasing music.
+*
 * Version 1.1.0 (08/28/2024):
 * -Fixed a bug where several SE's being played in succession would rapidly 
 * decrease the BGM volume.
@@ -90,39 +96,29 @@ Frashaw.Param.VoiceMultiplier = Number(Parameters.volumeMult);
 var volumeAddInterval = undefined;
 var volume = undefined;
 var enable = true;
-var reduced = false;
 var check = false;
 
 //A function that is to be called on to return the volume to it's original value
 function volumeAdd(){
-	//Gets what sound effects are currently playing to determine if there are any playing
-	AudioManager._seBuffers = AudioManager._seBuffers.filter(function(audio) {
-        return audio.isPlaying();
-    });
-	//Runs if the amount playing are 0
-	if (AudioManager._seBuffers.length == 0){
-		//Gets current BGM info to properly return the correct BGM beign played
-		var info = AudioManager.saveBgm();
-		//Backup for the one below it, in case shinnanigans happen
-		if (info.volume == volume){
-			volume = undefined;
-			clearInterval(volumeAddInterval);
-			volumeAddInterval = undefined;
-			reduced = false;
-		}
-		//Adds 1 to the current BGM's volume to increase it
-		info.volume = info.volume + 1;
-		//Plays the volume adjusted audio
-		AudioManager.playBgm(info);
-		//Checks to see if the current volume is the same as the stored one
-		if (info.volume >= volume){
-			//Makes the stored one null as to set it again
-			volume = undefined;
-			//Both stops this function from running
-			clearInterval(volumeAddInterval);
-			volumeAddInterval = undefined;
-			reduced = false;
-		}
+	//Gets current BGM info to properly return the correct BGM beign played
+	var info = AudioManager.saveBgm();
+	//Backup for the one below it, in case shinnanigans happen
+	if (info.volume == volume || volume == null){
+		volume = undefined;
+		clearInterval(volumeAddInterval);
+		volumeAddInterval = undefined;
+	}
+	//Adds 1 to the current BGM's volume to increase it
+	info.volume = info.volume + 1;
+	//Plays the volume adjusted audio
+	AudioManager.playBgm(info);
+	//Checks to see if the current volume is the same as the stored one
+	if (info.volume >= volume){
+		//Makes the stored one null as to set it again
+		volume = undefined;
+		//Both stops this function from running
+		clearInterval(volumeAddInterval);
+		volumeAddInterval = undefined;
 	}
 }
 
@@ -158,24 +154,37 @@ AudioManager.playEventSe = function(se) {
 			}
 			//If check is true, run the dampen
 			if (check){
+				//Makes the loop that increases the volume not run again
+				clearInterval(volumeAddInterval);
+				volumeAddInterval = undefined;
+				//Removes the current flag of music reincrease check
+				AudioManager._seBuffers[AudioManager._seBuffers.length-1].removeStopListener();
 				//Gets the info of the currently playing BGM to play the correct one
 				var info = AudioManager.saveBgm();
 				//If the volume variable isn't defined, it defines it as the current volume of the BGM
-				if (volume == null) volume = info.volume;
+				if (volume == undefined) volume = info.volume;
 				//A fail safe to stop a sound effect from further reducting the volume when
 				//it already is
-				if (!reduced){
-					reduced = true;
+				if (volume != null && info.volume >= volume*Frashaw.Param.VoiceMultiplier){
 					//Cuts the current volume by the multiplier
 					info.volume *= Frashaw.Param.VoiceMultiplier;
 				}
 				//Plays the modified BGM
 				AudioManager.playBgm(info);
 				//Sets up the Volume Increasing function to be triggered
-				if (volumeAddInterval == null) volumeAddInterval = setInterval(volumeAdd,25);
+				//if (volumeAddInterval == null) volumeAddInterval = setInterval(volumeAdd,25);
+				AudioManager._seBuffers[AudioManager._seBuffers.length-1].addStopListener(
+					() => {if (volumeAddInterval == undefined) volumeAddInterval = setInterval(volumeAdd,25)}
+				);
+				
 			}
 		}
 	}
+};
+
+//A special function made to remove the checks of the 
+WebAudio.prototype.removeStopListener = function() {
+    this._stopListeners.splice(this._stopListeners.indexOf("() => {if (volumeAddInterval == undefined) volumeAddInterval = setInterval(volumeAdd,25)}"), 1);
 };
 
 //An extention to add the plugin commands
