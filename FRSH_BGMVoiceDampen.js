@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -53,6 +53,9 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * for a scene or 
 * something.
 * ===Change Log=================================================================
+* Version 1.2.0 (10/23/2024):
+* -Added a check so that the plugin doesn't run if the BGM volume isn't 0
+*
 * Version 1.2.0 (10/09/2024):
 * -Change the way that the music reduction is triggered, now it specifically
 * waiting until the end of the specified sound effects to activate.
@@ -140,7 +143,7 @@ AudioManager.playEventSe = function(se) {
         buffer.play(false);
         this._seBuffers.push(buffer);
 		//Checks to see if the plugin is currently enabled and if the current BGM isn't actually nothing
-		if (enable && AudioManager.saveBgm().name != ""){
+		if (enable && AudioManager.saveBgm().name != "" && AudioManager.saveBgm().volumme != 0){
 			check = false;
 			//Checks to see if the developer want to have any SE dampen the BGM
 			if (!Frashaw.Param.DapenAnySound){
