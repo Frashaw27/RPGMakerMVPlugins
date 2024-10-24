@@ -143,7 +143,7 @@ AudioManager.playEventSe = function(se) {
         buffer.play(false);
         this._seBuffers.push(buffer);
 		//Checks to see if the plugin is currently enabled and if the current BGM isn't actually nothing
-		if (enable && AudioManager.saveBgm().name != "" && AudioManager.saveBgm().volumme != 0){
+		if (enable && AudioManager.saveBgm().name != "" && AudioManager.saveBgm().volume != 0){
 			check = false;
 			//Checks to see if the developer want to have any SE dampen the BGM
 			if (!Frashaw.Param.DapenAnySound){
