@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.2.1
+// Version: 1.3.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -53,7 +53,11 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * for a scene or 
 * something.
 * ===Change Log=================================================================
-* Version 1.2.0 (10/23/2024):
+* Version 1.3.0 (10/23/2024):
+* -Added an alt way for the basic "Save BGM" command to not save the reduced 
+* volume version of a track
+*
+* Version 1.2.1 (10/23/2024):
 * -Added a check so that the plugin doesn't run if the BGM volume isn't 0
 *
 * Version 1.2.0 (10/09/2024):
@@ -124,6 +128,31 @@ function volumeAdd(){
 		volumeAddInterval = undefined;
 	}
 }
+
+//An extention that checks to see if the current audio is reduced by a voice, if so then the
+//"Save BGM" feature still correctly gets the correct volume
+frsh_vdampen_save_bgm_correctly = Game_Interpreter.prototype.command243;
+Game_Interpreter.prototype.command243 = function() {
+    $gameSystem._savedBgm = AudioManager.saveBgmField()
+	return true;
+};
+
+//A variation of the Save BGM that is used with the command "SaveBGM" so as to not save Reduced
+//volume tracks
+AudioManager.saveBgmField = function() {
+    if (this._currentBgm) {
+        var bgm = this._currentBgm;
+        return {
+            name: bgm.name,
+            volume: (volumeAddInterval == null) ? bgm.volume : volume,
+            pitch: bgm.pitch,
+            pan: bgm.pan,
+            pos: this._bgmBuffer ? this._bgmBuffer.seek() : 0
+        };
+    } else {
+        return this.makeEmptyAudioObject();
+    }
+};
 
 //An overwrite that makes the sound effect called from events be the one that triggers the
 //the specific audio triggers
