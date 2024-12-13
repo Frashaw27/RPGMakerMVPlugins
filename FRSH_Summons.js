@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Summons
 // FRSH_Summons.js
-// Version: 1.2.9
+// Version: 1.2.10
 //=============================================================================
 
 var Imported = Imported || {};
@@ -157,6 +157,10 @@ Frashaw.Summons = Frashaw.Summons || {};
 * You can use <Summon Leave Eval> for a simular effect but for when the 
 * summon leaves via turn duration or dies.
 * ===Change Log===============================================================
+* Version 1.2.10 (12/13/24):
+* -Added failsafes to make sure that when using Force Action to summon an 
+* ally, the summon can always move afterwards
+*
 * Version 1.2.9 (07/20/24):
 * -Changed the way summons level up so that a lag spike doesn't occur
 *
@@ -713,8 +717,9 @@ Game_BattlerBase.prototype.die = function() {
 Game_Party.prototype.addSummon = function(actorId) {
     if (!this._actors.contains(actorId)) {
         summonList.push($gameActors.actor(actorId));
-		this.noMove = true;
+	if ($gameActors.actor(actorId).isDead()) $gameActors.actor(actorId).revive();
     }
+	if (!BattleManager.isForcedTurn()) this.noMove = true;
 };
 
 //A function that removes summons from the summon list and the summoner's summon list
