@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.2.0
+// Version: 1.3.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -209,12 +209,18 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
 * ===Change Log===============================================================
-* Version 1.2.0 (02/16/34) :
+* Version 1.3.0 (12/18/24) :
+* -Changed the way overheal is checked as too not be intrusive to other 
+* plugins 
+* -The calls to check an actors Mp and Tp costs via scripts should now work
+* properly
+*
+* Version 1.2.0 (02/16/24) :
 * -Removed method that caused passive states to double up on calls
 * -Added calls to make specifically skills or items give overheal
 * -Fixed bug that made overheals not interact properly
 *
-* Version 1.1.0 (01/31/23):
+* Version 1.1.0 (01/31/24):
 * -Fixed bug where mixed overheal and not would not pay the proper costs
 * -Added feature to allow individual targets to get overhealed
 *
@@ -236,7 +242,6 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 //Setup
 //==============================================================================
 //General Variables
-var costNull = false;
 var FrshOverhealLoaded = false;
 
 //Sets up the information got from the plugin parameters
@@ -729,70 +734,48 @@ Window_Base.prototype.tpColor = function(actor) {
 	}
 };
 
-//Just here so that the cost shows up properly
-frsh_overheal_base_cost_draw = Window_SkillList.prototype.drawSkillCost;
-Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
-	costNull = false;
-    return frsh_overheal_base_cost_draw.call(this, skill, x, y, width);
-};
-
 //==============================================================================
 //Actually Making Overheal Work
 //==============================================================================
 //Add a psuedo overwrite that makes the skill mp and tp costs take into account of overheal
 frsh_overheal_base_cost_restrict = Game_BattlerBase.prototype.canPaySkillCost;
 Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
-	costNull = false;
-	if ((this._tp + this.tpOverheal) < this.skillTpCost(skill)) return false;
-	if ((this._mp + this.mpOverheal) < this.skillMpCost(skill)) return false;
-	costNull = true;
-    return frsh_overheal_base_cost_restrict.call(this, skill);
+	this._mp += this.mpOverheal;
+	this._tp += this.tpOverheal;
+    bool = frsh_overheal_base_cost_restrict.call(this, skill);
+	this._mp -= this.mpOverheal;
+	this._tp -= this.tpOverheal;
+	return bool;
 };
 
 //Add a psuedo overwrite that makes the skill mp and tp costs take from overheal before using the actual stats
 frsh_overheal_base_cost_alter = Game_BattlerBase.prototype.paySkillCost;
 Game_BattlerBase.prototype.paySkillCost = function(skill) {
-	costNull = false;
-    if (this.mpOverheal > 0){
-		var value = this.skillMpCost(skill); 
-		if (this.mpOverheal > value){
-			this.mpOverheal -= this.skillMpCost(skill);
-		} else {
-			value -= this.mpOverheal;
-			this.mpOverheal = 0;
-			this.setMp(this.mp-value);
-		}
-	} else {
-		this._mp -= this.skillMpCost(skill);
-	}
-    if (this.tpOverheal > 0){
-		var value = this.skillTpCost(skill); 
-		if (this.tpOverheal > value){
-			this.tpOverheal -= this.skillTpCost(skill);
-		} else {
-			value -= this.tpOverheal;
-			this.tpOverheal = 0;
-			this.setTp(this.tp - value);
-		}
-	} else {
-		this._tp -= this.skillTpCost(skill);
-	}
-	costNull = true;
+	var mp = this._mp;
+	var omp = this.mpOverheal;
+	var tp = this._tp;
+	var otp = this.tpOverheal;
 	frsh_overheal_base_cost_alter.call(this, skill);
-};
-
-//An overwrite that makes the cost be 0 when a global variable is on, so that the plugin is scalable with others that effects costs 
-frsh_overheal_mp_cost_null = Game_BattlerBase.prototype.skillMpCost;
-Game_BattlerBase.prototype.skillMpCost = function(skill) {
-    if (costNull) return 0;
-	return frsh_overheal_mp_cost_null.call(this, skill);
-};
-
-//An overwrite that makes the cost be 0 when a global variable is on, so that the plugin is scalable with others that effects costs 
-frsh_overheal_tp_cost_null = Game_BattlerBase.prototype.skillTpCost;
-Game_BattlerBase.prototype.skillTpCost = function(skill) {
-	if (costNull) return 0;
-    return frsh_overheal_tp_cost_null.call(this, skill);
+	if (this._mp < mp && omp > 0){
+		var diff = mp - this._mp;
+		if (omp >= diff){
+			this._mp += diff;
+			this.mpOverheal -= diff;
+		} else {
+			this._mp += omp;
+			this.mpOverheal -= omp;
+		}
+	}
+	if (this._tp < tp && otp > 0){
+		var diff = tp - this._tp;
+		if (otp >= diff){
+			this._tp += diff;
+			this.tpOverheal -= diff;
+		} else {
+			this._tp += omp;
+			this.tpOverheal -= omp;
+		}
+	}
 };
 
 //An extentision to make this work with Yanfly Skill Core
