@@ -33,6 +33,9 @@ Frashaw.Bturns = Frashaw.Bturns || {};
 * (target).addDebuffSpecific(buffId, turns, user) - Calls a specific user for
 * thier bonuses on the debuff.
 * ===Introduction=============================================================
+* !!! ~~This plugin has been depreciated. It still works but won't get~~ !!!
+*               !!! ~~any more support and updates~~ !!!
+*			  !!! ~~Please use FRSH_BuffPlus instead~~ !!!
 * Base RPG Maker has Buffs and Debuffs, however there's no way to influence 
 * how many turns an actor/enemy can get beyond the set amount. This plugin
 * aims to fix that by adding the ability to have actors/classes/equipment/
