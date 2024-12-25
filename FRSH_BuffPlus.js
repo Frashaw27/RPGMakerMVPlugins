@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffPlus
 // FRSH_BuffPlus.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -97,9 +97,9 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * @text Buff Type
 * @type select
 * @option General All-In-One Formula
-* @option General Stat-Based Formulas
-* @option Actor/Enemy All-In-One Formulas
-* @option Actor/Enemy Stat-Based Formulas
+* @option General Stat-Based Formula
+* @option Actor/Enemy All-In-One Formula
+* @option Actor/Enemy Stat-Based Formula
 * @option General All-In-One Increments
 * @option General Stat-Based Increments
 * @option Actor/Enemy All-In-One Increments
@@ -1095,6 +1095,11 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * appropriate tags in. Does not conflict with Yanfly's BuffStatesCore due
 * to the method it uses to apply the buff modifiers.
 * ===Change Log=================================================================
+* Version 1.0.1 (12/25/2024):
+* -Fixed a typo causing different options to not work
+* -Added something to make sure parameters are properly initalized without 
+* crashes
+*
 * Version 1.0.0 (12/24/2024):
 * -Finished Base Plugin
 * ==============================================================================
@@ -1105,6 +1110,7 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 //==============================================================================
 //Gets the parameters from the plugin-in settings
 Parameters = PluginManager.parameters('FRSH_BuffPlus');
+Frashaw.Param = Frashaw.Param || {};
 Frashaw.Param.BuffType = Parameters.buffFormulaType;
 Frashaw.Param.DoubleInfinite = Parameters.doubleBuffInf == "true";
 Frashaw.Param.DebuffSplit = Parameters.debuffSplit == "true";
@@ -1635,7 +1641,7 @@ if (Frashaw.Param.BuffType == "General All-In-One Formula"){
 			eval(i + "[0] = Parameters.genLukDebuffFormula");
 		});
 	}
-} else if (Frashaw.Param.BuffType == "Actor/Enemy All-In-One Formulas"){
+} else if (Frashaw.Param.BuffType == "Actor/Enemy All-In-One Formula"){
 	if (!Frashaw.Param.DebuffSplit){
 		//Goes through each buff and debuff of each actor and applies the generic formula to each
 		["maxHpBuffActor", "maxMpBuffActor", "atkBuffActor", "defBuffActor", "matBuffActor", "mdfBuffActor", "agiBuffActor", "lukBuffActor", "maxHpDebuffActor", "maxMpDebuffActor", "atkDebuffActor", "defDebuffActor", "matDebuffActor", "mdfDebuffActor", "agiDebuffActor", "lukDebuffActor"].forEach(function (i){
