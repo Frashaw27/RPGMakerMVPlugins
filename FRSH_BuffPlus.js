@@ -1095,7 +1095,7 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * appropriate tags in. Does not conflict with Yanfly's BuffStatesCore due
 * to the method it uses to apply the buff modifiers.
 * ===Change Log=================================================================
-* Version 1.0 (01/09/23):
+* Version 1.0.0 (12/24/2024):
 * -Finished Base Plugin
 * ==============================================================================
 */
