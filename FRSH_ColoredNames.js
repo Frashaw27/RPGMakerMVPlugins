@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.3.1
+// Version: 1.4.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -75,6 +75,10 @@ nnameColorEval>
 * hexadecial code for what the name outline color of the thing would be.
 * getNameIcon(put the thing to get name icon of): Returns the numerical value
 * the icon for what the icon of the thing would be.
+* [actor, enemy].colorName() - Calls the specifically colored name instead of
+* the normal name() which has been given conditions to avoid rash errors.
+* Please report places where they should but aren't, but other plugin
+* functionality is on a case by case basis.
 * ===Introduction===============================================================
 * While working on my games, I noticed that I liked having items colored names 
 * because it looks it neat. However, I ran into the problem that this also made 
@@ -103,6 +107,11 @@ nnameColorEval>
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log=================================================================
+* Version 1.4.0 (12/25/24):
+* -Fixed a bug where certain windows would show messed up versions of the 
+* Actor and Enemy names
+* -Added the colorName() function to actors and enemies 
+*
 * Version 1.3.1 (8/30/24):
 * -Fixed a bug with writing nick names
 *
@@ -327,7 +336,7 @@ function iconEvaluate(code){
 	} catch (e) {
 		//Displays if an error happens
 		//Displays where the error occured
-		var text = this._name + " Outline Color Evaluate Error!!!!!"
+		var text = this._name + " Icon Evaluate Error!!!!!"
 		console.log(text);
 		//Displays code to the console log
 		console.log(code || 'No Code');
@@ -563,6 +572,25 @@ Window_Base.prototype.drawItemName = function(item, x, y, width) {
 //An overwrite to add all the icon and color bells and whistles to the actor's name
 Game_Actor.prototype.name = function() {
 	var name = "";
+	if (SceneManager._scene._logWindow == null) return this._name;
+	//Checks to see if the actor has an icon, if so draw it
+	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
+	//Sets the outline color of the actor's name
+	name += "\\ohx[" + getNameOutlineColor(this) + "]";
+	//Sets the name's text color
+	name += "\\hx[" + getNameColor(this) + "]";
+	//Adds the actor's name
+	name += this._name;
+	//Resets the outline and text color
+	name += "\\c[0]";
+	name += "\\ohx[" + normalOutlineColor + "]";
+	return name;
+};
+
+//An explicit copy when someone wants to call the colored name outside of the battlelog
+Game_Actor.prototype.colorName = function() {
+	var name = "";
+	if (SceneManager._scene._logWindow == null) return this._name;
 	//Checks to see if the actor has an icon, if so draw it
 	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
 	//Sets the outline color of the actor's name
@@ -633,7 +661,6 @@ Window_ShopStatus.prototype.drawActorEquipInfo = function(x, y, actor) {
 	var enabled = actor.canEquip(this._item);
 	this.changePaintOpacity(enabled);
 	this.resetTextColor();
-	this.changeTextColor(getNameColor(actor));
 	this.changeTextColor(getNameColor(actor));
 	if (getNameIcon(actor) != undefined){
 		this.drawText(actor._name, x+32, y, 168, 'left');
@@ -726,7 +753,7 @@ Window_Base.prototype.drawActorNickname = function(actor, x, y, width) {
 //For the level up text boxes
 Game_Actor.prototype.displayLevelUp = function(newSkills) {
 	//Gets text that shows that "x leveled up!" or what ever you put
-	var text = TextManager.levelUp.format(this.name(), TextManager.level, this._level);
+	var text = TextManager.levelUp.format(this.colorName(), TextManager.level, this._level);
 	//Sets up a new next box specifically for the user
 	$gameMessage.newPage();
 	//Adds the text
@@ -748,20 +775,12 @@ Game_Actor.prototype.displayLevelUp = function(newSkills) {
 //Enemies
 //============================================================================
 //An overwrite that adds the various icon and colors to the enemy name
-Game_Enemy.prototype.originalName = function() {
+Game_Enemy.prototype.name = function() {
 	var name = "";
 	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
 	name += "\\ohx[" + getNameOutlineColor(this) + "]";
 	name += "\\hx[" + getNameColor(this) + "]";
-	name += this.enemy().name;
-	name += "\\c[0]";
-	name += "\\ohx[" + normalOutlineColor + "]";
-	return name;
-};
-
-//Extends the Enemy name to the plural name letters when there is multiple of one
-Game_Enemy.prototype.name = function() {
-	var name = this.originalName();
+	name += this.originalName();	
 	//Checks if the enemy is a multiple of itself
 	if (this._plural){
 		//All the color bells and whistles
@@ -772,6 +791,34 @@ Game_Enemy.prototype.name = function() {
 		name += "\\c[0]";
 		name += "\\ohx[" + normalOutlineColor + "]";
 	}
+	name += "\\c[0]";
+	name += "\\ohx[" + normalOutlineColor + "]";
+	return name;
+};
+
+//An explicit copy for when you want to call the colored name specifically
+Game_Enemy.prototype.colorName = function() {
+	var name = "";
+	//A call to not have the visual select of Yanfly Battle Engine Core show corrupted names
+	if (Imported.YEP_BattleEngineCore){
+		if (SceneManager._scene._enemyWindow != null && (BattleManager._phase == "input" || BattleManager._phase == "turn") && Yanfly.Param.BECEnemySelect) return this.originalName();
+	}
+	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
+	name += "\\ohx[" + getNameOutlineColor(this) + "]";
+	name += "\\hx[" + getNameColor(this) + "]";
+	name += this.originalName();	
+	//Checks if the enemy is a multiple of itself
+	if (this._plural){
+		//All the color bells and whistles
+		name += "\\ohx[" + getNameOutlineColor(this) + "]";
+		name += "\\hx[" + getNameColor(this) + "]";
+		//Adds the letter that denotes which specific enemy dupe it is
+		name += this._letter;
+		name += "\\c[0]";
+		name += "\\ohx[" + normalOutlineColor + "]";
+	}
+	name += "\\c[0]";
+	name += "\\ohx[" + normalOutlineColor + "]";
 	return name;
 };
 
