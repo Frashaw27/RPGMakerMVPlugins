@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.4.0
+// Version: 1.4.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -107,6 +107,10 @@ nnameColorEval>
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log=================================================================
+* Version 1.4.1 (01/02/25):
+* -Fixed an oversight where colorName would still apply the logic added to the
+* normal one
+*
 * Version 1.4.0 (12/25/24):
 * -Fixed a bug where certain windows would show messed up versions of the 
 * Actor and Enemy names
@@ -590,7 +594,6 @@ Game_Actor.prototype.name = function() {
 //An explicit copy when someone wants to call the colored name outside of the battlelog
 Game_Actor.prototype.colorName = function() {
 	var name = "";
-	if (SceneManager._scene._logWindow == null) return this._name;
 	//Checks to see if the actor has an icon, if so draw it
 	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
 	//Sets the outline color of the actor's name
@@ -799,10 +802,6 @@ Game_Enemy.prototype.name = function() {
 //An explicit copy for when you want to call the colored name specifically
 Game_Enemy.prototype.colorName = function() {
 	var name = "";
-	//A call to not have the visual select of Yanfly Battle Engine Core show corrupted names
-	if (Imported.YEP_BattleEngineCore){
-		if (SceneManager._scene._enemyWindow != null && (BattleManager._phase == "input" || BattleManager._phase == "turn") && Yanfly.Param.BECEnemySelect) return this.originalName();
-	}
 	if (getNameIcon(this) != undefined) name += "\\i[" + getNameIcon(this) + "]";
 	name += "\\ohx[" + getNameOutlineColor(this) + "]";
 	name += "\\hx[" + getNameColor(this) + "]";
