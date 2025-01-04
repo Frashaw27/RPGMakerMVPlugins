@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ColoredNames
 // FRSH_ColoredNames.js
-// Version: 1.4.1
+// Version: 1.4.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -107,6 +107,9 @@ nnameColorEval>
 * color selection (stolen for ease of use). And finally, you can use \ohx[] to
 * determine the outline color with hexadecimal code like with \hx.
 * ===Change Log=================================================================
+* Version 1.4.2 (01/03/25):
+* -Added compatibility for FRSH_RandomTerms
+*
 * Version 1.4.1 (01/02/25):
 * -Fixed an oversight where colorName would still apply the logic added to the
 * normal one
@@ -838,7 +841,9 @@ Window_BattleEnemy.prototype.drawItem = function(index) {
 	this.contents.outlineColor = normalOutlineColor;
 	this.resetTextColor();
 };
-	
+
+//A check that checks to make sure it doesn't overwrite with FRSH_RandomTerms
+if (!Imported.RTerms){	
 //Overwrites the name displayed for a dropped item to be colored
 BattleManager.displayDropItems = function() {
 	//Gets the items that were collected
@@ -859,6 +864,7 @@ BattleManager.displayDropItems = function() {
 		});
 	}
 };
+}
 })();
 //=============================================================================
 // End of File
