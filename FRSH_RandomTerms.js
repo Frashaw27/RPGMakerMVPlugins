@@ -84,7 +84,7 @@ Frashaw.RTerms = Frashaw.RTerms || {};
 * "100 Experience" + term. For the defeat and escape messages, they'll do
 * the same but for the party name. Ex: "Bonner and friends" + escape line.
 * ===Change Log=================================================================
-* Version 1.0.0 (12/24/2024):
+* Version 1.0.0 (01/03/2025):
 * -Finished Base Plugin
 * ==============================================================================
 */
