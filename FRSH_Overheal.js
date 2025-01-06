@@ -812,7 +812,6 @@ if (Imported.YEP_SkillCore){
 Game_Battler.prototype.gainHp = function(value) {
     this._result.hpDamage = -value;
     this._result.hpAffected = true;
-	console.log(BattleManager._phase);
 	if (value < 0 && this.overheal > 0){
 		if (this.overheal > Math.abs(value)){
 			this.overheal += value;
