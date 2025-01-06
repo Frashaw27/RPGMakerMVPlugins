@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.3.0
+// Version: 1.3.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -209,6 +209,10 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
 * ===Change Log===============================================================
+* Version 1.3.1 (01/06/24):
+* -Added a fix to make sure the regen effects don't give overheal unless the
+* the recipient specifically has all healing of that type be overheal
+*
 * Version 1.3.0 (12/18/24) :
 * -Changed the way overheal is checked as too not be intrusive to other 
 * plugins 
@@ -808,6 +812,7 @@ if (Imported.YEP_SkillCore){
 Game_Battler.prototype.gainHp = function(value) {
     this._result.hpDamage = -value;
     this._result.hpAffected = true;
+	console.log(BattleManager._phase);
 	if (value < 0 && this.overheal > 0){
 		if (this.overheal > Math.abs(value)){
 			this.overheal += value;
@@ -816,13 +821,15 @@ Game_Battler.prototype.gainHp = function(value) {
 			this.overheal = 0;
 			this.setHp(this.hp + value);
 		}
-	} else if (value > 0 && (this.hp + value) > this.mhp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || this.overhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
+	
+	} else if (value > 0 && (this.hp + value) > this.mhp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._phase != "turnEnd" || this.overhealSelf) && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || this.overhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.mhp - this.hp;
 		this.setHp(this.mhp);
 		value *= this.overhealMult;
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.overheal += value;
+		this._result.hpOverhealShow += value;
 	} else {
 		this.setHp(this.hp + value);
 	}
@@ -840,13 +847,14 @@ Game_Battler.prototype.gainMp = function(value) {
 			this.mpOverheal = 0;
 			this.setMp(this.mp + value);
 		}
-	} else if (value > 0 && (this.mp + value) > this.mmp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || this.mpOverhealSelf  || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
+	} else if (value > 0 && (this.mp + value) > this.mmp && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._phase != "turnEnd" || this.mpOverhealSelf) && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || this.mpOverhealSelf  || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.mmp - this.mp;
 		this.setMp(this.mmp);
 		value *= this.overhealMult;
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.mpOverheal += value;
+		this._result.mpOverhealShow += value;
 	} else {
 		this.setMp(this.mp + value);
 	}
@@ -864,13 +872,14 @@ Game_Battler.prototype.gainTp = function(value) {
 			this.tpOverheal = 0;
 			this.setTp(this.mp + value);
 		}
-	} else if (value > 0 && (this.tp + value) > this.maxTp() && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || this.tpOverhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
+	} else if (value > 0 && (this.tp + value) > this.maxTp() && ($gameParty.inBattle() && BattleManager._action != null && (BattleManager._phase != "turnEnd" || this.tpOverhealSelf) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || this.tpOverhealSelf || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem())))){
 		value -= this.maxTp() - this.tp;
 		this.setTp(this.maxTp());
 		value *= this.overhealMult;
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.tpOverheal += value;
+		this._result.tpOverhealShow = value;
 	} else {
 		this.setTp(this.tp + value);
 	}
