@@ -953,6 +953,15 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
 		return text;
 	}
 };
+
+//A function to reset the overheal values that get show on the hud
+frsh_overheal_value_sets = Game_ActionResult.prototype.clear;
+Game_ActionResult.prototype.clear = function() {
+	frsh_overheal_value_sets.call(this);
+	this.hpOverhealShow = 0;
+    this.mpOverhealShow = 0;
+    this.tpOverhealShow = 0;
+};
 })();
 //=============================================================================
 // End of File
