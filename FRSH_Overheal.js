@@ -212,6 +212,7 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * Version 1.3.1 (01/06/24):
 * -Added a fix to make sure the regen effects don't give overheal unless the
 * the recipient specifically has all healing of that type be overheal
+* -Updated the way that the overheal message is displayed
 *
 * Version 1.3.0 (12/18/24) :
 * -Changed the way overheal is checked as too not be intrusive to other 
@@ -904,15 +905,11 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
 	var text = frsh_overheal_hp_text.call(this, target);
 	var damage = target.result().hpDamage * -1;
 	//Checks to see if overheal is applicable and if the party is in battle
-	if (damage > 0 && damage > (target.mhp-target.hp) && (BattleManager._action.item().overheal || BattleManager._action.subject().overhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
+	if (target.result().hpOverhealShow > 0) {
 		//adds the normal text
 		this.push('addText', text);
 		//Removes the actual heal to get the amount of overheal
-		damage -= (target.mhp-target.hp);
-		//Times it by the multiplier for accurate results
-		damage *= target.overhealMult;
-		damage *= BattleManager._action.item().overhealMult;
-		damage = Math.round(damage);
+		damage = target.result().hpOverhealShow;
 		//Gets the appropriate text
 		var text2 = Frashaw.Param.OverhealMessage;
 		//Replaces the respective symbols for name and overheal respectively
@@ -930,12 +927,9 @@ frsh_overheal_mp_text = Window_BattleLog.prototype.makeMpDamageText;
 Window_BattleLog.prototype.makeMpDamageText = function(target) {
 	var text = frsh_overheal_mp_text.call(this, target);
 	var damage = target.result().mpDamage * -1;
-	if (damage > 0 && damage > (target.mmp-target.mp) && (BattleManager._action.item().overheal || BattleManager._action.subject().mpOverhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
+	if (this._result.mpOverhealShow > 0) {
 		this.push('addText', text);
-		damage -= (target.mmp-target.mp);
-		damage *= target.overhealMult;
-		damage *= BattleManager._action.item().overhealMult;
-		damage = Math.round(damage);
+		damage = this._result.mpOverhealShow
 		var text2 = Frashaw.Param.MpOverhealMessage;
 		text2 = text2.replace('1%', target.name()).replace('2%', damage);
 		return text2;
@@ -949,12 +943,9 @@ frsh_overheal_tp_text = Window_BattleLog.prototype.makeTpDamageText;
 Window_BattleLog.prototype.makeTpDamageText = function(target) {
 	var text = frsh_overheal_tp_text.call(this, target);
 	var damage = target.result().tpDamage * -1;
-	if (damage > 0 && damage > (target.maxTp()-target.tp) && (BattleManager._action.item().overheal || BattleManager._action.subject().tpOverhealUse || (BattleManager._action.subject().overhealSkills && BattleManager._action.isSkill()) || (BattleManager._action.subject().overhealItems && BattleManager._action.isItem()))) {
+	if (this._result.tpOverhealShow > 0) {
 		this.push('addText', text);
-		damage -= (target.maxTp()-target.tp);
-		damage *= target.overhealMult;
-		damage *= BattleManager._action.item().overhealMult;
-		damage = Math.round(damage);
+		damage = this._result.tpOverhealShow;
 		var text2 = Frashaw.Param.TpOverhealMessage;
 		text2 = text2.replace('1%', target.name()).replace('2%', damage);
 		return text2;
