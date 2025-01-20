@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffPlus
 // FRSH_BuffPlus.js
-// Version: 1.0.1
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1095,6 +1095,10 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * appropriate tags in. Does not conflict with Yanfly's BuffStatesCore due
 * to the method it uses to apply the buff modifiers.
 * ===Change Log=================================================================
+* Version 1.1.0 (01/20/2025):
+* -Fixed the way the buff formulas are calculated so that the modifier doesn'Tacks
+* accidently reduce the stats
+*
 * Version 1.0.1 (12/25/2024):
 * -Fixed a typo causing different options to not work
 * -Added something to make sure parameters are properly initalized without 
@@ -1890,23 +1894,39 @@ Game_Actor.prototype.paramBuffRate = function(paramId) {
 			//If the formula type is 0, it gets the 0 element of the array, otherwise it 
 			//takes the element based on the level
 			//Also multiplies the buff by the recipients buff strength
-			modifier = eval(maxHpBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.mhpBuffStrength;
+			mod = eval(maxHpBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mhpBuffStrength;
 		} else if (paramId == 1){
-			modifier = eval(maxMpBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.mmpBuffStrength;
+			mod = eval(maxMpBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mmpBuffStrength;
 		} else if (paramId == 2){
-			modifier = eval(atkBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.atkBuffStrength;
+			mod = eval(atkBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.atkBuffStrength;
 		} else if (paramId == 3){
-			modifier = eval(defBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.defBuffStrength;
+			mod = eval(defBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.defBuffStrength;
 		} else if (paramId == 4){
-			modifier = eval(matBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.matBuffStrength;
+			mod = eval(matBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.matBuffStrength;
 		} else if (paramId == 5){
-			modifier = eval(mdfBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.mdfBuffStrength;
+			mod = eval(mdfBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mdfBuffStrength;
 		} else if (paramId == 6){
-			modifier = eval(agiBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.agiBuffStrength;
+			mod = eval(agiBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.agiBuffStrength;
 		} else if (paramId == 7){
-			modifier = eval(lukBuffActor[((formulaType == 0) ? 0 : buffs)]) * this.lukBuffStrength;
+			mod = eval(lukBuffActor[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.lukBuffStrength;
 		}
-		return modifier * this.buffStrength;
+		return 1 + (modifier * this.buffStrength);
 	} else if (buffs < 0){
 		if (paramId == 0){
 			modifier = eval(maxHpDebuffActor[((formulaType == 0) ? 0 : -buffs)]) * this.mhpDebuffStrength;
@@ -1937,23 +1957,39 @@ Game_Enemy.prototype.paramBuffRate = function(paramId) {
 	if (buffs > 0){
 		modifier = 0;
 		if (paramId == 0){
-			modifier = eval(maxHpBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.mhpBuffStrength;
+			mod = eval(maxHpBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mhpBuffStrength;
 		} else if (paramId == 1){
-			modifier = eval(maxMpBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.mmpBuffStrength;
+			mod = eval(maxMpBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mmpBuffStrength;
 		} else if (paramId == 2){
-			modifier = eval(atkBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.atkBuffStrength;
+			mod = eval(atkBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.atkBuffStrength;
 		} else if (paramId == 3){
-			modifier = eval(defBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.defBuffStrength;
+			mod = eval(defBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.defBuffStrength;
 		} else if (paramId == 4){
-			modifier = eval(matBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.matBuffStrength;
+			mod = eval(matBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.matBuffStrength;
 		} else if (paramId == 5){
-			modifier = eval(mdfBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.mdfBuffStrength;
+			mod = eval(mdfBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.mdfBuffStrength;
 		} else if (paramId == 6){
-			modifier = eval(agiBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.agiBuffStrength;
+			mod = eval(agiBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.agiBuffStrength;
 		} else if (paramId == 7){
-			modifier = eval(lukBuffEnemy[((formulaType == 0) ? 0 : buffs)]) * this.lukBuffStrength;
+			mod = eval(lukBuffEnemy[((formulaType == 0) ? 0 : buffs)]);
+			mod = (mod > 1) ? mod - 1 : mod;
+			modifier = mod * this.lukBuffStrength;
 		}
-		return modifier * this.buffStrength;;
+		return 1 + (modifier * this.buffStrength);
 	} else if (buffs < 0){
 		if (paramId == 0){
 			modifier = eval(maxHpDebuffEnemy[((formulaType == 0) ? 0 : -buffs)]) * this.mhpDebuffStrength;
