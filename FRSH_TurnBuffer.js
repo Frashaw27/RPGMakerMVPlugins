@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TurnBuffer
 // FRSH_TurnBuffer.js
-// Version: 1.0.2
+// Version: 1.0.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -43,6 +43,11 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * !!! Action Removed Stats work normally with on !!!
 * Plug and Play, very simple. 
 * ===Change Log===============================================================
+* Version 1.0.3 (02/10/25) :
+* -Fixed a bug that had End of the turn Forced Actions to have the buffer 
+* turn, resulting in them actually having two as the turn processing is over 
+* post use
+*
 * Version 1.0.2 (07/07/23) :
 * -Added notetags to allow the option for certain states to ignore/always
 * the buffer addition, ignoring the rules put in place 
@@ -95,7 +100,7 @@ Game_Battler.prototype.addBuff = function(paramId, turns, user) {
 	//Checks to see if the index already includes this
 	if (!this.buffBufferIndex.contains(paramId)){
 		//Checks to see if the turns are correct or the option is false, getting put into the buffer if yes
-		if (turns > 1 || Frashaw.Param.BuffOne == false) this.buffBufferIndex.push(paramId);
+		if ((turns > 1 || Frashaw.Param.BuffOne == false) && !(BattleManager.isForcedTurn() && BattleManager._phase == "turnEnd")) this.buffBufferIndex.push(paramId);
 	}
 };
 
@@ -104,7 +109,7 @@ frsh_addDebuff_tBuffer = Game_Battler.prototype.addDebuff;
 Game_Battler.prototype.addDebuff = function(paramId, turns, user) {
 	frsh_addDebuff_tBuffer.call(this, paramId, turns, user);
 	if (!this.buffBufferIndex.contains(paramId)){
-		if (turns > 1 || Frashaw.Param.BuffOne == false) this.buffBufferIndex.push(paramId);
+		if ((turns > 1 || Frashaw.Param.BuffOne == false) && !(BattleManager.isForcedTurn() && BattleManager._phase == "turnEnd")) this.buffBufferIndex.push(paramId);
 	}
 };
 
