@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.3.0
+// Version: 1.4.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -36,6 +36,15 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * @desc Put the number you want the number to be multiplied by when a voice line is said.
 * @default 0.25
 *
+* @param volumeStep
+* @text volume Increase Step
+* @type number
+* @decimals 2
+* @min 0
+* @max 1
+* @desc Put the number you want the number of the number to increase by to return to normal volume.
+* @default 0.05
+*
 * @help
 * ===Plugin Commands============================================================
 * ! - Case Sensitive
@@ -50,9 +59,15 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * it to. Note that it only works on Sound Effects played with event commands as 
 * all over times it would've made battles sound terrible from how often the song 
 * would be reduced. Use the plugin commands to turn this plugin off if needed 
-* for a scene or 
-* something.
+* for a scene or something.
 * ===Change Log=================================================================
+* Version 1.4.0 (03/20/2025):
+* -Rewrote the plugin with a different method of lowering volume that didn't
+* come with all the issues of the previous iterations by aaudioModlying a modifier
+* on bgm output.
+* -Global sound dampening via plugin parameters now works properly
+* -Fixed a bug where fadeout bgm didn't work
+*
 * Version 1.3.0 (10/23/2024):
 * -Added an alt way for the basic "Save BGM" command to not save the reduced 
 * volume version of a track
@@ -98,60 +113,50 @@ if (Parameters.voiceDampenNameList != ''){
 	Frashaw.Param.VoiceNameList = [];
 }
 Frashaw.Param.VoiceMultiplier = Number(Parameters.volumeMult);
+Frashaw.Param.VoiceStep = Number(Parameters.volumeStep);
 
 //Variable setting
 var volumeAddInterval = undefined;
 var volume = undefined;
 var enable = true;
 var check = false;
+var audioMod = 1;
+var fadingCheck = false;
+var bufferCheck = false;
 
-//A function that is to be called on to return the volume to it's original value
-function volumeAdd(){
-	//Gets current BGM info to properly return the correct BGM beign played
-	var info = AudioManager.saveBgm();
-	//Backup for the one below it, in case shinnanigans happen
-	if (info.volume == volume || volume == null){
-		volume = undefined;
-		clearInterval(volumeAddInterval);
-		volumeAddInterval = undefined;
-	}
-	//Adds 1 to the current BGM's volume to increase it
-	info.volume = info.volume + 1;
-	//Plays the volume adjusted audio
-	AudioManager.playBgm(info);
-	//Checks to see if the current volume is the same as the stored one
-	if (info.volume >= volume){
-		//Makes the stored one null as to set it again
-		volume = undefined;
-		//Both stops this function from running
-		clearInterval(volumeAddInterval);
-		volumeAddInterval = undefined;
+//An always running programming occuring every 1/4th of a second dedicated
+//for automatically adjusting the volume on the BGM
+function passiveVolumeControl(){
+	//Checks that makes sure it doesn't run when it shouldn't
+	if (!fadingCheck && !bufferCheck){
+		//Increases the audio volume for steps
+		if (audioMod < 1) audioMod += Frashaw.Param.VoiceStep;
+		//Failsafe incase it somehow exceeds 1
+		if (audioMod > 1) audioMod = 1;
+		//Updates the BGM parameters to account the modifier
+		AudioManager.updateBgmParameters(AudioManager.saveBgm())
 	}
 }
 
-//An extention that checks to see if the current audio is reduced by a voice, if so then the
-//"Save BGM" feature still correctly gets the correct volume
-frsh_vdampen_save_bgm_correctly = Game_Interpreter.prototype.command243;
-Game_Interpreter.prototype.command243 = function() {
-    $gameSystem._savedBgm = AudioManager.saveBgmField()
-	return true;
+//Sets up the passiveVolumeControl to always be running
+setInterval(passiveVolumeControl, 250);
+
+//An overwrite that makes the fadeout not just immediatly lose sound
+AudioManager.fadeOutBgm = function(duration) {
+    if (this._bgmBuffer && this._currentBgm) {
+		fadingCheck = true;
+        this._bgmBuffer.fadeOut(duration);
+		setTimeout(function(){
+			audioMod = 1;
+			fadingCheck = false;
+		}, duration * 1000);
+        this._currentBgm = null;
+    }
 };
 
-//A variation of the Save BGM that is used with the command "SaveBGM" so as to not save Reduced
-//volume tracks
-AudioManager.saveBgmField = function() {
-    if (this._currentBgm) {
-        var bgm = this._currentBgm;
-        return {
-            name: bgm.name,
-            volume: (volumeAddInterval == null) ? bgm.volume : volume,
-            pitch: bgm.pitch,
-            pan: bgm.pan,
-            pos: this._bgmBuffer ? this._bgmBuffer.seek() : 0
-        };
-    } else {
-        return this.makeEmptyAudioObject();
-    }
+//An overwright made so that the bgm volume could be altered by the audioMod
+AudioManager.updateBgmParameters = function(bgm) {
+    this.updateBufferParameters(this._bgmBuffer, this._bgmVolume*audioMod, bgm);
 };
 
 //An overwrite that makes the sound effect called from events be the one that triggers the
@@ -170,53 +175,36 @@ AudioManager.playEventSe = function(se) {
         var buffer = this.createBuffer('se', se.name);
         this.updateSeParameters(buffer, se);
         buffer.play(false);
-        this._seBuffers.push(buffer);
-		//Checks to see if the plugin is currently enabled and if the current BGM isn't actually nothing
+		this._seBuffers.push(buffer);
+		//A varity of checks to make sure the plugin doesn't interact with things it
+		//isn't suppose to
 		if (enable && AudioManager.saveBgm().name != "" && AudioManager.saveBgm().volume != 0){
 			check = false;
 			//Checks to see if the developer want to have any SE dampen the BGM
-			if (!Frashaw.Param.DapenAnySound){
+			if (!Frashaw.Param.DampenAnySound){
 				//Goes through the list of deined voice names and checks then 
 				//against the current BGM being played
 				Frashaw.Param.VoiceNameList.forEach(function(i){
 					if (se.name.contains(i)) check = true;
-				})
+				});
 			} else {
 				check = true;
 			}
-			//If check is true, run the dampen
 			if (check){
-				//Makes the loop that increases the volume not run again
-				clearInterval(volumeAddInterval);
-				volumeAddInterval = undefined;
-				//Removes the current flag of music reincrease check
-				AudioManager._seBuffers[AudioManager._seBuffers.length-1].removeStopListener();
-				//Gets the info of the currently playing BGM to play the correct one
-				var info = AudioManager.saveBgm();
-				//If the volume variable isn't defined, it defines it as the current volume of the BGM
-				if (volume == undefined) volume = info.volume;
-				//A fail safe to stop a sound effect from further reducting the volume when
-				//it already is
-				if (volume != null && info.volume >= volume*Frashaw.Param.VoiceMultiplier){
-					//Cuts the current volume by the multiplier
-					info.volume *= Frashaw.Param.VoiceMultiplier;
-				}
-				//Plays the modified BGM
-				AudioManager.playBgm(info);
-				//Sets up the Volume Increasing function to be triggered
-				//if (volumeAddInterval == null) volumeAddInterval = setInterval(volumeAdd,25);
+				//Sets the audio modifier to the one in the plugin parameters
+				audioMod = Frashaw.Param.VoiceMultiplier;
+				AudioManager.updateBgmParameters(AudioManager.saveBgm());
+				//Makes the sure the audomatic adjustment don't run while the sound
+				//effect plays
+				if (!bufferCheck) bufferCheck = true;
 				AudioManager._seBuffers[AudioManager._seBuffers.length-1].addStopListener(
-					() => {if (volumeAddInterval == undefined) volumeAddInterval = setInterval(volumeAdd,25)}
+					//Runs when the sound effect ends, allowing the auto sound adjust to
+					//work again
+					() => { bufferCheck = false }
 				);
-				
 			}
 		}
 	}
-};
-
-//A special function made to remove the checks of the 
-WebAudio.prototype.removeStopListener = function() {
-    this._stopListeners.splice(this._stopListeners.indexOf("() => {if (volumeAddInterval == undefined) volumeAddInterval = setInterval(volumeAdd,25)}"), 1);
 };
 
 //An extention to add the plugin commands
