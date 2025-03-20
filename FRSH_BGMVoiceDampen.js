@@ -63,8 +63,8 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * ===Change Log=================================================================
 * Version 1.4.0 (03/20/2025):
 * -Rewrote the plugin with a different method of lowering volume that didn't
-* come with all the issues of the previous iterations by aaudioModlying a modifier
-* on bgm output.
+* come with all the issues of the previous iterations via a volume 
+* modifier on bgm output.
 * -Global sound dampening via plugin parameters now works properly
 * -Fixed a bug where fadeout bgm didn't work
 *
