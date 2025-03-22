@@ -57,7 +57,10 @@ Frashaw.SChanges = Frashaw.SChanges || {};
 * Mostly Plug and Play. There isn't much to do unless you add the respective
 * notetags once the settings are set up.
 * ===Change Log===============================================================
-* Version 1.0 (03/22/2025):
+* Version 1.0.1 (03/22/2025):
+* -Fixed a bug where the program wouldn't see the base item speed
+*
+* Version 1.0.0 (03/22/2025):
 * -Finished Base Plugin
 * ============================================================================
 */
@@ -169,7 +172,7 @@ Game_Action.prototype.speed = function() {
 		speed += this.subject().skillSpeedBoost;
 	}
 	if (this.isItem()){
-		speed += BaseItemSpeedBoost;
+		speed += Frashaw.Param.BaseItemSpeedBoost;
 		if (Frashaw.Param.ActionSpeedGlobal) speed += this.subject().attackSpeed();
 		speed += this.subject().itemSpeedBoost;
 	}
