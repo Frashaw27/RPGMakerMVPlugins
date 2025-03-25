@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.4.0
+// Version: 1.4.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -61,6 +61,9 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * would be reduced. Use the plugin commands to turn this plugin off if needed 
 * for a scene or something.
 * ===Change Log=================================================================
+* Version 1.4.1 (03/25/2025):
+* -Added the same things to Fading in BGMs as fading them out
+*
 * Version 1.4.0 (03/20/2025):
 * -Rewrote the plugin with a different method of lowering volume that didn't
 * come with all the issues of the previous iterations via a volume 
@@ -151,6 +154,18 @@ AudioManager.fadeOutBgm = function(duration) {
 			fadingCheck = false;
 		}, duration * 1000);
         this._currentBgm = null;
+    }
+};
+
+//Same as above, but for audio fade ins
+AudioManager.fadeInBgm = function(duration) {
+    if (this._bgmBuffer && this._currentBgm) {
+		fadingCheck = true;
+		this._bgmBuffer.fadeIn(duration);
+		setTimeout(function(){
+			audioMod = 1;
+			fadingCheck = false;
+		}, duration * 1000);   
     }
 };
 
