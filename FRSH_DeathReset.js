@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DeathReset
 // FRSH_DeathReset.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -76,24 +76,27 @@ Frashaw.DResets = Frashaw.DResets || {};
 * @max 255
 * 
 * @help 
-* ===Plugin Commands==========================================================
+* ===Plugin Commands============================================================
 * ! - Case Sensitive
 * deathReset enable - Allows player to reset a fight during battle.
 * deathReset false - Denies player to reset a fight during battle.
 * deathAutoTitle enable - Player goes back to the title automatically upon 
 * death.
 * deathAutoTitle false - Player does the normal flow of events upon death.
-* ===Introduction=============================================================
+* ===Introduction===============================================================
 * SRD once made a plugin for this exact purpose, however I found his plugin 
 * to be too obtrusive and screwed with a few things in my game. So I decided
 * to make my own version all centered around resetting the battle after death.
-* ===How to Use===============================================================
+* ===How to Use=================================================================
 * Plug and play once set up. You can use the plugin commands for more 
 * specific control if you want a specific boss to have or what have you. 
-* ===Change Log===============================================================
+* ===Change Log=================================================================
+* Version 1.0.1 (03/26/2025):
+* -Fixed a bug where you could spam the commands on the death menu
+*
 * Version 1.0.0 (05/06/24):
 * -Finished Base Plugin
-* ============================================================================
+* ==============================================================================
 */
 //============================================================================
 (function() {
@@ -113,6 +116,7 @@ Frashaw.Param.DeathWindowOpacity = Number(Parameters.deathWindowOpacity);
 //Variable setting
 var inBattle = false;
 var deaded = false;
+var spamStop = false;
 
 //Sets the inital setting of death reseting and death skipping
 frsh_deathreset_reset_set = Game_Party.prototype.initialize;
@@ -226,6 +230,8 @@ Window_DeathChoices.prototype.drawItem = function(index) {
 Window_DeathChoices.prototype.processOk = function() {
 	//Gets the symbol associated with the choice 
     var symbol = this._list[this.index()].symbol;
+	//Stops the player from spamming the button
+	if (spamStop) return;
 	//Runs the the reset option for death
 	if (symbol == "deathReset"){
 		//Plays the bgm the battle started with
@@ -244,9 +250,13 @@ Window_DeathChoices.prototype.processOk = function() {
 		SceneManager.goto(Scene_Battle);
 		//Turns off the variable that stops the death screen from looping
 		deaded = false;
+		spamStop = true;
+		setTimeout(function(){ spamStop = false; }, 1000);
 	} else if (symbol == "deathLoad"){
 		//Opens up the load menu
 		SceneManager.push(Scene_Load);
+		spamStop = true;
+		setTimeout(function(){ spamStop = false; }, 1000);
 	} else if (symbol == "deathTitle"){
 		//Returns the player to the title screen when selected
 		location.reload();
