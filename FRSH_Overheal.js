@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_Overheal
 // FRSH_Overheal.js
-// Version: 1.3.1
+// Version: 1.4.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -22,6 +22,17 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * @desc Put the number you want to be the default multiplier for all overheals.
 * @default 0.5
 * @min 0
+*
+* @param baseOHCap
+* @text Base Overheal Cap
+* @type number
+* @decimals 2
+* @desc Select the option that you want to cap out Overheals by default. 
+* @type select
+* @option Current Stat Max
+* @option Half Stat Max
+* @option No Cap
+* @default Current Stat Max
 *
 * @param
 * @default
@@ -156,39 +167,37 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * @min -1
 *
 * @help
-* ==Notetags==================================================================
-* <either of these|syntaxesWorks>
+* ==Notetags====================================================================
+* Spaces and Capitalization doesn't matter
+* | mean either can be used
 * Skills/Items:
-* <overheal> - Causes the desisred skill/item to always overheal the Target 
+* <Overheal> - Causes the desisred skill/item to always overheal the Target 
 * regardless of what stat it is and the user's personal overheal permissions.
-* <overhealMult: x> - Give a multiplier to whatever overheal the skill/item
-* produces.
+* <Overheal Mult|Multiplier: x> - Give a multiplier to whatever overheal the 
+* skill/item produces.
+*
 * Actors, Enemies, Classes, Weapons, Armors, and States:
-* <overheal|Overheal Use|overhealUse> - Causes all skills and items to
-* give the target hp overheal. 
-* <mpOverheal|MP Overheal|MP Overheal Use|mpOverhealUse> - Causes all skills 
-* and items to give the target mp overheal. 
-* <tpOverheal|TP Overheal|TP Overheal Use|tpOverhealUse> - Causes all skills 
-* and items to give the target tp overheal (doesn't include tp gained from
-* damage and/or using skill Tp Gain).
-* <Overheal Self|overhealSelf> - Triggers all Hp heals to proc overheals.
-* <Mp Overheal Self|mpOverhealSelf> - Triggers all Mp heals to proc 
-* overheals.
-* <Tp Overheal Self|tpOverhealSelf> - Triggers all Tp heals to proc 
-* overheals.
-* <Overheal Skills|overhealSkills> - All Skills from the "holder" gives
-* overheal.
-* <Overheal Items|overhealItems> - All Items from the "holder" gives
-* overehal. Doesn't work on the enemies, for obvious reasons.
-* <overhealMult: x> - Same as the skill version, but for the actual entities.
-* ===Introduction=============================================================
+* <Overheal Use> - Causes all skills and items to give the target Hp overheal. 
+* <MP Overheal Use> - Causes all skills and items to give the target Mp 
+* overheal. 
+* <TP Overheal Use> - Causes all skills and items to give the target Tp 
+* overheal (doesn't include Tp gained from damage and/or using skill Tp Gain).
+* <Overheal Self> - Triggers all Hp heals to proc overheals.
+* <Mp Overheal Self> - Triggers all Mp heals to proc overheals.
+* <Tp Overheal Self> - Triggers all Tp heals to proc overheals.
+* <Overheal Skills> - All Skills from the "holder" gives overheal.
+* <Overheal Items> - All Items from the "holder" gives overheal. Doesn't work 
+* on the enemies, for obvious reasons.
+* <Overheal Mult|Multiplier: x> - Same as the skill version, but for the 
+* actual entities.
+* ===Introduction===============================================================
 * When I was a wee child, I was obsessed with  the game Persona Q. In that 
 * game, you have the ability to have additional max hp and sp based on your
 * equipped persona. Because of this, I began to invision how that would work.
 * And I got it working with Yanfly Buff and States core. While that worked 
 * fine, it didn't feel particularlly intergrated with the game, so this 
 * plugin was made to smooth that process out significantly.
-* ===How to Use===============================================================
+* ===How to Use=================================================================
 * !-Make sure to put this beneath any Battlelog Plugins & Yanfly Skill Core~!
 * !~Also has incompatability with Mog Battle Hud, what you can do is 
 * comment it out in the plugin itself, the method gainHp~!
@@ -208,7 +217,12 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 * What you need to do:
 * You assign the various conditions with the plugin options and then you 
 * assign the tags to the applicable things. That's about it.
-* ===Change Log===============================================================
+* ===Change Log=================================================================
+* Version 1.4.0 (06/01/2025):
+* -Changed up notetags calls to not require spaces along side other 
+* optimizations
+* -Added an adjustable cap to allow people to not have players overstep
+*
 * Version 1.3.1 (01/06/24):
 * -Added a fix to make sure the regen effects don't give overheal unless the
 * the recipient specifically has all healing of that type be overheal
@@ -239,9 +253,9 @@ Frashaw.Overheal = Frashaw.Overheal || {};
 *
 * Version 1.0 (10/31/23) :
 * -Finished Base Plugin
-* ============================================================================
+* ==============================================================================
 */
-//============================================================================
+//==============================================================================
 (function() {
 //==============================================================================
 //Setup
@@ -253,6 +267,7 @@ var FrshOverhealLoaded = false;
 Parameters = PluginManager.parameters('FRSH_Overheal');
 Frashaw.Param = Frashaw.Param || {};
 Frashaw.Param.BaseOverhealMultiplier = Number(Parameters.baseOHMult);
+Frashaw.Param.BaseOverhealCap = Parameters.baseOHCap;
 Frashaw.Param.OverhealMessage = Parameters.ohMsg;
 Frashaw.Param.HpColor1 = Number(Parameters.hpColor1);
 Frashaw.Param.HpCustom1 = Parameters.hpColor1Over;
@@ -313,7 +328,7 @@ DataManager.isDatabaseLoaded = function() {
 DataManager.processOverhealNotetagsA = function(group) {
 	//Loads up various strings to check for
 	var note = /<(OVERHEAL)>/i;
-	var note2 = /<(?:OVERHEAL MULTIPLIER|overhealMult):[ ](.*)>/i;
+	var note2 = /<Overheal[ ]?(?:Mult|Multiplier):[ ]?\d+.?\d*>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
@@ -335,15 +350,17 @@ DataManager.processOverhealNotetagsA = function(group) {
 //Does the processing for everything else
 DataManager.processOverhealNotetagsB = function(group) {
 	//Loads up various strings to check for
-	var note1 = /<(OVERHEAL|OVERHEAL USE|overhealUse)>/i;
-	var note2 = /<(?:MP OVERHEAL USE|mpOverhealUse|MP OVERHEAL|mpOverheal)>/i;
-	var note3 = /<(?:TP OVERHEAL USE|tpOverhealUse|TP OVERHEAL|tpOverheal)>/i;
-	var note1a = /<(OVERHEAL SELF|overhealSelf)>/i;
-	var note2a = /<(?:MP OVERHEAL SELF|mpOverhealSelf)>/i;
-	var note3a = /<(?:TP OVERHEAL SELF|tpOverhealSelf)>/i;
-	var note4a = /<(?:OVERHEAL ITEMS|overhealItems)>/i;
-	var note4b = /<(?:OVERHEAL SKILLS|overhealSkills)>/i;
-	var noteA = /<(?:OVERHEAL MULTIPLIER|overMult):[ ](.*)>/i;
+	var note1 = /<(Overheal[ ]?(?:Use)?)>/i;
+	var note2 = /<(?:MP[ ]?Overheal[ ]?(?:Use)?)>/i;
+	var note3 = /<(?:TP[ ]?Overheal[ ]?(?:Use)?)>/i;
+	var note1a = /<(Overheal[ ]?Self)>/i;
+	var note2a = /<(?:MP[ ]?Overheal[ ]?Self)>/i;
+	var note3a = /<(?:TP[ ]?Overheal[ ]?Self)>/i;
+	var note4a = /<(?:Overheal[ ]?Items)>/i;
+	var note4b = /<(?:Overheal[ ]?Skills)>/i;
+	var noteA = /<Overheal[ ]?(?:Mult|Multiplier):[ ]?\d+.?\d*>/i;
+	var noteB = /<Overheal[ ]?Cap[ ]?Add:[ ]?\d+>/i;
+	var noteC = /<Overheal[ ]?Cap[ ]?(?:Mult|Multiplier):[ ]?\d+.?\d*>/i;
 	for (var n = 1; n < group.length; n++) {
 		var obj = group[n];
 		var notedata = obj.note.split(/[\r\n]+/);
@@ -357,6 +374,8 @@ DataManager.processOverhealNotetagsB = function(group) {
 		obj.overhealItems = false;
 		obj.overhealSkills = false;
 		obj.overhealMult = 1;
+		obj.overhealCapAdd = 0;
+		obj.overhealCapMult = 1;
 
 		for (var i = 0; i < notedata.length; i++) {
 			var line = notedata[i];
@@ -378,6 +397,10 @@ DataManager.processOverhealNotetagsB = function(group) {
 				obj.overhealSkills = true;
 			} else if (line.match(noteA)){
 				obj.overhealMult = Number(RegExp.$1);
+			} else if (line.match(noteB)){
+				obj.overhealCapAdd = Number(RegExp.$1);
+			} else if (line.match(noteC)){
+				obj.overhealCapMult = Number(RegExp.$1);
 			}
 		}
 	}
@@ -438,6 +461,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 	this.overhealMult *= $dataActors[this.actorId()].overhealMult;
 	this.overhealSkills = $dataActors[this.actorId()].overhealSkills;
 	this.overhealItems = $dataActors[this.actorId()].overhealItems;
+	this.overhealCapMult = $dataActors[this.actorId()].overhealCapMult;
+	this.overhealCapAdd += $dataActors[this.actorId()].overhealCapAdd;
 	//Gets the modifiers from the classe of the actor
 	var id = this._classId;
 	if (!this.overhealUse) this.overhealUse = $dataClasses[id].overhealUse;
@@ -449,6 +474,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 	this.overhealMult *= $dataClasses[id].overhealMult;
 	if (!this.overhealSkills) this.overhealSkills = $dataClasses[id].overhealSkills;
 	if (!this.overhealItems) this.overhealItems = $dataClasses[id].overhealItems;
+	this.overhealCapMult *= $dataClasses[id].overhealCapMult;
+	this.overhealCapAdd += $dataClasses[id].overhealCapAdd;
 	//Checks each equip the actor has
 	for (var i = 0; i != this.equips().length; i++){
 		var equip = this.equips()[i];
@@ -464,6 +491,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 		this.overhealMult *= equip.overhealMult;
 		if (!this.overhealSkills) this.overhealSkills = equip.overhealSkills;
 		if (!this.overhealItems) this.overhealItems = equip.overhealItems;
+		this.overhealCapMult *= equip.overhealCapMult;
+		this.overhealCapAdd += equip.overhealCapAdd;
 	}
 	//Gets actor's states
 	var stateList = this.states();
@@ -479,6 +508,8 @@ Game_Actor.prototype.getOverhealStuff = function() {
 		this.overhealMult *= $dataStates[id].overhealMult;
 		if (!this.overhealSkills) this.overhealSkills = $dataStates[id].overhealSkills;
 		if (!this.overhealItems) this.overhealItems = $dataStates[id].overhealItems;
+		this.overhealCapMult = $dataStates[id].overhealCapMult;
+		this.overhealCapAdd += $dataStates[id].overhealCapAdd;
 	}
 };
 
@@ -519,6 +550,12 @@ Game_BattlerBase.prototype.removeOverhealStuff = function() {
 		eval(text);
 	}
 	this.overhealMult = Frashaw.Param.BaseOverhealMultiplier;
+	if (Frashaw.Param.BaseOverhealCap == "Current Stat Max"){
+		this.overhealCapMult = 1;
+	} else if (Frashaw.Param.BaseOverhealCap == "Half Stat Max"){
+		this.overhealCapMult = 0.5;
+	}
+	this.overhealCapAdd = 0;
 };
 
 //Gets and resets the modifiers for the overheal
@@ -829,6 +866,10 @@ Game_Battler.prototype.gainHp = function(value) {
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.overheal += value;
+		cap = Math.round((this.overhealCapMult * this.mhp) + this.overhealCapAdd);
+		if (Frashaw.Param.BaseOverhealCap != "No Cap" && this.overheal > cap){
+			this.overheal = cap;
+		}
 		this._result.hpOverhealShow += value;
 	} else {
 		this.setHp(this.hp + value);
@@ -854,6 +895,10 @@ Game_Battler.prototype.gainMp = function(value) {
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.mpOverheal += value;
+		cap = Math.round((this.overhealCapMult * this.mhp) + this.overhealCapAdd);
+		if (Frashaw.Param.BaseOverhealCap != "No Cap" && this.mpOverheal > cap){
+			this.mpOverheal = cap;
+		}
 		this._result.mpOverhealShow += value;
 	} else {
 		this.setMp(this.mp + value);
@@ -879,6 +924,10 @@ Game_Battler.prototype.gainTp = function(value) {
 		value *= BattleManager._action.item().overhealMult;
 		value = Math.round(value);
 		this.tpOverheal += value;
+		cap = Math.round((this.overhealCapMult * this.mhp) + this.overhealCapAdd);
+		if (Frashaw.Param.BaseOverhealCap != "No Cap" && this.tpOverheal > cap){
+			this.tpOverheal = cap;
+		}
 		this._result.tpOverhealShow = value;
 	} else {
 		this.setTp(this.tp + value);
