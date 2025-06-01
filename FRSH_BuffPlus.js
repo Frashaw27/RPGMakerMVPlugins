@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffPlus
 // FRSH_BuffPlus.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1095,8 +1095,12 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * appropriate tags in. Does not conflict with Yanfly's BuffStatesCore due
 * to the method it uses to apply the buff modifiers.
 * ===Change Log=================================================================
+* Version 1.1.1 (06/01/2025):
+* -Fixed debuffs when using the "Actor/Enemy Stat-Based Formula" and "Debuff 
+* Split" options not calling the correct thing leading to them crashing
+*
 * Version 1.1.0 (01/20/2025):
-* -Fixed the way the buff formulas are calculated so that the modifier doesn'Tacks
+* -Fixed the way the buff formulas are calculated so that the modifier doesn't
 * accidently reduce the stats
 *
 * Version 1.0.1 (12/25/2024):
@@ -1737,7 +1741,7 @@ if (Frashaw.Param.BuffType == "General All-In-One Formula"){
 		defBuffActor[0] = Parameters.aDefFormula;
 		defDebuffActor[0] = Parameters.aDefDebuffFormula;
 		matBuffActor[0] = Parameters.aMatFormula;
-		matDebuffActor[0] = Parameters.aMarDebuffFormula;
+		matDebuffActor[0] = Parameters.aMatDebuffFormula;
 		mdfBuffActor[0] = Parameters.aMdfFormula;
 		mdfDebuffActor[0] = Parameters.aMdfDebuffFormula;
 		agiBuffActor[0] = Parameters.aAgiFormula;
@@ -1755,7 +1759,7 @@ if (Frashaw.Param.BuffType == "General All-In-One Formula"){
 		defBuffEnemy[0] = Parameters.eDefFormula;
 		defDebuffEnemy[0] = Parameters.eDefDebuffFormula;
 		matBuffEnemy[0] = Parameters.eMatFormula;
-		matDebuffEnemy[0] = Parameters.eMarDebuffFormula;
+		matDebuffEnemy[0] = Parameters.eMatDebuffFormula;
 		mdfBuffEnemy[0] = Parameters.eMdfFormula;
 		mdfDebuffEnemy[0] = Parameters.eMdfDebuffFormula;
 		agiBuffEnemy[0] = Parameters.eAgiFormula;
