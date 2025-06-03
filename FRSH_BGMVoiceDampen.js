@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BGMVoiceDampen
 // FRSH_BGMVoiceDampen.js
-// Version: 1.4.1
+// Version: 1.4.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -61,6 +61,9 @@ Frashaw.VDampen = Frashaw.VDampen || {};
 * would be reduced. Use the plugin commands to turn this plugin off if needed 
 * for a scene or something.
 * ===Change Log=================================================================
+* Version 1.4.2 (06/03/2025):
+* -Added the same things to Fading in BGMs when coming out of battle
+*
 * Version 1.4.1 (03/25/2025):
 * -Added the same things to Fading in BGMs as fading them out
 *
@@ -159,6 +162,7 @@ AudioManager.fadeOutBgm = function(duration) {
 
 //Same as above, but for audio fade ins
 AudioManager.fadeInBgm = function(duration) {
+	console.log(duration);
     if (this._bgmBuffer && this._currentBgm) {
 		fadingCheck = true;
 		this._bgmBuffer.fadeIn(duration);
@@ -166,6 +170,24 @@ AudioManager.fadeInBgm = function(duration) {
 			audioMod = 1;
 			fadingCheck = false;
 		}, duration * 1000);   
+    }
+};
+
+//Same as above, but for audio fade ins after battle
+AudioManager.replayBgm = function(bgm) {
+    if (this.isCurrentBgm(bgm)) {
+        this.updateBgmParameters(bgm);
+    } else {
+		fadingCheck = true;
+        this.playBgm(bgm, bgm.pos);
+        if (this._bgmBuffer) {
+            this._bgmBuffer.fadeIn(this._replayFadeTime);
+        }
+		time = this;
+		setTimeout(function(){
+			audioMod = 1;
+			fadingCheck = false;
+		}, 5000); 
     }
 };
 
