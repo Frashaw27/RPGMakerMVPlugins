@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_TurnBuffer
 // FRSH_TurnBuffer.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -87,6 +87,9 @@ Frashaw.TBuffer = Frashaw.TBuffer || {};
 * If you are using Yanfly Buff and States Core, please post this below it for 
 * full capatability.
 * ===Change Log=================================================================
+* Version 1.1.1 (06/19/25) :
+* -Fixed an oversight with setting the propery of alwaysBuffer
+*
 * Version 1.1.0 (06/18/25) :
 * -Updated the method of getting the note tages for ease of use and more stable
 * implamentation
@@ -156,7 +159,7 @@ DataManager.processBufferThings = function(group) {
 		for (var i = 0; i < notedata.length; i++) {
 			var line = notedata[i];
 			if (line.match(noteA)) {
-				obj.ignoreBuffer = Number(true);
+				obj.ignoreBuffer = true;
 			} else if (line.match(noteB)){
 				obj.alwaysBuffer = true;
 			}
