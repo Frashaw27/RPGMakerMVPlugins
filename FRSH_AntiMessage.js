@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.0.4
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -236,30 +236,41 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 *
 * @help
 * ==Notetages=================================================================
-* Skill, Items (All Case Sensitive):
-* No Fail Message: <Antifail> | No Action Results Message: <AntiActionResults>
-* No Action Message: <AntiAction> | No Damage Message: <AntiDamage>
-* No Counter Message: <AntiCounter> | No Reflection Message: <AntiReflection>
-* No Substitute Message: <AntiSubstitute> | No Miss Message: <AntiMiss>
-* No Evasion Message: <AntiEvasion> | No Critical Message: <AntiCritical>
-* No Actor Criticals Message: <AntiActorCritical>
-* No Enemy Criticals Message: <AntiEnemyCritical>
-* No Affected Status Message: <AntiAffectedStatus>
-* No Added States Message: <AntiAddedStates> 
-* No Removed States Message: <AntiRemovedStates>
-* No Current State Message: <AntiCurrentState> 
-* No Changed Buffs Message: <AntiChangedBuffs>
-* No Add Buffs Message: <AntiAddedBuffs> 
-* No Add Debuffs Message: <AntiAddedDebuffs>
-* No Remove Buffs Message: <AntiRemovedBuffs> 
-* No Display Hp Damage Message: <AntiHpDamage>
-* No Display Hp Damage Text  Message: <AntiHpDamageText>
-* No Display Mp Damage Message: <AntiMpDamage>
-* No Display Mp Damage Text  Message: <AntiMpDamageText>
-* No Display Tp Damage Message: <AntiTpDamage>
-* No Display Tp Damage Text  Message: <AntiTpDamageText>
+* Spaces and Capitalization doesn't matter
+*
+* Skill, Items:
+* Spaces can be replaced with dashes like: <Anti-Fail>
+* Anti can be replaced with No like: <No Fail>
+* No Fail Message: <Anti Fail>
+* No Action Results Message: <Anti Action Results>, Action be removed 
+* (alongside the extra space) and still work
+* No Action Message: <Anti Action>
+* No Damage Message: <Anti Damage>
+* No Counter Message: <Anti Counter>
+* No Reflection Message: <Anti Reflect>, can add "ion" to the end of reflect
+* No Substitute Message: <Anti Substitute>
+* No Miss Message: <AntiMiss>
+* No Evasion Message: <Anti Evasion>
+* No Critical Message: <Anti Critical>
+* No Enemy Criticals Message: <Anti Enemy Critical>, Enemy and the subsequent 
+* space can be remove in place of just E
+* No Actor Criticals Message: <Anti Actor Critical>, same as Enemy but with A
+* No Affected Status Message: <Anti Affected Status>, Affect also works
+* No Added States Message: <Anti Added States>, Add also works
+* No Removed States Message: <Anti Removed States>, Remove also works
+* No Current State Message: <Anti Current State> 
+* No Changed Buffs Message: <Anti Changed Buffs>, Change also works
+* No Add Buffs Message: <Anti Added Buffs>, Add also works
+* No Add Debuffs Message: <Anti Added Debuffs>, Add also works
+* No Remove Buffs Message: <Anti Removed Buffs>, Remove also works
+* No Display Hp Damage Message: <Anti Hp Damage>
+* No Display Hp Damage Text  Message: <Anti Hp Text>
+* No Display Mp Damage Message: <Anti Mp Damage>
+* No Display Mp Damage Text  Message: <Anti Mp Text>
+* No Display Tp Damage Message: <Anti Tp Damage>
+* No Display Tp Damage Text  Message: <Anti Tp Text>
 * 
-* ===Introduction=============================================================
+* ===Introduction===============================================================
 * For the longest time, I've wanted a plugin that worked like Yanfly's
 * Antifail from Vx Ace, but didn't find one and couldn't replicate it. 
 * While another one of my scripts, Dynamic Battlelog Messages can sort
@@ -269,13 +280,23 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 *
 * Roughly 4 monthes after it was completed, it was then evolved to merge the
 * two plugins, allowing for more things.
-* ===How to Use===============================================================
+* ===How to Use=================================================================
 * By inserting the corresponding tag or deactivating/turning off the 
 * corresponding switch to the message will cause it not display when it is 
 * called. Adding the tag will make it not display, regardless is if the 
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
-* ===Change Log===============================================================
+* ===Change Log=================================================================
+* Version 1.1.0 (06/19/25) :
+* -Heavily update the code to be more optimized and less dense with filler 
+* lines
+* -Made Notetags both non-capital and space dependent
+* -Add variations to the Notetags
+* -Removed meaningless code that holds no more relavance
+* -Made the system to determine the current item based from BattleManager
+* -Inclosed the plugin in a function
+* -Fixed the damage texts needing to reset to the base function
+*
 * Version 1.0.5 (12/14/23) :
 * -Changed two state relate sections to be calls instead of overwrites
 *
@@ -297,348 +318,308 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 *
 * Version 1.0 (05/11/23) :
 * -Finished Base Plugin
-* ============================================================================
+* ==============================================================================
 */
-//============================================================================
-Frashaw.Parameters = PluginManager.parameters('FRSH_AntiMessage');
+//==============================================================================
+(function() {
+//Sets up the information got from the plugin parameters
+Parameters = PluginManager.parameters('FRSH_AntiMessage');
 Frashaw.Param = Frashaw.Param || {};
-Frashaw.Param.DSwitch1 = Number(Frashaw.Parameters['Fail Switch']);
-Frashaw.Param.DSwitch2 = Number(Frashaw.Parameters['Action Results Switch']);
-Frashaw.Param.DSwitch3 = Number(Frashaw.Parameters['Action Switch']);
-Frashaw.Param.DSwitch4 = Number(Frashaw.Parameters['Damage Switch']);
-Frashaw.Param.DSwitch5 = Number(Frashaw.Parameters['Counter Switch']);
-Frashaw.Param.DSwitch6 = Number(Frashaw.Parameters['Reflection Switch']);
-Frashaw.Param.DSwitch7 = Number(Frashaw.Parameters['Substitute Switch']);
-Frashaw.Param.DSwitch8 = Number(Frashaw.Parameters['Miss Switch']);
-Frashaw.Param.DSwitch9 = Number(Frashaw.Parameters['Evasion Switch']);
-Frashaw.Param.DSwitch10 = Number(Frashaw.Parameters['Critical Switch']);
-Frashaw.Param.DSwitch11 = Number(Frashaw.Parameters['Enemy Critical Switch']);
-Frashaw.Param.DSwitch12 = Number(Frashaw.Parameters['Actor Critical Switch']);
-Frashaw.Param.DSwitch13 = Number(Frashaw.Parameters['Affected Status Switch']);
-Frashaw.Param.DSwitch14 = Number(Frashaw.Parameters['Changed State Switch']);
-Frashaw.Param.DSwitch15 = Number(Frashaw.Parameters['Added State Switch']);
-Frashaw.Param.DSwitch16 = Number(Frashaw.Parameters['Remove State Switch']);
-Frashaw.Param.DSwitch17 = Number(Frashaw.Parameters['Current State Switch']);
-Frashaw.Param.DSwitch18 = Number(Frashaw.Parameters['Changed Buffs Switch']);
-Frashaw.Param.DSwitch19 = Number(Frashaw.Parameters['Add Buffs Switch']);
-Frashaw.Param.DSwitch20 = Number(Frashaw.Parameters['Add Debuffs Switch']);
-Frashaw.Param.DSwitch21 = Number(Frashaw.Parameters['Remove Buffs Switch']);
-Frashaw.Param.DSwitch22 = Number(Frashaw.Parameters['Hp Damage Switch']);
-Frashaw.Param.DSwitch23 = Number(Frashaw.Parameters['Hp Damage Text Switch']);
-Frashaw.Param.DSwitch24 = Number(Frashaw.Parameters['Mp Damage Switch']);
-Frashaw.Param.DSwitch25 = Number(Frashaw.Parameters['Mp Damage Text Switch']);
-Frashaw.Param.DSwitch26 = Number(Frashaw.Parameters['Tp Damage Switch']);
-Frashaw.Param.DSwitch27 = Number(Frashaw.Parameters['Tp Damage Text Switch']);
+terms = ['Fail Switch', 'Action Results Switch', 'Action Switch', 'Damage Switch', 'Counter Switch', 'Reflection Switch', 'Substitute Switch', 'Miss Switch', 'Evasion Switch', 'Critical Switch', 'Enemy Critical Switch', 'Actor Critical Switch', 'Affected Status Switch', 'Changed State Switch', 'Added State Switch', 'Remove State Switch', 'Current State Switch', 'Changed Buffs Switch', 'Add Buffs Switch', 'Add Debuffs Switch', 'Remove Buffs Switch', 'Hp Damage Switch', 'Hp Damage Text Switch', 'Mp Damage Switch', 'Mp Damage Text Switch', 'Tp Damage Switch', 'Tp Damage Text Switch'];
+Frashaw.Param.DSwitches = [0];
+terms.forEach(function(i){
+	Frashaw.Param.DSwitches.push(eval(Number(Parameters[i])));
+});
 
-	//Sets variables, so no fuckery happens
-	var lastUsed = 1;
-	var thing = 0;
-	var otherText = []; //Text for the battle log for summon and/or item concequences
-	if (!Imported.Summons){ //Text option imported from FRSH_Summons
-	Parameters.resetOther = true;
-	} else {
-		Parameters.resetOther = PluginManager.parameters('FRSH_Summons').resetOther;
-		if (Parameters.resetOther === "false"){
-			Parameters.resetOther = true;
-		} else {
-			Parameters.resetOther = false;
+//Preloads the various things for the anti messages
+var FrshAMessageLoaded = false;
+FrshAMessageLoaded_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	if (!FrshAMessageLoaded_database.call(this)) return false; 
+	if (FrshAMessageLoaded == false) {
+		this.processAntiThings($dataSkills);
+		this.processAntiThings($dataItems);
+		FrshAMessageLoaded = true;
+	}
+	return true;
+};
+
+//A function to process the unique anti messages for specific skills and items
+DataManager.processAntiThings = function(group) {
+	var string = "";
+	var note1 = /<(?:Anti|No)[ -]?Fail>/i;
+	var note2 = /<(?:Anti|No)[ -]?(?:Action[ -]?)?Results?>/i;
+	var note3 = /<(?:Anti|No)[ -]?Action>/i;
+	var note4 = /<(?:Anti|No)[ -]?Damage>/i;
+	var note5 = /<(?:Anti|No)[ -]?Counter>/i;
+	var note6 = /<(?:Anti|No)[ -]?Reflect(?:ion)?>/i;
+	var note7 = /<(?:Anti|No)[ -]?Substitute>/i;
+	var note8 = /<(?:Anti|No)[ -]?Miss>/i;
+	var note9 = /<(?:Anti|No)[ -]?Evasion>/i;
+	var note10 = /<(?:Anti|No)[ -]?Critical>/i;
+	var note11 = /<(?:Anti|No)[ -]?E(?:nemy[ -]?)?Critical>/i;
+	var note12 = /<(?:Anti|No)[ -]?A(?:ctor[ -]?)?Critical>/i;
+	var note13 = /<(?:Anti|No)[ -]?Affect(?:ed)?[ -]?States?>/i;
+	var note14 = /<(?:Anti|No)[ -]?Change(?:d)?[ -]?States?>/i;
+	var note15 = /<(?:Anti|No)[ -]?Add(?:ed)?[ -]?States?>/i;
+	var note16 = /<(?:Anti|No)[ -]?Removed(?:ed)?[ -]?States?>/i;
+	var note17 = /<(?:Anti|No)[ -]?Current?[ -]?States?>/i;
+	var note18 = /<(?:Anti|No)[ -]?Change(?:d)?[ -]?Buffs?>/i;
+	var note19 = /<(?:Anti|No)[ -]?Add(?:ed)?[ -]?Buffs?>/i;
+	var note20 = /<(?:Anti|No)[ -]?Add(?:ed)?[ -]?Debuffs?>/i;
+	var note21 = /<(?:Anti|No)[ -]?Remove(?:d)?[ -]?Buffs?>/i;
+	var note22 = /<(?:Anti|No)[ -]?Hp?[ -]?Damage>/i;
+	var note23 = /<(?:Anti|No)[ -]?Hp?[ -]?Text>/i;
+	var note24 = /<(?:Anti|No)[ -]?Mp?[ -]?Damage>/i;
+	var note25 = /<(?:Anti|No)[ -]?Mp?[ -]?Text>/i;
+	var note26 = /<(?:Anti|No)[ -]?Tp?[ -]?Damage>/i;
+	var note27 = /<(?:Anti|No)[ -]?Tp?[ -]?Text>/i;
+
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		//Initalizes the shit for the checks later
+		obj.antiFail = false;
+		obj.antiResults = false;
+		obj.antiAction = false;
+		obj.antiDamage = false;
+		obj.antiCounter = false;
+		obj.antiReflect = false;
+		obj.antiSubstitute = false;
+		obj.antiMiss = false;
+		obj.antiEvasion = false;
+		obj.antiCritical = false;
+		obj.antiECritical = false;
+		obj.antiACritical = false;
+		obj.antiAffectStates = false;
+		obj.antiChangeStates = false;
+		obj.antiAddStates = false;
+		obj.antiRemoveStates = false;
+		obj.antiCurrentStates = false;
+		obj.antiChangeBuffs = false;
+		obj.antiAddBuffs = false;
+		obj.antiAddDebuffs = false;
+		obj.antiRemoveBuffs = false;
+		obj.antiHpDamage = false;
+		obj.antiHpText = false;
+		obj.antiMpDamage = false;
+		obj.antiMpText = false;
+		obj.antiTpDamage = false;
+		obj.antiTpText = false;
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note1)) {
+				obj.antiFail = true;
+			} else if (line.match(note2)){
+				obj.antiResults = true;
+			} else if (line.match(note3)){
+				obj.antiAction = true;
+			} else if (line.match(note4)){
+				obj.antiDamage = true;
+			} else if (line.match(note5)){
+				obj.antiCounter = true;
+			} else if (line.match(note6)){
+				obj.antiReflect = true;
+			} else if (line.match(note7)){
+				obj.antiSubstitute = true;
+			} else if (line.match(note8)){
+				obj.antiMiss = true;
+			} else if (line.match(note9)){
+				obj.antiEvasion = true;
+			} else if (line.match(note10)){
+				obj.antiCritical = true;
+			} else if (line.match(note11)){
+				obj.antiECritical = true;
+			} else if (line.match(note12)){
+				obj.antiACritical = true;
+			} else if (line.match(note13)){
+				obj.antiAffectStates = true;
+			} else if (line.match(note14)){
+				obj.antiChangeStates = true;
+			} else if (line.match(note15)){
+				obj.antiAddStates = true;
+			} else if (line.match(note16)){
+				obj.antiRemoveStates = true;
+			} else if (line.match(note17)){
+				obj.antiCurrentStates = true;
+			} else if (line.match(note18)){
+				obj.antiChangeBuffs = true;
+			} else if (line.match(note19)){
+				obj.antiAddBuffs = true;
+			} else if (line.match(note20)){
+				obj.antiAddDebuffs = true;
+			} else if (line.match(note21)){
+				obj.antiRemoveBuffs = true;
+			} else if (line.match(note22)){
+				obj.antiHpDamage = true;
+			} else if (line.match(note23)){
+				obj.antiHpDamage = true;
+			} else if (line.match(note24)){
+				obj.antiMpDamage = true;
+			} else if (line.match(note25)){
+				obj.antiMpText = true;
+			} else if (line.match(note26)){
+				obj.antiTpDamage = true;
+			} else if (line.match(note27)){
+				obj.antiTpText = true;
+			}
 		}
 	}
+};
 	
-	//Adds an additional action upon using an item, namely seting last used to
-	//the id of the last used thing. Shouldn't conflict with anything.
-	var Frashaw_useItem = Game_Battler.prototype.useItem;
-    Game_Battler.prototype.useItem = function(item) {
-        Frashaw_useItem.call(this, item);
-        lastUsed = item.id;
-		if (DataManager.isItem(item)){
-			thing = 1;
-		} else {
-			thing = 0;
-		}
-    };
-	
-	//A function to quickly check if the message should be displayed or not
-	function checkChecker(switchNumber,tag){
-	//Gets the switch number of the associated plugin parameter
-	var numb = eval("Frashaw.Param.DSwitch" + switchNumber);
+//A function to quickly check if the message should be displayed or not
+function antiCheck(switchNumber, tag){
+	//Gets the switch number from the ones listed by the maker
+	num = Frashaw.Param.DSwitches[switchNumber];
 	//Doesn't check if the number is 0
-	if (numb != 0){
-		if ($gameSwitches.value(numb)){
-			return false;
-		}
+	if (switchNumber != 0){
+		if ($gameSwitches.value(num)) return false;
 	}
-	var bool = eval("lastUsed != 1 && (thing == 0 && $dataSkills[lastUsed].meta." + tag + " != null)");
-	if (bool){
-		return false;
-	}
-	var bool = eval("lastUsed != 0 && (thing == 1 && $dataItems[lastUsed].meta." + tag + " != null)");
-	if (thing == 1 && $dataItems[lastUsed].meta.Antifail != null){
-		return false;
-	}
-	//If none of the other checks ran, it returns true that the fail message
+	//Checks the last used item to see if they have the respective tag for the no
+	//messages
+	if (eval("BattleManager._action.item()." + tag)) return false;
+	//If none of the other checks ran, it returns true that the message
 	//can show.
 	return true;
-	}
+}
 
-	//The fuction that shows the fail message (or not).
-	frsh_displayFailure_antiMsg = Window_BattleLog.prototype.displayFailure;
-	Window_BattleLog.prototype.displayFailure = function(target){
-		if (target.result().isHit() && !target.result().success){
-			var check = checkChecker(1, "Antifail");
+//The fuction that shows the fail message (or not).
+frsh_antiMsg_displayFailure = Window_BattleLog.prototype.displayFailure;
+Window_BattleLog.prototype.displayFailure = function(target){
+	if ((target.result().isHit() && !target.result().success) && antiCheck(1, "antiFail")) frsh_antiMsg_displayFailure.call(this, target);
+};
+	
+frsh_antiMsg_displayActionResults = Window_BattleLog.prototype.displayActionResults;
+Window_BattleLog.prototype.displayActionResults = function(subject, target) {
+	if (antiCheck(2, "antiResults")){
+		frsh_antiMsg_displayActionResults.call(this, subject, target);
+		//A line imported from battle engine it overwrites this function and better to be safe then sorry
+		//if removing the only difference will break the plugin
+		if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
+	}
+}
+	
+//Doesn't run when Custom Item Messages is in
+if (!Imported.CIMessage){
+	frsh_antiMsg_displayAction = Window_BattleLog.prototype.displayAction
+	Window_BattleLog.prototype.displayAction = function(subject, item) {
+		if (antiCheck(3, "antiAction")) frsh_antiMsg_displayAction.call(this,subject,item);
+	};
+}
+
+//Beyond minor variations in critical and buffs, there is nothing to note as it is
+//a repetition of a slightly different check followed by the init call
+frsh_antiMsg_displayDamage = Window_BattleLog.prototype.displayDamage
+Window_BattleLog.prototype.displayDamage = function(target) {
+	if (antiCheck(4, "antiDamage")) frsh_antiMsg_displayDamage.call(this,target);
+};
+	
+frsh_antiMsg_displayCounter = Window_BattleLog.prototype.displayCounter;
+Window_BattleLog.prototype.displayCounter = function(target) {
+	if (antiCheck(5, "antiCounter")) frsh_antiMsg_displayCounter.call(this,target);
+};
+
+frsh_antiMsg_displayReflection = Window_BattleLog.prototype.displayReflection;
+Window_BattleLog.prototype.displayReflection = function(target) {
+	if (antiCheck(6, "antiReflection")) frsh_antiMsg_displayReflection.call(this,target);
+};
+	
+frsh_antiMsg_displaySubstitute = Window_BattleLog.prototype.displaySubstitute;
+Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
+	if (antiCheck(7, "antiSubstitute")) frsh_antiMsg_displaySubstitute.call(this, substitute, target);
+};
+
+frsh_antiMsg_displayMiss = Window_BattleLog.prototype.displayMiss;
+Window_BattleLog.prototype.displayMiss = function(target) {
+	if (antiCheck(8, "antiMiss")) frsh_antiMsg_displayMiss.call(this, target);
+};
+
+frsh_antiMsg_displayEvasion = Window_BattleLog.prototype.displayEvasion;
+Window_BattleLog.prototype.displayEvasion = function(target) {
+	if (antiCheck(9, "antiEvasion")) frsh_antiMsg_displayEvasion.call(this,target);
+};
+
+//Criticals
+Window_BattleLog.prototype.displayCritical = function(target) {
+	if (target.result().critical && antiCheck(10, "antiCritical")) {
+		if (target.isActor()) {
+			if (antiCheck(12, "antiACritical")) this.push('addText', TextManager.criticalToActor);
 		} else {
-			var check = false;
-		}
-		if (check) {
-			frsh_displayFailure_antiMsg.call(this, target);
-		}
-	};
-	
-	frsh_displayActionResults_antiMsg = Window_BattleLog.prototype.displayActionResults;
-	Window_BattleLog.prototype.displayActionResults = function(subject, target) {
-		var check = checkChecker(2, "AntiActionResults");
-		if (check){
-			frsh_displayActionResults_antiMsg.call(this, subject, target);
-			//A line imported from battle engine it overwrites this function and better to be safe then sorry
-			//if removing the only difference will break the plugin
-			if (Imported.YEP_BattleEngineCore){ if (target.isDead()) target.performCollapse(); }
+			if (antiCheck(11, "antiECritical")) this.push('addText', TextManager.criticalToEnemy);
 		}
 	}
-	
-	//Doesn't run when Custom Item Messages is in
-	if (!Imported.CIMessage){
-		frsh_displayAction_antiMsg = Window_BattleLog.prototype.displayAction
-		Window_BattleLog.prototype.displayAction = function(subject, item) {
-			var numMethods = this._methods.length;
-			var check = checkChecker(3, "AntiAction");
-			if (check){
-				frsh_displayAction_antiMsg.call(this,subject,item);
-			}
-		};
-	}
-	
-	frsh_displayDamage_antiMsg = Window_BattleLog.prototype.displayDamage
-	Window_BattleLog.prototype.displayDamage = function(target) {
-		var check = checkChecker(4, "AntiDamage");
-		if (check){
-			frsh_displayDamage_antiMsg.call(this,target);
-		}
-	};
-	
-	frsh_displayCounter_antiMsg = Window_BattleLog.prototype.displayCounter;
-	Window_BattleLog.prototype.displayCounter = function(target) {
-		var check = checkChecker(5, "AntiCounter");
-		if (check){
-			frsh_displayCounter_antiMsg.call(this,target);
-		}
-	};
-
-	frsh_displayReflection_antiMsg = Window_BattleLog.prototype.displayReflection;
-	Window_BattleLog.prototype.displayReflection = function(target) {
-		var check = checkChecker(6, "AntiReflection");
-		if (check){
-			frsh_displayReflection_antiMsg.call(this,target);
-		}
-	};
-	
-	frsh_displaySubstitute_antiMsg = Window_BattleLog.prototype.displaySubstitute;
-	Window_BattleLog.prototype.displaySubstitute = function(substitute, target) {
-		var check = checkChecker(7, "AntiSubstitute");
-		if (check){
-			frsh_displaySubstitute_antiMsg.call(this, substitute, target);
-		}
-	};
-
-	frsh_displayMiss_antiMsg = Window_BattleLog.prototype.displayMiss;
-	Window_BattleLog.prototype.displayMiss = function(target) {
-		var check = checkChecker(8, "AntiMiss");
-		if (check){
-			frsh_displayMiss_antiMsg.call(this,target);
-		}
-	};
-
-	frsh_displayEvasion_antiMsg = Window_BattleLog.prototype.displayEvasion;
-	Window_BattleLog.prototype.displayEvasion = function(target) {
-		var check = checkChecker(9, "AntiEvasion");
-		if (check){
-			frsh_displayEvasion_antiMsg.call(this,target);
-		}
-	};
-
-	//Criticals
-	Window_BattleLog.prototype.displayCritical = function(target) {
-		var check = checkChecker(10, "AntiCritical");
-		var checkA = checkChecker(11, "AntiActorCritical");
-		var checkB = checkChecker(12, "AntiEnemyCritical");
-		if (check){
-			if (target.result().critical) {
-				if (target.isActor()) {
-					if (checkA){
-						this.push('addText', TextManager.criticalToActor);
-					}
-				} else {
-					if (checkB){
-						this.push('addText', TextManager.criticalToEnemy);
-					}
-				}
-			}
-		}
-	};
+};
 
 
-	//Other Free One
-	frsh_displalyAffectedStatus_antiMsg = Window_BattleLog.prototype.displayAffectedStatus;
-	Window_BattleLog.prototype.displayAffectedStatus = function(target) {
-		var check = checkChecker(13, "AntiAffectedStatus");
-		if (check){
-			frsh_displalyAffectedStatus_antiMsg.call(this,target);
-		}
-	};
+//Other Free One
+frsh_antiMsg_displayAffectedStatus = Window_BattleLog.prototype.displayAffectedStatus;
+Window_BattleLog.prototype.displayAffectedStatus = function(target) {
+	if (antiCheck(13, "antiAffectStates")) frsh_antiMsg_displayAffectedStatus.call(this,target);
+};
 
-	//States
-	frsh_displalyChangedStatus_antiMsg = Window_BattleLog.prototype.displayChangedStates;
-	Window_BattleLog.prototype.displayChangedStates = function(target) {
-		var check = checkChecker(14, "AntiChangedStatuses");
-		if (check){
-			frsh_displalyChangedStatus_antiMsg.call(this,target);
-		}
-	};
+//States
+frsh_antiMsg_displayChangedStatus = Window_BattleLog.prototype.displayChangedStates;
+Window_BattleLog.prototype.displayChangedStates = function(target) {
+	if (antiCheck(14, "antiChangeStates")) frsh_antiMsg_displayChangedStatus.call(this,target);
+};
 
-	frsh_displalyAddedStates_antiMsg = Window_BattleLog.prototype.displayAddedStates;
-	Window_BattleLog.prototype.displayAddedStates = function(target) {
-		var check = checkChecker(15, "AntiAddedStates");
-		if (check){
-			frsh_displalyAddedStates_antiMsg.call(this, target);
-		}
-	};
+frsh_antiMsg_displayAddedStates = Window_BattleLog.prototype.displayAddedStates;
+Window_BattleLog.prototype.displayAddedStates = function(target) {
+	if (antiCheck(15, "antiAddStates")) frsh_antiMsg_displayAddedStates.call(this, target);
+};
 
-	frsh_displayRemovedStates_antiMsg = Window_BattleLog.prototype.displayRemovedStates;
-	Window_BattleLog.prototype.displayRemovedStates = function(target) {
-		var check = checkChecker(16, "AntiRemovedStates");
-		if (check){
-			frsh_displayRemovedStates_antiMsg.call(this, target);
-		}
-	};
+frsh_antiMsg_displayRemovedStates = Window_BattleLog.prototype.displayRemovedStates;
+Window_BattleLog.prototype.displayRemovedStates = function(target) {
+	if (antiCheck(16, "antiRemoveStates")) frsh_antiMsg_displayRemovedStates.call(this, target);
+};
 
-	frsh_displalyCurrentStatus_antiMsg = Window_BattleLog.prototype.displayChangedStates;
-	Window_BattleLog.prototype.displayCurrentState = function(subject) {
-		var check = checkChecker(17, "AntiCurrentState");
-		if (check){
-			frsh_displalyCurrentStatus_antiMsg.call(this, subject);
-		}
-	};
+frsh_antiMsg_displayCurrentStatus = Window_BattleLog.prototype.displayChangedStates;
+Window_BattleLog.prototype.displayCurrentState = function(subject) {
+	if (antiCheck(17, "antiCurrentStates")) frsh_antiMsg_displayCurrentStatus.call(this, subject);
+};
 
-	//Buffs
-	Window_BattleLog.prototype.displayChangedBuffs = function(target) {
-		var checkA = checkChecker(18, "AntiChangedBuffs");
-		var checkB = checkChecker(19, "AntiAddedBuffs");
-		var checkC = checkChecker(20, "AntiAddedDebuffs");
-		var checkD = checkChecker(21, "AntiRemovedBuffs");
-		if (checkA){
+//Buffs
+Window_BattleLog.prototype.displayChangedBuffs = function(target) {
+	if (antiCheck(18, "antiChangeBuffs")){
 		var result = target.result();
-		if (checkB){
-			this.displayBuffs(target, result.addedBuffs, TextManager.buffAdd);
-		} 
-		if (checkC){
-			this.displayBuffs(target, result.addedDebuffs, TextManager.debuffAdd);
-		} 
-		if (checkD){
-			this.displayBuffs(target, result.removedBuffs, TextManager.buffRemove);
-		}
-		}
-	};
+		if (antiCheck(19, "antiAddBuffs")) this.displayBuffs(target, result.addedBuffs, TextManager.buffAdd);
+		if (antiCheck(20, "antiAddDebuffs")) this.displayBuffs(target, result.addedDebuffs, TextManager.debuffAdd);
+		if (antiCheck(21, "antiRemoveBuffs")) this.displayBuffs(target, result.removedBuffs, TextManager.buffRemove);
+	}
+};
 
-	frsh_displayHpDamage_antiMsg = Window_BattleLog.prototype.displayHpDamage;
-	Window_BattleLog.prototype.displayHpDamage = function(target) {
-		var check = checkChecker(22, "AntiHpDamage");
-		if (check){
-			frsh_displayHpDamage_antiMsg.call(this,target);
-		}
-	};
+frsh_antiMsg_displayHpDamage = Window_BattleLog.prototype.displayHpDamage;
+Window_BattleLog.prototype.displayHpDamage = function(target) {
+	if (antiCheck(22, "antiHpDamage")) frsh_antiMsg_displayHpDamage.call(this,target);
+};
 	
-	Window_BattleLog.prototype.makeHpDamageText = function(target) {
-		var check = checkChecker(23, "AntiHpDamageText");
-		if (check){
-			var result = target.result();
-			var damage = result.hpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0 && result.drain) {
-				fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-				return fmt.format(target.name(), TextManager.hp, damage);
-			} else if (damage > 0) {
-				fmt = isActor ? TextManager.actorDamage : TextManager.enemyDamage;
-				return fmt.format(target.name(), damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-				return fmt.format(target.name(), TextManager.hp, -damage);
-			} else {
-				fmt = isActor ? TextManager.actorNoDamage : TextManager.enemyNoDamage;
-				return fmt.format(target.name());
-			}
-		}
-	};
+frsh_antiMsg_displayHpText = Window_BattleLog.prototype.makeHpDamageText;
+Window_BattleLog.prototype.makeHpDamageText = function(target) {
+	if (antiCheck(23, "antiHpText")) return frsh_antiMsg_displayHpText.call(this, target);
+};
 
+frsh_antiMsg_displayMpDamage = Window_BattleLog.prototype.displayMpDamage;
+Window_BattleLog.prototype.displayMpDamage = function(target) {
+	if (antiCheck(24, "antiMpDamage")) frsh_antiMsg_displayMpDamage.call(this, target);
+};
 
-	frsh_displayMpDamage_antiMsg = Window_BattleLog.prototype.displayMpDamage;
-	Window_BattleLog.prototype.displayMpDamage = function(target) {
-		var check = checkChecker(24, "AntiMpDamage");
-		if (check){
-			frsh_displayMpDamage_antiMsg.call(this, target);
-		}
-	};
+frsh_antiMsg_makeMpDamageText = Window_BattleLog.prototype.makeMpDamageText;
+Window_BattleLog.prototype.makeMpDamageText = function(target) {
+	if (antiCheck(25, "antiMpText")) return frsh_antiMsg_makeMpDamageText.call(this, target);
+};
 
-	frsh_makeMpDamageText_antiMsg = Window_BattleLog.prototype.makeMpDamageText;
-	Window_BattleLog.prototype.makeMpDamageText = function(target) {
-		var check = checkChecker(25, "AntiMpDamageText");
-		if (check){
-			var result = target.result();
-			var damage = result.mpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0 && result.drain) {
-				fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
-				return fmt.format(target.name(), TextManager.mp, damage);
-			} else if (damage > 0) {
-				fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-				return fmt.format(target.name(), TextManager.mp, damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
-				return fmt.format(target.name(), TextManager.mp, -damage);
-			} else {
-				return '';
-			}
-		}
-	};
+frsh_antiMsg_displayTpDamage = Window_BattleLog.prototype.displayTpDamage;
+Window_BattleLog.prototype.displayTpDamage = function(target) {
+	if (antiCheck(26, "antiTpDamage")) frsh_antiMsg_displayTpDamage.call(this, target);
+};
 
-	frsh_displayTpDamage_antiMsg = Window_BattleLog.prototype.displayTpDamage;
-	Window_BattleLog.prototype.displayTpDamage = function(target) {
-		var check = checkChecker(26, "AntiTpDamage");
-		if (check){
-			frsh_displayTpDamage_antiMsg.call(this, target);
-		}
-	};
-
-	frsh_makeTpDamageText_antiMsg = Window_BattleLog.prototype.makeTpDamageText;
-	Window_BattleLog.prototype.makeTpDamageText = function(target) {
-		var check = checkChecker(27, "AntiTpDamageText");
-		if (check){
-			var result = target.result();
-			var damage = result.tpDamage;
-			var isActor = target.isActor();
-			var fmt;
-			if (damage > 0) {
-				fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
-				return fmt.format(target.name(), TextManager.tp, damage);
-			} else if (damage < 0) {
-				fmt = isActor ? TextManager.actorGain : TextManager.enemyGain;
-				return fmt.format(target.name(), TextManager.tp, -damage);
-			} else {
-				return '';
-			}
-		}
-	};
-
+frsh_antiMsg_makeTpDamageText = Window_BattleLog.prototype.makeTpDamageText;
+Window_BattleLog.prototype.makeTpDamageText = function(target) {
+	if (antiCheck(27, "antiTpText")) return frsh_antiMsg_makeTpDamageText.call(this, target);
+};
+})();
 //=============================================================================
 // End of File
 //=============================================================================
