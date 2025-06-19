@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -287,6 +287,10 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log=================================================================
+* Version 1.1.1 (06/19/25) :
+* -Fixed an oversight with the code that made it not check the correct variable
+* for the switch
+*
 * Version 1.1.0 (06/19/25) :
 * -Heavily update the code to be more optimized and less dense with filler 
 * lines
@@ -474,7 +478,7 @@ function antiCheck(switchNumber, tag){
 	//Gets the switch number from the ones listed by the maker
 	num = Frashaw.Param.DSwitches[switchNumber];
 	//Doesn't check if the number is 0
-	if (switchNumber != 0){
+	if (num != 0){
 		if ($gameSwitches.value(num)) return false;
 	}
 	//Checks the last used item to see if they have the respective tag for the no
