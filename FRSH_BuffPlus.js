@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_BuffPlus
 // FRSH_BuffPlus.js
-// Version: 1.1.1
+// Version: 1.1.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -1085,6 +1085,12 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * [actors, enemies].numDebuffs(): Same as the buff version but for debuffs.
 * [actors, enemies].numUniqueDebuffs(): Same as the buff version but for 
 * debuffs.
+* [actors, enemies].lengthenBuff(paramId, duration): Legthens the specified
+* Buff/Debbuf by the designated turns. Compatible with TurnBuffer.
+* [actors, enemies].lengthenAllBuffs(duration): Goes through and lengthens all
+* buffs the recipient has.
+* [actors, enemies].lengthenAllDebuffs(duration): Goes through and lengthens 
+* all debbuffs the recipient has.
 * ===Introduction===============================================================
 * Simple and clean, the buff system is one I see be commonly ignored/replaced
 * and one of the most common reason I've seen is that the power of them is
@@ -1095,6 +1101,9 @@ Frashaw.BPlus = Frashaw.BPlus || {};
 * appropriate tags in. Does not conflict with Yanfly's BuffStatesCore due
 * to the method it uses to apply the buff modifiers.
 * ===Change Log=================================================================
+* Version 1.1.2 (05/20/2025):
+* -Added Buff Lengthening functions to use on actors and Enemies
+*
 * Version 1.1.1 (06/01/2025):
 * -Fixed debuffs when using the "Actor/Enemy Stat-Based Formula" and "Debuff 
 * Split" options not calling the correct thing leading to them crashing
@@ -1472,6 +1481,33 @@ Game_Battler.prototype.addDebuffSpecific = function(paramId, turns, user) {
 		});
 	}
 };
+
+//==============================================================================
+//Buff/Debuff Lengthening
+//==============================================================================
+//A function to make the ease of lengthening Buffs via script calls easier
+Game_BattlerBase.prototype.lengthenBuff = function(paramId, increase){
+	this._buffTurns[paramId] += increase;
+	if (Imported.TBuffer && !this.buffBufferIndex.contains(paramId)){
+		this.buffBufferIndex.push(paramId);
+	}
+}
+
+//A function to make the ease of lengthening all Buffs via script calls easier
+Game_BattlerBase.prototype.lengthenAllBuffs = function(increase){
+	user = this;
+	[0, 1, 2, 3, 4, 5, 6, 7].forEach(function(i){
+		if (user._buffs[i] > 0) user.lengthenBuff(i, increase); 
+	});
+}
+
+//A function to make the ease of lengthening all Debuffs via script calls easier
+Game_BattlerBase.prototype.lengthenAllDebuffs = function(increase){
+	user = this;
+	[0, 1, 2, 3, 4, 5, 6, 7].forEach(function(i){
+		if (user._buffs[i] < 0) user.lengthenBuff(i, increase); 
+	});
+}
 
 //==============================================================================
 //Buff/Debuff Counting
