@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.1.6
+// Version: 1.2.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -15,198 +15,230 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * @author Frashaw27
 * @plugindesc Allows Items to have custom use messages.
 *
-* @param ---Common Messages #1-----
+* @param Common Messages #1
 * @default
 *
-* @param mId1
+* @param messageIds1
 * @text Message Ids
-* @parent ---Common Messages #1-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #1
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m1
+*
+* @param message1
 * @text Message
-* @parent ---Common Messages #1-----
+* @parent Common Messages #1
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #2-----
+* @param Common Messages #2
 * @default
 *
-* @param mId2
+* @param messageIds2
 * @text Message Ids
-* @parent ---Common Messages #2-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #2
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m2
+*
+* @param message2
 * @text Message
-* @parent ---Common Messages #2-----
+* @parent Common Messages #2
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #3-----
+* @param Common Messages #3
 * @default
 *
-* @param mId3
+* @param messageIds3
 * @text Message Ids
-* @parent ---Common Messages #3-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #3
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m3
+*
+* @param message3
 * @text Message
-* @parent ---Common Messages #3-----
+* @parent Common Messages #3
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #4-----
+* @param Common Messages #4
 * @default
 *
-* @param mId4
+* @param messageIds4
 * @text Message Ids
-* @parent ---Common Messages #4-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #4
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m4
+*
+* @param message4
 * @text Message
-* @parent ---Common Messages #4-----
+* @parent Common Messages #4
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #5-----
+* @param Common Messages #5
 * @default
 *
-* @param mId5
+* @param messageIds5
 * @text Message Ids
-* @parent ---Common Messages #5-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #5
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m5
+*
+* @param message5
 * @text Message
-* @parent ---Common Messages #5-----
+* @parent Common Messages #5
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #6-----
+* @param Common Messages #6
 * @default
 *
-* @param mId6
+* @param messageIds6
 * @text Message Ids
-* @parent ---Common Messages #6-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #6
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m6
+*
+* @param message6
 * @text Message
-* @parent ---Common Messages #6-----
+* @parent Common Messages #6
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #7-----
+* @param Common Messages #7
 * @default
 *
-* @param mId7
+* @param messageIds7
 * @text Message Ids
-* @parent ---Common Messages #7-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #7
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m7
+*
+* @param message7
 * @text Message
-* @parent ---Common Messages #7-----
+* @parent Common Messages #7
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #8-----
+* @param Common Messages #8
 * @default
 *
-* @param mId8
+* @param messageIds8
 * @text Message Ids
-* @parent ---Common Messages #8-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #8
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m8
+*
+* @param message8
 * @text Message
-* @parent ---Common Messages #8-----
+* @parent Common Messages #8
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #9-----
+* @param Common Messages #9
 * @default
 *
-* @param mId9
+* @param messageIds9
 * @text Message Ids
-* @parent ---Common Messages #9-----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #9
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m9
+*
+* @param message9
 * @text Message
-* @parent ---Common Messages #9-----
+* @parent Common Messages #9
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Common Messages #10----
+* @param Common Messages #10
 * @default
 *
-* @param mId10
+* @param messageIds10
 * @text Message Ids
-* @parent ---Common Messages #10----
-* @type text
-* @desc Put the Id's of the Items you want to have this message, seperated by commas (,).
+* @parent Common Messages #10
+* @type number[]
+* @desc Insert the Id of the Item you want to use this message, each one individually added
 * @default
-* @param m10
+*
+* @param message10
 * @text Message
-* @parent ---Common Messages #10----
+* @parent Common Messages #10
 * @type text
 * @desc Put the message you want to use, with % being used to act as the item's name. EX: ate the %!
 * @default
 *
-* @param ---Give Message----
+* @param Give Messages
 * @default
 *
-* @param dbB
+* @param enableGiveMessages
 * @text Enable?
-* @parent ---Give Message----
+* @parent Give Message
 * @type boolean
 * @desc Click True or False if you want to enable Custom Messages if the target isn't the user nor an enemy.
 * @default true
-* @param dbM
+*
+* @param singleGiveMessage
 * @text Message to 1
-* @parent ---Give Message----
+* @parent Give Message
 * @type text
-* @desc Put the message you want to use, with % being used to act as the item's name and the recipient's name. EX: gave the % to %!
-* @default
-* @param dbA
+* @desc Put the message you'll use when using an item to an ally, with 1% being the ally's name and 2% the item's.
+* @default gave the 2% to 1%!
+*
+* @param singleDeadGiveMessage
+* @text Message to Dead 1
+* @parent Give Message
+* @type text
+* @desc Put the message you'll use when using an item to a dead ally, with 1% being the ally's name and 2% the item's.
+* @default gave the 2% to 1%!
+*
+* @param partyGiveMessage
 * @text Message to All
-* @parent ---Give Message----
+* @parent Give Message
 * @type text
-* @desc Put the message you want to use, with % being used to act as the item's name and the recipient's name. EX: gave % to the party!
-* @default
-* @param dbP
+* @desc Put the message you'll use when using an item on the party, with 1% being the party's name and 2% the item's.
+* @default gave the 2% to 1%!
+*
+* @param partyDeadGiveMessage
+* @text Message to Dead All
+* @parent Give Message
+* @type text
+* @desc Put the message you'll use when using an item on a dead party, with 1% being the party's name and 2% the item's.
+* @default gave the 2% to 1%!
+*
+* @param partyNameMessage
 * @text Party Name
-* @parent ---Give Message----
+* @parent Give Message
 * @type text
 * @desc Put the name you want to use when using an item that targets the party. 
-* @default
+* @default The Party
 *
 * @help
-* ==Notetags==================================================================
-* Individual Item Message: <customMessage: >
-* ===Introduction=============================================================
+* ==Notetags====================================================================
+* Spaces and Capitalization doesn't matter
+*
+* Items:
+* <Custom Item Message: text> - follows the same rules as the one from plugin
+* set up. Can swap Item and Custom or remove one (and their space) entirely,
+* Ex: <Item Message:
+* ===Introduction===============================================================
 * For a long time, I disliked how RPG Maker at base doesn't allow for
 * several item use messages like it does for skills. This is fine for most
 * cases, but I feel like adding the detail that someone "eats" the
@@ -216,18 +248,25 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 * to have their own customized one. What ever suits your fancy! I also
 * decided to tack on giving items recipients if they're not their
 * user because why not?
-* ===How to Use===============================================================
-* For all messages, the preferred syntax is message + % + punctuation. Ex:
-* (user) ate the Sandwich! Remember to use the % or else the message might
-* not look right.
-* For having a group from a custom message, give a list of numbers seperated
-* by commas. Ex: 52, 67, 522, 432, etc. Remember to seperate them with commas.
-* Their message can then be chosen by the message box below it.
-* For personalized messages use the Notetag listed above.
-* You can turn on/off if the recipient is mentioned in the item use by using
-* the true false parameter. You can also customize the message for giving
-* to a specific ally and the entire party, aswell as the name for the party.
-* ===Change Log===============================================================
+* ===How to Use=================================================================
+* For Messages, your string should be like "used the %!". The % is what is used
+* to indicate the item, so make sure to include it if you want to show what 
+* item it is. Beyond that it is mostly just inserting the appropriate numbers
+* and messages into the given catagories and using the custom message when
+* needed.
+* Remember to use 1% and 2% for the give messages as they both are needed for 
+* the recipient name and item name respectively in those messages.
+* ===Change Log=================================================================
+* Version 1.2.0 (06/20/25) :
+* -Rewrote almost entire plugin to be mroe efficent, more clean, and to have
+* better practices in regards to setting item Message
+* -Updated the compatability with ColoredNames to have the new methods of color
+* gettings for names and such so that it isn't reliant on specific old calls
+* -Updated compatability with AntiMessage
+* -Updated Notetag to have space and capitalization ignoring alongside allowing
+* for variations
+* -Added specific messages to giving to Dead Allies and Dead Parties
+*
 * Version 1.1.6 (05/11/23) :
 * -Swapped compatiblity with Dynamic Battlelog Message for AntiMessage
 *
@@ -260,275 +299,195 @@ Frashaw.CIMessage = Frashaw.CIMessage || {};
 *
 * Version 1.0 (01/11/23) :
 * -Finished Base Plugin
-* ============================================================================
+* ==============================================================================
 */
-//============================================================================
+//==============================================================================
+(function() {
 //Sets up the information got from the plugin parameters
 Parameters = PluginManager.parameters('FRSH_CustomItemMessages');
 Frashaw.Param = Frashaw.Param || {};
-Frashaw.Param.Id1 = arrayizer(Parameters.mId1);
-Frashaw.Param.Id2 = arrayizer(Parameters.mId2);
-Frashaw.Param.Id3 = arrayizer(Parameters.mId3);
-Frashaw.Param.Id4 = arrayizer(Parameters.mId4);
-Frashaw.Param.Id5 = arrayizer(Parameters.mId5);
-Frashaw.Param.Id6 = arrayizer(Parameters.mId6);
-Frashaw.Param.Id7 = arrayizer(Parameters.mId7);
-Frashaw.Param.Id8 = arrayizer(Parameters.mId8);
-Frashaw.Param.Id9 = arrayizer(Parameters.mId9);
-Frashaw.Param.Id10 = arrayizer(Parameters.mId10);
-Frashaw.Param.dbB = Parameters.dbB;
-Frashaw.Param.m1 = Parameters.m1;
-Frashaw.Param.m2 = Parameters.m2;
-Frashaw.Param.m3 = Parameters.m3;
-Frashaw.Param.m4 = Parameters.m4;
-Frashaw.Param.m5 = Parameters.m5;
-Frashaw.Param.m6 = Parameters.m6;
-Frashaw.Param.m7 = Parameters.m7;
-Frashaw.Param.m8 = Parameters.m8;
-Frashaw.Param.m9 = Parameters.m9;
-Frashaw.Param.m10 = Parameters.m10;
-Frashaw.Param.dbM = Parameters.dbM;
-Frashaw.Param.dbA = Parameters.dbA;
-Frashaw.Param.dbP = Parameters.dbP;
-
-//A function that checks if the value in the array is both a value and positive,
-//and removes them if they're not
-function isPositive(yes){
-	return yes > 0;
-}
-
-//Turns all the array elements into intergers
-function eacher(item, index, arr){
-	arr[index] = parseInt(item);
-}
-
-//A function meant to seperate the values gotten from the plugin parameters
-//into arrays along with removing any not used valeus
-function arrayizer(yes){
-	array = yes.split(",");
-	array.forEach(eacher);
-	array = array.filter(isPositive);
-	return array;
-}
-
-
-//Where the shit goes down
-Window_BattleLog.prototype.displayAction = function(subject, item) {
-	//Used to add compatiblity with another of my plugins, AntiMessage
-	if (Imported.AMessage){
-		var check = checkChecker(2, "AntiActionResults"); 
-	} else {
-	//If Dynamic Battlelog Messages isn't on
-		var check = true;
-	}
-	if (check == true) {
-    var numMethods = this._methods.length;
-	//Used to add compatiblity with another of my plugins, Colored Names
-	if (Imported.CName){
-		var color = 0;
-		if (item.meta.nameColor != null){
-			color = parseInt(item.meta.nameColor);
-		}
-		var icon = 0;
-		if (item.meta.iconNum != null){
-			icon = parseInt(item.meta.iconNum);
-		}
-		var name = "\\c[" + color + "]" + item.name + "\\c[0]";
-		if (icon != 0){
-			name = "\\i[" + icon + "]" + name;
-		}
-		var name2 = subject.name();
-	} else {
-	//If Colored Names isn't being used
-		var name = item.name;
-		var name2 = subject.name();
-	}
-    if (DataManager.isSkill(item)) {
-        if (item.message1) {
-            this.push('addText', name2 + item.message1.format(name));
-        }
-        if (item.message2) {
-            this.push('addText', item.message2.format(name));
-        }
-    } else {
-		//Makes the additional battlelog message if wanted
-		var booll = Frashaw.Param.dbB;
-		//Will not run code if scope is targeted at an enemy/ies
-		if ($dataItems[item.id].scope != 1 && $dataItems[item.id].scope != 2 && $dataItems[item.id].scope != 3 && $dataItems[item.id].scope != 4 && $dataItems[item.id].scope != 5 && $dataItems[item.id].scope != 6 && $dataItems[item.id].scope != 11){
-			if (booll){
-			//Checks to see if the scope if all allies, dead or alive. Doesn't play the
-			//the message if the scope is alive members and only one is alive.
-			if (($dataItems[item.id].scope == 8 && $gameParty.aliveMembers().length > 1) || $dataItems[item.id].scope == 10){
-				var name3 = Frashaw.Param.dbP; //Gets the party name parameter
-				if (name3 == null || name3 == ""){ //Sets the name if the parameter is null or empty
-					name3 = "The Party";
-				}
-				var Message = Frashaw.Param.dbA; //Gets the party give message parameter
-				if (Message != null && Message != ""){ 
-				//Uses the below code if the message is not null and not empty
-					messArray = Message.split('%'); //Splits the message so that it flows good
-					if (messArray[1] == undefined) messArray[1] = "";//If there are no %, sets the array value to blank
-					if (messArray[2] == undefined) messArray[2] = "";
-					this.push('addText', subject.name() + " " + messArray[0] + name3 + messArray[1]);
-				} else {
-					//message if the paramter one is blank or null
-					this.push('addText', subject.name() + " gave the item to " + name3 + "!");
-				}
-				name2 = name3;
-			} else {
-				if ($gameParty.aliveMembers().length > 1){
-					var yes = $gameParty.members()[BattleManager._action._targetIndex];//Get's the current target's name
-					if (yes._name != subject._name){ //Checks to see if the target is different from the user by comparing names
-					var id = yes._actorId;//Checks actor Id, because it works
-					var Message = Frashaw.Param.dbM;
-					if (Message != null && Message != ""){
-						messArray = Message.split('%');
-						if (messArray[1] == undefined) messArray[1] = "";
-						if (messArray[2] == undefined) messArray[2] = "";
-						this.push('addText', subject.name() + " " + messArray[0] + yes.name() + messArray[1]);
-					} else {
-						this.push('addText', subject.name() + " gave the item to " + yes.name() + "!");
-					}
-					name2 = $gameActors.actor(id).name(); //Sets the name to the recipient so it looks better
-					}
-				}
+Frashaw.Param.ItemMessages = [];
+//Goes through the array in order to get the 10 different messages and id lists
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(function(i){
+	//A variable for the item to set at the called id list
+	thing = eval("Parameters.messageIds" + i);
+	//Makes sure the id list actually exists
+	if (thing != "") {
+		//Turns the list into a normal array
+		array = JSON.parse(thing);
+		//Goes through the array to make all the elements into numbers
+		array.forEach(function(e, id, a){
+			//Just incase one of the data is not a number, it catches it and sets
+			//it to 0 instead
+			try{
+				a[id] = Number(e);
+			} catch {
+				a[id] = 0;
 			}
+		});
+	} else {
+	//Makes an empty array if it is empty
+		array = [];
+	}
+	Frashaw.Param.ItemMessages.push([array, eval("Parameters.message" + i)]);
+});
+
+//Sets a bool and strings
+Frashaw.Param.enableGiveMessages = Parameters.enableGiveMessages == "true";
+Frashaw.Param.singleGiveMessage = Parameters.singleGiveMessage;
+Frashaw.Param.singleDeadGiveMessage = Parameters.singleDeadGiveMessage;
+Frashaw.Param.partyGiveMessage = Parameters.partyGiveMessage;
+Frashaw.Param.partyDeadGiveMessage = Parameters.partyDeadGiveMessage;
+Frashaw.Param.partyNameMessage = Parameters.partyNameMessage;
+
+//Preloads the various things for the messages
+var FrshCIMessageLoaded = false;
+FrshCIMessageLoaded_database = DataManager.isDatabaseLoaded;
+DataManager.isDatabaseLoaded = function() {
+	if (!FrshCIMessageLoaded_database.call(this)) return false; 
+	if (FrshCIMessageLoaded == false) {
+		this.processItemMessageThings($dataItems);
+		FrshCIMessageLoaded = true;
+	}
+	return true;
+};
+
+//A function to process the unique messages for items
+DataManager.processItemMessageThings = function(group) {
+	var string = "";
+	var note = /<(?:Custom|Item)[ ]?(?:Custom|Item)?[ ]?Message:(.*)>/i;
+
+	for (var n = 1; n < group.length; n++) {
+		var obj = group[n];
+		var notedata = obj.note.split(/[\r\n]+/);
+		
+		//Initalizes the shit for the message
+		obj.itemMessage = "";
+
+		for (var i = 0; i < notedata.length; i++) {
+			var line = notedata[i];
+			if (line.match(note)) {
+				obj.itemMessage = RegExp.$1;
 			}
 		}
 		
-		//Sets arrays for use.
-		var array1 = Frashaw.Param.Id1;
-		var array2 = Frashaw.Param.Id2;
-		var array3 = Frashaw.Param.Id3;
-		var array4 = Frashaw.Param.Id4;
-		var array5 = Frashaw.Param.Id5;
-		var array6 = Frashaw.Param.Id6;
-		var array7 = Frashaw.Param.Id7;
-		var array8 = Frashaw.Param.Id8;
-		var array9 = Frashaw.Param.Id9;
-		var array10 = Frashaw.Param.Id10;
-		var id = item.id;
-		if (item.meta.customMessage != null){
-		//Will override all other messages if a custom one in the tags.
-			var Message = item.meta.customMessage;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
+		//Checks to see if the message has been set yet
+		if (obj.itemMessage == ""){
+			//Goes through the id lists and seeing if the item is in any of them
+			for(i = 0; i != 10; i++){
+				if (Frashaw.Param.ItemMessages[i][0].contains(n)){
+					obj.itemMessage = Frashaw.Param.ItemMessages[i][1];
+					//Stops the checking if it is found in a list
+					break;
+				}
 			}
-		} else if (array1.contains(id)){
-		//Message if item is in array 1.
-			var Message = Frashaw.Param.m1;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
+			//If the string still doesn't have a message, default to the TextManager
+			//option
+			if (obj.itemMessage == ""){
+				//Alters the Textmanage string to line up with the rest of the plugin
+				string = TextManager.useItem.replace("%1", "").replace("%2", "%");
+				obj.itemMessage = string;
 			}
-		} else if (array2.contains(id)){
-		//Message if item is in array 2.
-			var Message = Frashaw.Param.m2;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array3.contains(id)){
-		//Message if item is in array 3.
-			var Message = Frashaw.Param.m3;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array4.contains(id)){
-		//Message if item is in array 4.
-			var Message = Frashaw.Param.m4;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array5.contains(id)){
-		//Message if item is in array 5.
-			var Message = Frashaw.Param.m5;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array6.contains(id)){
-		//Message if item is in array 6.
-			var Message = Frashaw.Param.m6;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array7.contains(id)){
-		//Message if item is in array 7.
-			var Message = Frashaw.Param.m7;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array8.contains(id)){
-		//Message if item is in array 8.
-			var Message = Frashaw.Param.m8;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array9.contains(id)){
-		//Message if item is in array 9.
-			var Message = Frashaw.Param.m9;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else if (array10.contains(id)){
-		//Message if item is in array 10.
-			var Message = Frashaw.Param.m10;
-			if (Message != null && Message != ""){
-				messArray = Message.split('%');
-				if (messArray[1] == undefined) messArray[1] = "";
-				this.push('addText', name2 + " " + messArray[0] + name + messArray[1]);
-			} else {
-				this.push('addText', TextManager.useItem.format(name2, name));
-			}
-		} else {
-		//Message if item isn't in any array.
-		this.push('addText', TextManager.useItem.format(name2, name));
 		}
-    }
-    if (this._methods.length === numMethods) {
-        this.push('wait');
-    }
-}
+		//Checks to see if the first element is a space, if not then it adds one
+		if (obj.itemMessage[0] != " ") obj.itemMessage = " " + obj.itemMessage;
+	}
 };
 
+//Where the shit goes down
+Window_BattleLog.prototype.displayAction = function(subject, item) {
+	//Preforms a check to see if AntiMessages is active to see if it should be shown 
+	if (Imported.AMessage){
+		num = Frashaw.Param.DSwitches[2];
+		if (num != 0){
+			if ($gameSwitches.value(num)) check = false;
+		}
+		if (BattleManager._action.item().antiResults) check = false;
+		check = true;
+	} else {
+	//If AntiMessages isn't on
+		var check = true;
+	}
+	if (check) {
+		var numMethods = this._methods.length;
+		//When ColoredNames is active, makes the name of the item be colored and
+		//have an icon
+		if (Imported.CName){
+			var name = "\\ohx[" + getNameOutlineColor(item) + "]\\hx[" + getNameColor(item) + "]" + item.name + "\\c[0]\\ohx[" + normalOutlineColor + "]";
+			if (getNameIcon(item) != 0) name = "\\i[" + getNameIcon(item) + "]" + name;
+			var name2 = subject.name();
+		} else {
+		//If Colored Names isn't being used
+			var name = item.name;
+			var name2 = subject.name();
+		}
+		//Runs the function normally if the thing being used isn't an item
+		if (DataManager.isSkill(item)) {
+			if (item.message1) {
+				this.push('addText', name2 + item.message1.format(name));
+			}
+			if (item.message2) {
+				this.push('addText', item.message2.format(name));
+			}
+		} else {
+			//Checks to see if the give messages are on
+			if (Frashaw.Param.enableGiveMessages){
+				var scope = item.scope;
+				//Checks for a "One Ally" scope and that the target isn't the user
+				if (scope == 7 && !BattleManager._targets.contains(subject)){
+					//Gets the requisite line
+					mes = Frashaw.Param.singleGiveMessage;
+					//Doesn't run if there isn't a give message
+					if (mes != ""){
+						//Adds a space to the start of the line if it doesn't exist
+						if (mes[0] != " ") mes = " " + mes;
+						//Replaces the %s for the Item and Target names respectively
+						mes = name2 + mes.replace("2%", name).replace("1%", BattleManager._targets[0].name());
+						//Adds the text to the battle log
+						this.push('addText', mes);
+						//Changes the name for who is using what
+						name2 = BattleManager._targets[0].name();
+					}
+				//Checks for a "One Dead Ally" with an alternate of an "All Dead Allies"
+				//with only one dead party member
+				} else if (scope == 9 || (scope == 10 && $gameParty.deadMembers().length == 1)){
+					mes = Frashaw.Param.singleDeadGiveMessage;
+					if (mes != ""){
+						if (mes[0] != " ") mes = " " + mes;
+						mes = name2 + mes.replace("2%", name).replace("1%", BattleManager._targets[0].name());
+						this.push('addText', mes);
+						name2 = BattleManager._targets[0].name();
+					}
+				//Checks for "All Allies" and that there is more then 1 ally alive
+				} else if (scope == 8 && $gameParty.aliveMembers().length > 1){
+					mes = Frashaw.Param.partyGiveMessage;
+					if (mes != ""){
+						if (mes[0] != " ") mes = " " + mes;
+						//Gets the specified party name, defaulting to the Party
+						//when the specified name doesn't exist
+						partyName = (Frashaw.Param.partyNameMessage != "") ? Frashaw.Param.partyNameMessage : "the Party";
+						mes = name2 + mes.replace("2%", name).replace("1%", partyName);
+						this.push('addText', mes);
+						name2 = partyName;
+					}
+				//Checks for "All Dead Allies" and there is more then 1 dead ally
+				} else if (scope == 10 && $gameParty.deadMembers().length > 1){
+					mes = Frashaw.Param.partyDeadGiveMessage;
+					if (mes != ""){
+						if (mes[0] != " ") mes = " " + mes;
+						partyName = (Frashaw.Param.partyNameMessage != "") ? Frashaw.Param.partyNameMessage : "the Party";
+						mes = name2 + mes.replace("2%", name).replace("1%", partyName);
+						this.push('addText', mes);
+						name2 = BattleManager._targets[0].name();
+					}
+				}
+			}
+			//Gets the line for the actual item message
+			mes = name2 + item.itemMessage.replace("%", name)
+			this.push('addText', mes);
+	}}
+};
+})();
 //=============================================================================
 // End of File
 //=============================================================================
