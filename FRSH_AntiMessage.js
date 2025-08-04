@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_AntiMessage
 // FRSH_AntiMessage.js
-// Version: 1.1.1
+// Version: 1.1.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -287,6 +287,10 @@ Frashaw.AMessage = Frashaw.AMessage || {};
 * switch is active or not. If the switch is put to 0, it will not run as 
 * switches 0 and below are impossible to set and call.
 * ===Change Log=================================================================
+* Version 1.1.1 (08/03/25) :
+* -Add a check in case the the current battle action doesn't exit, leading to a
+* crash
+*
 * Version 1.1.1 (06/19/25) :
 * -Fixed an oversight with the code that made it not check the correct variable
 * for the switch
@@ -483,7 +487,7 @@ function antiCheck(switchNumber, tag){
 	}
 	//Checks the last used item to see if they have the respective tag for the no
 	//messages
-	if (eval("BattleManager._action.item()." + tag)) return false;
+	if (eval("BattleManager._action != null && BattleManager._action.item()." + tag)) return false;
 	//If none of the other checks ran, it returns true that the message
 	//can show.
 	return true;
