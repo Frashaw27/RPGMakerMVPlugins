@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_HpShields
 // FRSH_HpShields.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -262,6 +262,10 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * whatnot. At the end of the day, if your gonna do something with this might as 
 * well go the full mile.
 * ===Change Log=================================================================
+* Version 1.0.2 (08/17/2025) :
+* -Fixed and updated the names for the Shield Sound Effects, allowing them to
+* be properly called
+*
 * Version 1.0.1 (08/17/2025) :
 * -Fixed a bug where the Y-Adjust for the shield image was instead using the X
 * -Added a min cap to the adjust so they can roll down to the negatives
@@ -285,17 +289,17 @@ Frashaw.Param.ShieldTankMsg = Parameters.shieldTankMsg;
 Frashaw.Param.ShieldDegenActivate = Parameters.shieldDegenActivate == true;
 Frashaw.Param.ShieldGainMsg = Parameters.shieldGainMsg;
 Frashaw.Param.SingleShieldGainMsg = Parameters.shieldGainMsgSingle;
-Frashaw.Param.ShieldGainSE = Parameters.shieldGainSe;
-Frashaw.Param.ShieldGainSeVolume = Number(Parameters.shieldGainSeVolume);
-Frashaw.Param.ShieldGainSePitch = Number(Parameters.shieldGainSePitch);
-Frashaw.Param.ShieldGainSePan = Number(Parameters.shieldGainSePan);
+Frashaw.Param.ShieldGainSE = Parameters.shieldGainSE;
+Frashaw.Param.ShieldGainSEVolume = Number(Parameters.shieldGainSEVolume);
+Frashaw.Param.ShieldGainSEPitch = Number(Parameters.shieldGainSEPitch);
+Frashaw.Param.ShieldGainSEPan = Number(Parameters.shieldGainSEPan);
 Frashaw.Param.ActorShieldBreakAnimation = Number(Parameters.shieldBreakAnimActor);
 Frashaw.Param.EnemyShieldBreakAnimation = Number(Parameters.shieldBreakAnimEnemy);
 Frashaw.Param.ShieldLoseMsg = Parameters.shieldLoseMsgSingle;
 Frashaw.Param.SingleShieldLoseMsg = Parameters.shieldLoseMsgSingle;
 Frashaw.Param.ActorShieldLoseAnimation = Number(Parameters.shieldLoseAnimActor);
 Frashaw.Param.EnemyShieldLoseAnimation = Number(Parameters.shieldLoseAnimEnemy);
-Frashaw.Param.ShieldBreakSE = Parameters.shieldBreakSe;
+Frashaw.Param.ShieldBreakSE = Parameters.shieldBreakSE;
 Frashaw.Param.ShieldBreakSEVolume = Number(Parameters.shieldBreakSEVolume);
 Frashaw.Param.ShieldBreakSEPitch = Number(Parameters.shieldBreakSEPitch);
 Frashaw.Param.ShieldBreakSEPan = Number(Parameters.shieldBreakSEPan);
@@ -675,7 +679,7 @@ Game_Enemy.prototype.performShieldBreak = function() {
 Game_BattlerBase.prototype.shieldMakeSound = function() {
 	AudioManager.playSe({
 		name: Frashaw.Param.ShieldGainSE,
-		volume: Frashaw.Param.ShieldGainSeVolume,
+		volume: Frashaw.Param.ShieldGainSEVolume,
 		pitch: Frashaw.Param.ShieldGainSEPitch,
 		pan: Frashaw.Param.ShieldGainSEPan
 	});
