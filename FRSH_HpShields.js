@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_HpShields
 // FRSH_HpShields.js
-// Version: 1.0.0
+// Version: 1.0.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -168,6 +168,7 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * @text Shield Image X Adjust
 * @type number
 * @default 0
+* @min -9999999
 * @desc Adjust this to properly align the x-axis of the shield image.
 *
 * @param shieldImageYAdjust
@@ -175,6 +176,7 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * @text Shield Image Y Adjust
 * @type number
 * @default 0
+* @min -9999999
 * @desc Adjust this to properly align the y-axis of the shield image.
 *
 * @param shieldNumberXAdjust
@@ -182,6 +184,7 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * @text Shield Number X Adjust
 * @type number
 * @default 0
+* @min -9999999
 * @desc Adjust this to properly align the x-axis of the shield count text.
 *
 * @param shieldNumberXAdjust2
@@ -189,6 +192,7 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * @text Shield Number X Adjust 2
 * @type number
 * @default 0
+* @min -9999999
 * @desc Adjust this to properly align the x-axis of the shield count text when adding more places. Ex: 9 -> 10
 *
 * @param shieldNumberYAdjust
@@ -196,6 +200,7 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * @text Shield Number Y Adjust
 * @type number
 * @default 0
+* @min -9999999
 * @desc Adjust this to properly align the y-axis of the shield count text.
 *
 * @param 
@@ -250,12 +255,18 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * ===How to Use=================================================================
 * !-Make sure to put this beneath Frash Overheal and any other damage altering~!
 *                                 !~Plugins~!
-* You add in the notetags, properly align the shield image that appears and you
-* should be gucchi. This plugin is a lot more involved so I'd suggest taking
-* a decent amount of time deciding what value this would take to retrofit this
-* into your game and whatnot. At the end of the day, if your gonna do something 
-* with this might as well go the full mile.
+* You add in the notetags, make a shield image,
+* properly align the shield image that appears and you should be gucchi. This 
+* plugin is a lot more involved so I'd suggest taking a decent amount of time 
+* deciding what value this would take to retrofit this into your game and 
+* whatnot. At the end of the day, if your gonna do something with this might as 
+* well go the full mile.
 * ===Change Log=================================================================
+* Version 1.0.1 (08/17/2025) :
+* -Fixed a bug where the Y-Adjust for the shield image was instead using the X
+* -Added a min cap to the adjust so they can roll down to the negatives
+* -Added a section about the shield image in how to use
+*
 * Version 1.0 (08/17/2025) :
 * -Finished Base Plugin
 * ==============================================================================
@@ -713,7 +724,7 @@ Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
 		}
 		this.loadShield();
 		this.changeTextColor(this.textColor(0));
-		this.drawActorShield(actor, x + Frashaw.Param.ShieldImageX, y + Frashaw.Param.ShieldImageX);
+		this.drawActorShield(actor, x + Frashaw.Param.ShieldImageX, y + Frashaw.Param.ShieldImageY);
 		this.drawText(actor._shields, x + Frashaw.Param.ShieldTextX + ((String(actor._shields).length - 1) * Frashaw.Param.ShieldTextX2), y + Frashaw.Param.ShieldTextY);
 	} else {
 		frsh_shields_grayout_hp_bar.call(this, actor, x, y, width);
