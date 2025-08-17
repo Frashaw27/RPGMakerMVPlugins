@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_CustomItemMessages
 // FRSH_CustomItemMessages.js
-// Version: 1.2.0
+// Version: 1.2.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -399,11 +399,11 @@ Window_BattleLog.prototype.displayAction = function(subject, item) {
 	//Preforms a check to see if AntiMessages is active to see if it should be shown 
 	if (Imported.AMessage){
 		num = Frashaw.Param.DSwitches[2];
+		check = true;
 		if (num != 0){
 			if ($gameSwitches.value(num)) check = false;
 		}
 		if (BattleManager._action.item().antiResults) check = false;
-		check = true;
 	} else {
 	//If AntiMessages isn't on
 		var check = true;
