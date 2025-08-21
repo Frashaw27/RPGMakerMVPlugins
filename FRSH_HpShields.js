@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_HpShields
 // FRSH_HpShields.js
-// Version: 1.0.2
+// Version: 1.0.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -262,6 +262,11 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * whatnot. At the end of the day, if your gonna do something with this might as 
 * well go the full mile.
 * ===Change Log=================================================================
+* Version 1.0.3 (08/20/2025) :
+* -Added the ability to turn the numerical modifiers negative, expect for the
+* actual call for gaining shields
+* -Added functionality to where the item break bonuses would properly apply
+*
 * Version 1.0.2 (08/17/2025) :
 * -Fixed and updated the names for the Shield Sound Effects, allowing them to
 * be properly called
@@ -339,8 +344,8 @@ DataManager.isDatabaseLoaded = function() {
 DataManager.processShieldNotetagsA = function(group) {
 	//Loads up various strings to check for
 	var note1 = /<Shields?:[ ]?(\d+)>/i;
-	var note2 = /<Shields?[ ]?Break:[ ]?(\d+)>/i;
-	var note2a = /<Break[ ]?Shields?:[ ]?(\d+)>/i;
+	var note2 = /<Shields?[ ]?Break:[ ]?(-?\d+)>/i;
+	var note2a = /<Break[ ]?Shields?:[ ]?(-?\d+)>/i;
 	var note3 = /<Break[ ]?All[ ]?Shields?>/i;
 	var note4 = /<Ignore[ ]?(?:All)?[ ]?Shields?>/i;
 	var note5 = /<(?:Anti|No)[ -]?Shields?>/i;
@@ -362,8 +367,6 @@ DataManager.processShieldNotetagsA = function(group) {
 				if (num < 0) num = 0;
 				obj.shields = num;
 			} else if (line.match(note2) || line.match(note2a)){
-				num = Number(RegExp.$1);
-				if (num < 0) num = 0;
 				obj.shieldBreak = Number(RegExp.$1);
 			} else if (line.match(note3)){
 				obj.shieldBreakAll = true;
@@ -379,9 +382,9 @@ DataManager.processShieldNotetagsA = function(group) {
 //Does the processing for everything else
 DataManager.processShieldNotetagsB = function(group) {
 	//Loads up various strings to check for
-	var note1 = /<Shield[ ]?Boost:[ ]?(\d+)>/i;
-	var note2 = /<Shields?[ ]?Break[ ]?Boost:[ ]?(\d+)>/i;
-	var note3 = /<Shield[ ]?Cap[ ]?Mod(?:ifier)?:[ ]?(\d+)>/i;
+	var note1 = /<Shield[ ]?Boost:[ ]?(-?\d+)>/i;
+	var note2 = /<Shields?[ ]?Break[ ]?Boost:[ ]?(-?\d+)>/i;
+	var note3 = /<Shield[ ]?Cap[ ]?Mod(?:ifier)?:[ ]?(-?\d+)>/i;
 	var note4 = /<Break[ ]?All[ ]?Shields?>/i;
 	
 	for (var n = 1; n < group.length; n++) {
@@ -578,8 +581,8 @@ Game_Action.prototype.makeDamageValue = function(target, critical) {
 		if (this.shieldBreakAll || this.subject().shieldBreakAll){
 			target.removeAllShields();
 		} else {
-			amount = 1 + this.subject().shieldBreakBoost;
-			if (amount < 1) amount = 1;
+			amount = 1 + this.item().shieldBreak + this.subject().shieldBreakBoost;
+			if (amount < 0) amount = 0;
 			target.removeShields(amount);
 		}
 		return 0;
