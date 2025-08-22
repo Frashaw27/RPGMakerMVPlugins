@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_HpShields
 // FRSH_HpShields.js
-// Version: 1.0.3
+// Version: 1.0.4
 //=============================================================================
 
 var Imported = Imported || {};
@@ -262,6 +262,11 @@ Frashaw.hpShields = Frashaw.hpShields || {};
 * whatnot. At the end of the day, if your gonna do something with this might as 
 * well go the full mile.
 * ===Change Log=================================================================
+* Version 1.0.4 (08/22/2025) :
+* -Fixed an incorrect call for the end of battle
+* -Using shields with shield boost finally increases the amount of shields the
+* recipient gets 
+*
 * Version 1.0.3 (08/20/2025) :
 * -Added the ability to turn the numerical modifiers negative, expect for the
 * actual call for gaining shields
@@ -544,7 +549,7 @@ frsh_shields_shield_act = Game_Action.prototype.apply;
 Game_Action.prototype.apply = function(target){
 	frsh_shields_shield_act.call(this, target);
 	if (this.item().shields > 0){ 
-		target.gainShields(this.item().shields);
+		target.gainShields(this.item().shields + this.subject().shieldBoost);
 	}
 }
 
@@ -613,7 +618,7 @@ Game_BattlerBase.prototype.die = function() {
 //Resets all shields at the end of battle
 frsh_shields_battle_clear = Game_Battler.prototype.onBattleEnd
 Game_Battler.prototype.onBattleEnd = function() {
-    frsh_overheal_clear.call(this);
+    frsh_shields_battle_clear.call(this);
 	this.removeAllShields();
 };
 
