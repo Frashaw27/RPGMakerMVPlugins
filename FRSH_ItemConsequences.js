@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConsequences
 // FRSH_ItemConsequences.js
-// Version: 1.3.0
+// Version: 1.3.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -236,6 +236,9 @@ Frashaw.IConsequence = Frashaw.IConsequence || {};
 * Don't miss any element or otherwise it will mess everything up. Once that is 
 * done, add the notetags to the respective things and go about your devving.
 * ===Change Log=================================================================
+* Version 1.3.1 (01/19/2026):
+* -Fixed a bug where enemies would not drop Gold on death
+*
 * Version 1.3.0 (01/19/2026) :
 * -Rewrote the entire plugin
 * -Changed the way all systems work to be based on objects, not arrays
@@ -550,7 +553,7 @@ Game_BattlerBase.prototype.removeConsequenceStuff = function() {
 };
 
 //Gets and resets the modifiers for the consequences
-frsh_iconsequence_get_modifiers = Game_BattlerBase.prototype.refresh
+frsh_iconsequence_get_modifiers = Game_Actor.prototype.refresh;
 Game_Actor.prototype.refresh = function(){
 	frsh_iconsequence_get_modifiers.call(this);
 	//Resets the values
@@ -562,6 +565,7 @@ Game_Actor.prototype.refresh = function(){
 //==============================================================================
 //Consequence Functioning
 //==============================================================================
+
 
 //Applies the item consequences after using said item
 frsh_iconsequences_con_apply = Game_Action.prototype.apply;
