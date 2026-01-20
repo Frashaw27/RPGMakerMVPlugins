@@ -236,6 +236,10 @@ Frashaw.IConsequence = Frashaw.IConsequence || {};
 * Don't miss any element or otherwise it will mess everything up. Once that is 
 * done, add the notetags to the respective things and go about your devving.
 * ===Change Log=================================================================
+* Version 1.3.2 (01/19/2026):
+* -Add compatability with DoubleX's Permenant States by switching the death
+* reset to revive reset
+*
 * Version 1.3.1 (01/19/2026):
 * -Fixed a bug where enemies would not drop Gold on death
 *
@@ -462,9 +466,10 @@ Game_Actor.prototype.onBattleEnd = function() {
 	});
 };
 
-//Resets the values when the user dies
-frsh_iconsequences_death_clense = Game_Actor.prototype.die;
-Game_Actor.prototype.die = function() {
+//Resets the values when the user revives. Used to be when the user dies, but it
+//had incompabilities with DoubleX's Permenant States
+frsh_iconsequences_death_clense = Game_BattlerBase.prototype.revive;
+Game_Actor.prototype.revive = function() {
 	frsh_iconsequences_death_clense.call(this);
 	user = this;
 	Frashaw.Param.ConsequenceLabels.forEach(function(i){
@@ -561,6 +566,7 @@ Game_Actor.prototype.refresh = function(){
 	//Sets the values
 	this.getConsequenceStuff();
 }
+
 
 //==============================================================================
 //Consequence Functioning
