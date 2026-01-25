@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_ItemConsequences
 // FRSH_ItemConsequences.js
-// Version: 1.3.1
+// Version: 1.3.3
 //=============================================================================
 
 var Imported = Imported || {};
@@ -236,6 +236,12 @@ Frashaw.IConsequence = Frashaw.IConsequence || {};
 * Don't miss any element or otherwise it will mess everything up. Once that is 
 * done, add the notetags to the respective things and go about your devving.
 * ===Change Log=================================================================
+* Version 1.3.3 (01/25/2026):
+* -Fixed a bug that would cause concequences to drop to 0 immediately
+* -Swapped the order states and concequence show in the battlelog as the consequences
+* will sometimes deal with states
+* -Made it so that a blank punish message makes it so that it doesn't run
+*
 * Version 1.3.2 (01/19/2026):
 * -Add compatability with DoubleX's Permenant States by switching the death
 * reset to revive reset
@@ -572,7 +578,6 @@ Game_Actor.prototype.refresh = function(){
 //Consequence Functioning
 //==============================================================================
 
-
 //Applies the item consequences after using said item
 frsh_iconsequences_con_apply = Game_Action.prototype.apply;
 Game_Action.prototype.apply = function(target){
@@ -621,7 +626,7 @@ Game_Actor.prototype.onTurnEnd = function() {
 Game_Actor.prototype.gainConsequence = function(consequence, amount){
 	user = this;
 	eval("user." + consequence + " += amount");
-	if (amount > 0){
+	if (eval("user." + consequence + " > 0")){
 		if (eval("user." + consequence + " > 0")){
 			compare = (Frashaw.Param.MaxPoint) ? ">=" : ">";
 			if (eval("user." + consequence + compare + " user." + consequence + "Max")){
@@ -737,8 +742,8 @@ Game_ActionResult.prototype.clear = function() {
 //An extention to show the consequences in the battlelog during an action
 frsh_iconsequences_con_piggyback = Window_BattleLog.prototype.displayAffectedStatus;
 Window_BattleLog.prototype.displayAffectedStatus = function(target) {
-	frsh_iconsequences_con_piggyback.call(this, target);
 	this.displayConsequences(target);
+	frsh_iconsequences_con_piggyback.call(this, target);
 };
 
 //A function to show the effects in the battle log
@@ -758,7 +763,7 @@ Window_BattleLog.prototype.displayConsequences = function(target){
 			text = text.replace("1%", Math.abs(eval("target.result()." + i + "Change")));
 			battleLog.push('addText', target.name() + text);
 			//Shows the text when the consequence goes off
-			if (eval("target.result()." + i + "Punish")){
+			if (eval("target.result()." + i + "Punish") && Frashaw.Param.Consequence[i].punishText != ""){
 				battleLog.push('addText', target.name() + Frashaw.Param.Consequence[i].punishText);
 			}
 			battleLog.push('waitForNewLine');
