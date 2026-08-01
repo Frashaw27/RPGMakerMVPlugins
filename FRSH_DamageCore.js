@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DamageCore
 // FRSH_DamageCore.js
-// Version: 1.0.1
+// Version: 1.0.2
 //=============================================================================
 
 var Imported = Imported || {};
@@ -253,6 +253,8 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * is a first come, first serve basis. This means that a Weapon that sets the
 * Elemental Rate to 150% can not be changed from a State that sets it to 50%
 * -Healing modifiers are only applied by using the damage formula version
+* -Don't name elements "Physical" or "Magical" as they are reserved for the 
+* damage types of will have unintended circumstances if you care
 * 
 * !!!~~~Warning~~~!!!
 * This will probably not work with any other plugin that alters Damage like
@@ -260,6 +262,13 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * If there is a plugin like FRSH_HpShields that extends off of the Damage
 * function, put them below this plugin or they will not work.
 * ===Change Log=================================================================
+* Version 1.0.2 (08/01/2026):
+* -Fixed where the Toggle for PDR and MDR wasn't label correctly and thus never
+* triggerd within the damage running itself
+* -Fixed the Toggle not checking for the correct things
+* -Fixed the the results not properly updating after the action finished
+* -Added note about Physical and Magical
+*
 * Version 1.0.1 (08/01/2026):
 * -Fixed bug from something I changed last minute and didn't test
 * -Added disclaimer
@@ -286,7 +295,7 @@ Frashaw.Param.DMGPierceText = Parameters.dmgCorePierce;
 Frashaw.Param.DMGPierceSE = [Parameters.dmgCorePierceSE, Number(Parameters.dmgCorePierceSEVol), Number(Parameters.dmgCorePierceSEPitch)];
 Frashaw.Param.DMGAbsorbText = Parameters.dmgCoreAbsorb;
 Frashaw.Param.DMGAbsorbSE = [Parameters.dmgCoreAbsorbSE, Number(Parameters.dmgCoreAbsorbSEVol), Number(Parameters.dmgCoreAbsorbSEPitch)];
-Frashaw.Param.DMGDRToggle = Parameters.dmgCoreToggle == true;
+Frashaw.Param.DMGDRToggle = Parameters.dmgCoreToggle == "true";
 
 //Starts the function to intialize all the damage notetags
 FrshDmgCore_database = DataManager.isDatabaseLoaded;
@@ -660,8 +669,8 @@ Game_BattlerBase.prototype.refresh = function(){
 //Results
 //============================================================================
 //Sets all the factors for additional Damage popups to be changed later
-frsh_dmgcore_additional_results = Game_ActionResult.prototype.initialize;
-Game_ActionResult.prototype.initialize = function() {
+frsh_dmgcore_additional_results = Game_ActionResult.prototype.clear;
+Game_ActionResult.prototype.clear = function() {
     frsh_dmgcore_additional_results.call(this);
 	this.resisted = false;
 	this.weakness = false;
@@ -784,19 +793,19 @@ Game_Action.prototype.makeDamageValue = function(target, critical) {
 			value *= target.pdr;
 			//Checks the used PDR to see if the Weakness or Resisted result is
 			//respectively applied. Only triggers if the maker wants it to
-			if (target.pdr > 1 && Frashaw.Param.dmgCoreToggle) target.result().weakness = true;
-			if (target.pdr < 1 && Frashaw.Param.dmgCoreToggle) target.result().resisted = true;
+			if (target.pdr > 1 && Frashaw.Param.DMGDRToggle) target.result().weakness = true;
+			if (target.pdr < 1 && Frashaw.Param.DMGDRToggle) target.result().resisted = true;
 		//If the PDR is not used, see if it is below 0 and if it was from Pierce, so it
 		//can show the Pierced result
-		} else if (target.pdr < 1 && !this.getPhysPierce(target, user) && Frashaw.Param.dmgCoreToggle){
+		} else if (target.pdr < 1 && !this.getPhysPierce(target, user) && Frashaw.Param.DMGDRToggle){
 			target.result().pierced = true;
 		}
 		//Like Above but MDR instead of PDR
 		if (this.isMagical()&& this.getMagPierce(target, user)) {
 			value *= target.mdr;
-			if (target.mdr > 1 && Frashaw.Param.dmgCoreToggle) target.result().weakness = true;
-			if (target.mdr < 1 && Frashaw.Param.dmgCoreToggle) target.result().resisted = true;
-		} else if (target.mdr < 1 && !this.getMagPierce(target, user) && Frashaw.Param.dmgCoreToggle){
+			if (target.mdr > 1 && Frashaw.Param.DMGDRToggle) target.result().weakness = true;
+			if (target.mdr < 1 && Frashaw.Param.DMGDRToggle) target.result().resisted = true;
+		} else if (target.mdr < 1 && !this.getMagPierce(target, user) && Frashaw.Param.DMGDRToggle){
 			target.result().pierced = true;
 		}
 		//Checks to see if the Target aborbs the element and if the elementalOverride or
