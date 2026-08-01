@@ -253,7 +253,17 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * is a first come, first serve basis. This means that a Weapon that sets the
 * Elemental Rate to 150% can not be changed from a State that sets it to 50%
 * -Healing modifiers are only applied by using the damage formula version
+* 
+* !!!~~~Warning~~~!!!
+* This will probably not work with any other plugin that alters Damage like
+* this.
+* If there is a plugin like FRSH_HpShields that extends off of the Damage
+* function, put them below this plugin or they will not work.
 * ===Change Log=================================================================
+* Version 1.0.1 (08/01/2026):
+* -Fixed bug from something I changed last minute and didn't test
+* -Added disclaimer
+*
 * Version 1.0.0 (08/01/2026):
 * -Finished Base Plugin
 * ==============================================================================
@@ -840,7 +850,7 @@ Game_Action.prototype.getElement = function(target) {
 frsh_dmgcore_elementrate_override = Game_BattlerBase.prototype.elementRate;
 Game_BattlerBase.prototype.elementRate = function(elementId) {
     value = frsh_dmgcore_elementrate_override.call(this, elementId);
-	if (this.elementalOverride[elemenetId] != -1) value = this.elementalOverride[elemenetId];
+	if (this.elementalOverride[elementId] != -1) value = this.elementalOverride[elementId];
 	return value;
 };
 
