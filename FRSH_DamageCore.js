@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DamageCore
 // FRSH_DamageCore.js
-// Version: 1.0.2
+// Version: 1.1.0
 //=============================================================================
 
 var Imported = Imported || {};
@@ -144,10 +144,16 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 *
 * @param dmgCoreToggle
 * @text PDR/MDR Text Trigger?
-* @type bool
 * @type boolean
 * @desc Click True/False if you want the calculation with PDR/MDR to also trigger Resist, Weakness, and Absorb texts to show.
 * @default true
+*
+* @param dmgCoreCritBase
+* @text Base Crit Multiplier
+* @type number
+* @desc Choose the default modifer Critical Hits will use.
+* @default 3
+* @min 1
 *
 * @help 
 * ==Notetags====================================================================
@@ -160,7 +166,8 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * <Flat Damage Boost: x><dmgboost:x> - Increases all Damage from all Attacks by
 * this amount.
 * <Flat Reduction Boost: -x><dmgreduct:-x> - Decreases Damage taken from all
-* Attacks by this amount.
+* Attacks by this amount. Put as a negative to increase the Damage taken 
+* instead.
 * <Flat Heal Boost: x><healboost:x> - Increases all Healing from all Heals by
 * this amount.
 * <Damage Multiplier: x><dmgmult:x> - Multiplies all Damage from Attacks by 
@@ -259,9 +266,15 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * !!!~~~Warning~~~!!!
 * This will probably not work with any other plugin that alters Damage like
 * this.
-* If there is a plugin like FRSH_HpShields that extends off of the Damage
+* If there is a plugin like FRSH_HpShields that extends off of the Damage 
 * function, put them below this plugin or they will not work.
 * ===Change Log=================================================================
+* Version 1.1.0 (08/02/2026):
+* -Fixed Damage Reduct not properly checking the correct thing for the values
+* -Damage Reduct now does - for its factor instead of +
+* -Damage Reduct now doesn't get negated by Pierce
+* -Added an option to decide the base Critical Damage Multiplier
+*
 * Version 1.0.2 (08/01/2026):
 * -Fixed where the Toggle for PDR and MDR wasn't label correctly and thus never
 * triggerd within the damage running itself
@@ -296,6 +309,7 @@ Frashaw.Param.DMGPierceSE = [Parameters.dmgCorePierceSE, Number(Parameters.dmgCo
 Frashaw.Param.DMGAbsorbText = Parameters.dmgCoreAbsorb;
 Frashaw.Param.DMGAbsorbSE = [Parameters.dmgCoreAbsorbSE, Number(Parameters.dmgCoreAbsorbSEVol), Number(Parameters.dmgCoreAbsorbSEPitch)];
 Frashaw.Param.DMGDRToggle = Parameters.dmgCoreToggle == "true";
+Frashaw.Param.DMGCritBase = Number(Parameters.dmgCoreCritBase);
 
 //Starts the function to intialize all the damage notetags
 FrshDmgCore_database = DataManager.isDatabaseLoaded;
@@ -357,7 +371,7 @@ DataManager.processDamageCoreNotetagsA = function(group) {
 	});
 	//All non-elemenetal related modifiers
 	noteA = /<(?:Flat)?[ ]?Da?ma?ge?[ ]?Boost:[ ]?(-?\d+)>/i;
-	noteB = /<(?:Flat)?[ ]?Da?ma?ge?[ ]?Reduct(ion)?:[ ]?(-?\d+)>/i;
+	noteB = /<(?:Flat)?[ ]?Da?ma?ge?[ ]?Reduct(?:ion)?:[ ]?(-?\d+)>/i;
 	noteC = /<(?:Flat)?[ ]?Heal[ ]?Boost:[ ]?(-?\d+)>/i;
 	noteD = /<Da?ma?ge?[ ]?Mult(?:iplier)?:[ ]?(\d+(?:[.]\d+)?)>/i;
 	noteE = /<Heal[ ]?Mult(?:iplier)?:[ ]?(\d+(?:[.]\d+)?)>/i;
@@ -898,7 +912,7 @@ Game_Action.prototype.calcElementDamage = function(target, elementId) {
 Game_Action.prototype.addFlatDamage = function(target, user, elementId, value){
 	value += user.flatDmgBoost;
 	value += user.elementalBoost[elementId];
-	if (target.flatDmgReduct > 0 || !user.elementalPierce[elementId]) value += target.flatDmgReduct;
+	value -= target.flatDmgReduct;
 	if (value < 0) value = 0;
 	return value;
 }
@@ -942,7 +956,7 @@ Game_Action.prototype.applyCritical = function(damage) {
 //Gets the Critical Damage that the attack will be amped by when hitting
 //a Critical Hit
 Game_Action.prototype.getCritDamage = function(user){ 
-	var mod = 3 + this.item().critDamageBonus + user.critDamageBonus;
+	var mod = Frashaw.Param.DMGCritBase + this.item().critDamageBonus + user.critDamageBonus;
 	if (mod < 1) mod = 1;
 	return mod;
 }
