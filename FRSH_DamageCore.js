@@ -1,7 +1,7 @@
 //=============================================================================
 // FRSH_DamageCore
 // FRSH_DamageCore.js
-// Version: 1.1.0
+// Version: 1.1.1
 //=============================================================================
 
 var Imported = Imported || {};
@@ -269,6 +269,10 @@ Frashaw.DMGCore = Frashaw.DMGCore || {};
 * If there is a plugin like FRSH_HpShields that extends off of the Damage 
 * function, put them below this plugin or they will not work.
 * ===Change Log=================================================================
+* Version 1.1.1 (08/05/2026):
+* -Fixed a bug where when calculating the elements of a "Normal Attack" with
+* multiple elements, it would cause an infinite loop
+*
 * Version 1.1.0 (08/02/2026):
 * -Fixed Damage Reduct not properly checking the correct thing for the values
 * -Damage Reduct now does - for its factor instead of +
@@ -857,7 +861,7 @@ Game_Action.prototype.getElement = function(target) {
 		user = this.subject();
 		//Goes through each of the elements that the attack could have and
 		//uses the one with the most Damage
-		for(i = 0; i != user.attackElements(); i++){
+		for(i = 0; i != user.attackElements().length; i++){
 			if (value == null || target.elementRate(i) > value){
 				value = user.attackElements()[i];
 			}
